@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Your VirLife</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
+    background:#05070d; color:#fff; user-select:none; }
+  body { display:flex; justify-content:center; align-items:center; }
+  #app { width:100%; max-width:430px; height:100vh; max-height:900px;
+    background:linear-gradient(180deg,#0e1424,#080b14);
+    display:flex; flex-direction:column; position:relative; overflow:hidden; }
+  @media(min-width:480px){ #app{ border-radius:36px; border:8px solid #131a2c; height:92vh;
+    box-shadow:0 0 80px rgba(91,140,255,0.25);} }
+  .topbar { padding:16px 20px 12px; display:flex; justify-content:space-between; align-items:center;
+    border-bottom:1px solid rgba(91,140,255,0.1); background:rgba(0,0,0,0.25); flex-shrink:0; }
+  .topbar .title { font-size:16px; font-weight:800; }
+  .topbar .title span { color:#5b8cff; }
+  .pill { font-size:11px; font-weight:700; padding:5px 10px; border-radius:20px;
+    background:rgba(91,140,255,0.15); color:#8fb0ff; border:1px solid rgba(91,140,255,0.3); }
+  #content { flex:1; overflow-y:auto; padding:16px 18px 100px; }
+  #content::-webkit-scrollbar { width:0; }
+  .screen { display:none; animation:fade .25s ease; }
+  .screen.active { display:block; }
+  @keyframes fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+  .hero { background:linear-gradient(135deg,#1b2a52,#0f1730);
+    border:1px solid rgba(91,140,255,0.25); border-radius:22px; padding:22px 20px;
+    margin-bottom:16px; position:relative; overflow:hidden; }
+  .hero::after { content:''; position:absolute; top:-40px; right:-40px; width:140px; height:140px;
+    border-radius:50%; background:radial-gradient(circle,rgba(91,140,255,0.35),transparent 70%); }
+  .hero .label { font-size:12px; color:#8892b0; text-transform:uppercase; letter-spacing:1px; }
+  .hero .money { font-size:38px; font-weight:900; margin-top:6px;
+    background:linear-gradient(90deg,#4ade80,#7bd3ff);
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero .money small { font-size:18px; color:#4ade80; -webkit-text-fill-color:#4ade80; }
+  .section-title { font-size:12px; color:#8892b0; text-transform:uppercase;
+    letter-spacing:1.5px; margin:20px 4px 10px; font-weight:700; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .tile { background:linear-gradient(145deg,#161f38,#0f1626);
+    border:1px solid rgba(91,140,255,0.15); border-radius:18px; padding:18px 16px;
+    display:flex; flex-direction:column; gap:8px; cursor:pointer;
+    transition:transform .12s, border-color .2s; min-height:110px; justify-content:space-between; }
+  .tile:active { transform:scale(0.95); border-color:rgba(91,140,255,0.5); }
+  .tile .ico { font-size:26px; }
+  .tile .name { font-size:14px; font-weight:700; }
+  .tile .sub { font-size:11px; color:#8892b0; }
+  .job { background:#121a2e; border:1px solid rgba(91,140,255,0.12);
+    border-radius:16px; padding:16px; margin-bottom:10px; }
+  .job.current { border-color:#4ade80; background:linear-gradient(135deg,#14281f,#0f1b16); }
+  .job .jHead { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .job .jico { width:46px; height:46px; border-radius:12px;
+    background:rgba(91,140,255,0.12); display:flex; align-items:center;
+    justify-content:center; font-size:22px; flex-shrink:0; }
+  .job .info { flex:1; min-width:0; }
+  .job .jname { font-size:14px; font-weight:800; }
+  .job .jmeta { font-size:11px; color:#8892b0; margin-top:3px; }
+  .job .rankRow { display:flex; justify-content:space-between; align-items:center;
+    padding:6px 0; border-bottom:1px solid rgba(91,140,255,0.08); font-size:11.5px; }
+  .job .rankRow:last-child { border-bottom:none; }
+  .btn { background:linear-gradient(135deg,#5b8cff,#3b6ce0); border:none; color:#fff;
+    font-size:12px; font-weight:800; padding:10px 14px; border-radius:10px;
+    cursor:pointer; transition:transform .1s; white-space:nowrap; }
+  .btn:active { transform:scale(0.92); }
+  .btn:disabled { background:#2a3450; color:#5a6688; cursor:not-allowed; }
+  .btn.owned { background:rgba(74,222,128,0.18); color:#4ade80; }
+  .btn.red { background:linear-gradient(135deg,#ff5b5b,#e03b3b); }
+  .btn.green { background:linear-gradient(135deg,#4ade80,#22c55e); color:#052e16; }
+  .btn.gold { background:linear-gradient(135deg,#fbbf24,#f59e0b); color:#451a03; }
+  .stat { display:flex; justify-content:space-between; padding:14px 16px;
+    background:#121a2e; border-radius:14px; margin-bottom:8px; font-size:14px; }
+  .stat .k { color:#8892b0; }
+  .stat .v { font-weight:700; }
+  .v.green { color:#4ade80; } .v.yellow { color:#ffcc00; }
+  .v.blue { color:#5b8cff; } .v.pink { color:#f472b6; }
+  .v.red { color:#ff6b6b; }
+  .backRow { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .backBtn { background:rgba(91,140,255,0.12); border:1px solid rgba(91,140,255,0.25);
+    color:#8fb0ff; font-size:13px; font-weight:700; padding:8px 14px; border-radius:12px;
+    cursor:pointer; transition:transform .1s; }
+  .backBtn:active { transform:scale(0.93); }
+  .pageTitle { font-size:20px; font-weight:800; margin-left:4px; }
+  .countdown { background:linear-gradient(135deg,#2a1b3d,#1a1230);
+    border:1px solid rgba(168,85,247,0.25); border-radius:18px;
+    padding:18px; margin-bottom:16px; text-align:center; }
+  .countdown .cd-label { font-size:11px; color:#b794f6; letter-spacing:1.5px; text-transform:uppercase; }
+  .countdown .cd-time { font-size:26px; font-weight:900; margin-top:6px; color:#e9d5ff;
+    font-variant-numeric:tabular-nums; }
+  .countdown .cd-sub { font-size:11px; color:#8892b0; margin-top:4px; }
+  #nav { position:absolute; bottom:0; left:0; right:0; height:72px;
+    background:rgba(10,14,26,0.95); backdrop-filter:blur(12px);
+    border-top:1px solid rgba(91,140,255,0.12); display:flex; }
+  .navItem { flex:1; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:3px; cursor:pointer; color:#5a6688;
+    font-size:10px; font-weight:600; transition:color .2s; }
+  .navItem .nIco { font-size:20px; }
+  .navItem.active { color:#5b8cff; }
+  #toast { position:absolute; bottom:90px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:rgba(20,30,55,0.98); border:1px solid rgba(91,140,255,0.35);
+    padding:12px 20px; border-radius:14px; font-size:13px; font-weight:600;
+    opacity:0; pointer-events:none; transition:all .3s; z-index:50;
+    max-width:85%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.5); }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  #toast.good { border-color:rgba(74,222,128,0.5); color:#4ade80; }
+  #toast.bad { border-color:rgba(255,80,80,0.5); color:#ff6b6b; }
+  #loginScreen { position:absolute; inset:0; background:#080b14; z-index:200;
+    display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; }
+  #loginScreen h1 { font-size:28px; margin-bottom:6px; }
+  #loginScreen h1 span { color:#5b8cff; }
+  #loginScreen p { color:#8892b0; font-size:13px; margin-bottom:30px; text-align:center; }
+  #loginScreen input { width:100%; max-width:320px; padding:16px; border-radius:14px;
+    background:#121a2e; border:1px solid rgba(91,140,255,0.3); color:#fff;
+    font-size:16px; margin-bottom:12px; outline:none; text-align:center; }
+  #loginScreen input:focus { border-color:#5b8cff; }
+  #loginScreen button { width:100%; max-width:320px; padding:16px; border-radius:14px;
+    background:linear-gradient(135deg,#5b8cff,#3b6ce0); border:none; color:#fff;
+    font-size:16px; font-weight:800; cursor:pointer; }
+  #loginScreen button:active { transform:scale(0.97); }
+  .chatList { display:flex; flex-direction:column; gap:8px; padding-bottom:70px; }
+  .msg { background:#121a2e; border-radius:14px; padding:10px 14px; }
+  .msg .u { font-size:11px; color:#5b8cff; font-weight:700; margin-bottom:3px; }
+  .msg .t { font-size:13px; word-break:break-word; }
+  .chatBar { position:absolute; bottom:72px; left:0; right:0; padding:10px 14px;
+    background:rgba(10,14,26,0.98); border-top:1px solid rgba(91,140,255,0.15);
+    display:flex; gap:8px; }
+  .chatBar input { flex:1; padding:12px; border-radius:12px; background:#121a2e;
+    border:1px solid rgba(91,140,255,0.2); color:#fff; font-size:14px; outline:none; }
+  .chatBar button { padding:0 18px; border-radius:12px; background:#5b8cff;
+    border:none; color:#fff; font-weight:800; cursor:pointer; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:10px;
+    font-weight:700; margin-left:6px; }
+  .badge.green { background:rgba(74,222,128,0.2); color:#4ade80; }
+  .badge.yellow { background:rgba(255,204,0,0.2); color:#ffcc00; }
+  .badge.red { background:rgba(255,80,80,0.2); color:#ff6b6b; }
+  .badge.blue { background:rgba(91,140,255,0.2); color:#8fb0ff; }
+  .badge.purple { background:rgba(168,85,247,0.2); color:#c084fc; }
+  .clickBtn { width:100%; padding:24px; border-radius:20px;
+    background:linear-gradient(135deg,#fbbf24,#f59e0b);
+    border:none; color:#451a03; font-size:18px; font-weight:900;
+    cursor:pointer; margin-bottom:16px;
+    box-shadow:0 8px 24px rgba(251,191,36,0.3); transition:transform .1s; }
+  .clickBtn:active { transform:scale(0.96); }
+  .clickBtn:disabled { background:#2a3450; color:#5a6688; box-shadow:none; }
+  .stock { background:#121a2e; border:1px solid rgba(91,140,255,0.12);
+    border-radius:16px; padding:14px; margin-bottom:10px; }
+  .stock .sTop { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .stock .sName { font-size:14px; font-weight:800; }
+  .stock .sPrice { font-size:16px; font-weight:900; color:#ffcc00; }
+  .stock .sChange { font-size:11px; font-weight:700; }
+  .sChange.up { color:#4ade80; } .sChange.down { color:#ff6b6b; }
+  .stock .sRow { display:flex; gap:6px; align-items:center; }
+  .stock input { width:70px; padding:8px; border-radius:8px; background:#0a0e1a;
+    border:1px solid rgba(91,140,255,0.2); color:#fff; font-size:12px; text-align:center; outline:none; }
+  .stock .sInfo { font-size:11px; color:#8892b0; flex:1; }
+  .stock .sInfo b { color:#8fb0ff; }
+  .newsItem { background:#121a2e; border-left:3px solid #5b8cff;
+    border-radius:12px; padding:14px; margin-bottom:10px; }
+  .newsItem .nt { font-size:14px; font-weight:800; margin-bottom:6px; }
+  .newsItem .nb { font-size:12px; color:#b0b8d0; line-height:1.5; white-space:pre-wrap; }
+  .newsItem .nd { font-size:10px; color:#5a6688; margin-top:8px; }
+  .careerCard { background:linear-gradient(135deg,#1e2a4a,#12192e);
+    border:1px solid rgba(91,140,255,0.3); border-radius:18px; padding:18px; margin-bottom:14px; }
+  .careerCard .cTop { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  .careerCard .cTitle { font-size:17px; font-weight:900; }
+  .careerCard .cCompany { font-size:12px; color:#8892b0; margin-top:3px; }
+  .careerCard .cLevel { font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px;
+    background:rgba(74,222,128,0.2); color:#4ade80; }
+  .careerCard .cSalary { font-size:22px; font-weight:900; color:#4ade80; margin-top:8px; }
+  .careerCard .cSalary small { font-size:12px; color:#8892b0; font-weight:400; }
+  .task { background:#121a2e; border:1px solid rgba(91,140,255,0.15);
+    border-radius:14px; padding:14px; margin-bottom:8px;
+    display:flex; align-items:center; gap:12px; }
+  .task.done { background:linear-gradient(135deg,#14281f,#0f1b16); border-color:#4ade80; }
+  .task .tIco { font-size:24px; flex-shrink:0; }
+  .task .tInfo { flex:1; }
+  .task .tName { font-size:13px; font-weight:700; }
+  .task .tReward { font-size:11px; color:#4ade80; font-weight:700; margin-top:3px; }
+  .achieveGrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .achCard { background:#121a2e; border:1px solid rgba(91,140,255,0.12);
+    border-radius:14px; padding:12px; text-align:center; }
+  .achCard.unlocked { background:linear-gradient(135deg,#14281f,#0f1b16); border-color:#4ade80; }
+  .achCard .aIcon { font-size:28px; margin-bottom:6px; }
+  .achCard .aName { font-size:12px; font-weight:800; }
+  .achCard .aDesc { font-size:10px; color:#8892b0; margin-top:3px; }
+  .achCard .aReward { font-size:10px; color:#4ade80; font-weight:700; margin-top:5px; }
+  .appGrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .appTile { background:linear-gradient(145deg,#1a2340,#0f1626);
+    border:1px solid rgba(91,140,255,0.2); border-radius:16px; padding:16px;
+    text-align:center; cursor:pointer; transition:transform .12s; }
+  .appTile:active { transform:scale(0.94); }
+  .appTile .apIco { font-size:32px; margin-bottom:8px; }
+  .appTile .apName { font-size:12px; font-weight:700; }
+  .pvpRow { display:flex; justify-content:space-between; align-items:center;
+    padding:12px 14px; background:#121a2e; border-radius:12px; margin-bottom:8px; }
+  .pvpRow .pName { font-size:13px; font-weight:700; }
+  .pvpRow .pMoney { font-size:11px; color:#8892b0; }
+  input, textarea { font-family:inherit; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="loginScreen">
+    <h1>Your <span>VirLife</span></h1>
+    <p>Gib deinen Namen ein um zu starten</p>
+    <input id="loginName" maxlength="16" placeholder="Dein Name" autocomplete="off">
+    <button onclick="login()">Spielen</button>
+    <p style="margin-top:20px; font-size:11px;" id="loginMsg"></p>
+  </div>
+
+  <div class="topbar">
+    <div class="title">Your <span>VirLife</span></div>
+    <div class="pill" id="hudDay">📅 Tag 1</div>
+  </div>
+
+  <div id="content">
+
+    <div class="screen active" id="scr-home">
+      <div class="hero">
+        <div class="label">Dein Vermögen</div>
+        <div class="money" id="homeMoney">0 <small>€</small></div>
+      </div>
+      <button class="clickBtn" id="clickBtn" onclick="doClick()">⚡ ARBEITEN KLICKEN</button>
+      <div id="dailyRewardBox"></div>
+      <div class="section-title">Mein Job</div>
+      <div id="homeCareer"></div>
+      <div class="section-title">Menü</div>
+      <div class="grid">
+        <div class="tile" onclick="go('scr-myjob')"><div class="ico">💼</div><div><div class="name">Mein Job</div><div class="sub">Aufgaben</div></div></div>
+        <div class="tile" onclick="go('scr-jobs')"><div class="ico">🏢</div><div><div class="name">Jobs</div><div class="sub">Karriere</div></div></div>
+        <div class="tile" onclick="go('scr-edu')"><div class="ico">🎓</div><div><div class="name">Ausbildung</div><div class="sub">Auto durch Job</div></div></div>
+        <div class="tile" onclick="go('scr-apps')"><div class="ico">📱</div><div><div class="name">Apps</div><div class="sub">Job-Apps</div></div></div>
+        <div class="tile" onclick="go('scr-social')"><div class="ico">🌟</div><div><div class="name">Social</div><div class="sub">Follower</div></div></div>
+        <div class="tile" onclick="go('scr-owned')"><div class="ico">🛍️</div><div><div class="name">Besitz</div><div class="sub">Kaufen</div></div></div>
+        <div class="tile" onclick="go('scr-stocks')"><div class="ico">📈</div><div><div class="name">Aktien</div><div class="sub">Handel</div></div></div>
+        <div class="tile" onclick="go('scr-casino')"><div class="ico">🎰</div><div><div class="name">Casino</div><div class="sub">Glücksspiel</div></div></div>
+        <div class="tile" onclick="go('scr-biz')"><div class="ico">🏭</div><div><div class="name">Businesses</div><div class="sub">Passiv</div></div></div>
+        <div class="tile" onclick="go('scr-pvp')"><div class="ico">⚔️</div><div><div class="name">PvP</div><div class="sub">Angreifen</div></div></div>
+        <div class="tile" onclick="go('scr-mayor'); goMayor();"><div class="ico">🏛️</div><div><div class="name">Rathaus</div><div class="sub">Wahlen</div></div></div>
+        <div class="tile" onclick="go('scr-ach')"><div class="ico">🏆</div><div><div class="name">Erfolge</div><div class="sub">Achievements</div></div></div>
+        <div class="tile" onclick="go('scr-leaderboard')"><div class="ico">📊</div><div><div class="name">Leaderboard</div><div class="sub">Top</div></div></div>
+        <div class="tile" onclick="go('scr-chat')"><div class="ico">💬</div><div><div class="name">Chat</div><div class="sub">Global</div></div></div>
+        <div class="tile" onclick="go('scr-news')"><div class="ico">📰</div><div><div class="name">News</div><div class="sub">Updates</div></div></div>
+      </div>
+      <div class="section-title">Nächster Monatslohn</div>
+      <div class="countdown">
+        <div class="cd-label">Auszahlung in</div>
+        <div class="cd-time" id="homeCountdown">--:--:--</div>
+        <div class="cd-sub" id="homeNextWage">Monatslohn: 0 €</div>
+      </div>
+    </div>
+
+    <div class="screen" id="scr-myjob">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Mein Job</div>
+        <button class="backBtn" style="margin-left:auto;" onclick="refreshMyJob()">🔄 Check</button>
+      </div>
+      <div id="myJobInfo"></div>
+      <div class="section-title">Aufgaben heute</div>
+      <div id="myTaskList"></div>
+      <div class="stat" style="margin-top:14px;"><span class="k">✅ Erledigt heute</span><span class="v green" id="myTaskDone">0 / 0</span></div>
+      <div class="stat"><span class="k">💰 Bonus heute</span><span class="v yellow" id="myTaskWage">0 €</span></div>
+      <div class="stat"><span class="k">⚠️ Status</span><span class="v" id="myTaskStatus">–</span></div>
+    </div>
+
+    <div class="screen" id="scr-jobs">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Jobs</div>
+      </div>
+      <div id="jobList"></div>
+    </div>
+
+    <div class="screen" id="scr-edu">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Ausbildung</div>
+      </div>
+      <div class="stat"><span class="k">ℹ️ Info</span><span class="v blue">Automatisch durch Job-Rang</span></div>
+      <div class="stat"><span class="k">💡 Bonus</span><span class="v green">+5% Lohn pro Stufe</span></div>
+      <div id="eduList"></div>
+    </div>
+
+    <div class="screen" id="scr-apps">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Apps</div>
+      </div>
+      <div id="appsList"></div>
+    </div>
+
+    <div class="screen" id="scr-social">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Social Media</div>
+      </div>
+      <div class="stat"><span class="k">📱 Follower</span><span class="v pink" id="smFollowers">0</span></div>
+      <div class="section-title">Aktionen</div>
+      <div id="socialActions"></div>
+    </div>
+
+    <div class="screen" id="scr-owned">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Besitz</div>
+      </div>
+      <div id="ownedList"></div>
+    </div>
+
+    <div class="screen" id="scr-stocks">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Aktienmarkt</div>
+      </div>
+      <div id="stockList"></div>
+    </div>
+
+    <div class="screen" id="scr-casino">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Casino</div>
+      </div>
+      <div class="stat"><span class="k">💶 Dein Geld</span><span class="v green" id="caMoney">0 €</span></div>
+      <div class="section-title">Einsatz</div>
+      <div class="stock">
+        <div class="sRow">
+          <input id="caBet" type="number" value="100" min="10" step="10">
+          <button class="btn gold" onclick="playCasino(2)">2x</button>
+          <button class="btn green" onclick="playCasino(3)">3x</button>
+          <button class="btn" onclick="playCasino(5)">5x</button>
+        </div>
+        <div style="font-size:11px; color:#8892b0; margin-top:8px;">Chancen: 2x → 48% · 3x → 30% · 5x → 15%</div>
+      </div>
+      <div id="casinoResult"></div>
+    </div>
+
+    <div class="screen" id="scr-biz">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Businesses</div>
+      </div>
+      <div class="stat"><span class="k">💼 Deine Businesses</span><span class="v blue" id="bizOwned">0</span></div>
+      <div class="stat"><span class="k">💰 Passiv / Monat</span><span class="v green" id="bizPassive">0 €</span></div>
+      <div id="bizList"></div>
+    </div>
+
+    <div class="screen" id="scr-pvp">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">PvP Arena</div>
+      </div>
+      <div class="stat"><span class="k">🛡️ Schild</span><span class="v blue" id="pvpShield">Kein Schild</span></div>
+      <button class="btn green" style="width:100%; padding:14px; margin-bottom:14px;" onclick="buyShield()">🛡️ Schild (5.000 € / 24h)</button>
+      <div class="section-title">Spieler:innen angreifen</div>
+      <div id="pvpList"></div>
+    </div>
+
+    <div class="screen" id="scr-mayor">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">🏛️ Rathaus</div>
+        <button class="backBtn" style="margin-left:auto;" onclick="goMayor()">🔄</button>
+      </div>
+      <div id="electionInfo"></div>
+      <div id="mayorInfo"></div>
+      <div id="mayorActions"></div>
+      <div id="taxList"></div>
+    </div>
+
+    <div class="screen" id="scr-ach">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Achievements</div>
+      </div>
+      <div class="stat"><span class="k">🏆 Freigeschaltet</span><span class="v green" id="achCount">0 / 0</span></div>
+      <div class="achieveGrid" id="achList" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="screen" id="scr-leaderboard">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Leaderboard</div>
+      </div>
+      <div id="lbList"></div>
+    </div>
+
+    <div class="screen" id="scr-chat" style="padding-bottom:130px;">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">Globaler Chat</div>
+      </div>
+      <div class="chatList" id="chatList"></div>
+    </div>
+
+    <div class="screen" id="scr-news">
+      <div class="backRow">
+        <button class="backBtn" onclick="go('scr-home')">← Zurück</button>
+        <div class="pageTitle">News</div>
+      </div>
+      <div id="newsList"></div>
+    </div>
+
+  </div>
+
+  <div class="chatBar" id="chatBar" style="display:none;">
+    <input id="chatInput" maxlength="120" placeholder="Nachricht..." autocomplete="off">
+    <button onclick="sendChat()">➤</button>
+  </div>
+
+  <div id="nav">
+    <div class="navItem active" data-scr="scr-home" onclick="go('scr-home')"><div class="nIco">🏠</div><div>Home</div></div>
+    <div class="navItem" data-scr="scr-myjob" onclick="go('scr-myjob')"><div class="nIco">💼</div><div>Mein Job</div></div>
+    <div class="navItem" data-scr="scr-jobs" onclick="go('scr-jobs')"><div class="nIco">🏢</div><div>Jobs</div></div>
+    <div class="navItem" data-scr="scr-mayor" onclick="go('scr-mayor'); goMayor();"><div class="nIco">🏛️</div><div>Rathaus</div></div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+const SUPABASE_URL  = 'https://pclaxcevihwysokkeqex.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_vtD4LfBOZkC74i45qaMqVA_rN_4Cgh3';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// Monatsende um Mitternacht
+function msUntilMonthEnd() {
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0);
+  return end.getTime() - now.getTime();
+}
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+}
+function monthKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+let username = null;
+let state = null;
+
+const EDUCATION = [
+  { id:1, icon:'📗', name:'Grundschule',  desc:'Ab Job-Rang 1' },
+  { id:2, icon:'📘', name:'Hauptschule',  desc:'Ab Job-Rang 2' },
+  { id:3, icon:'📙', name:'Realschule',   desc:'Ab Job-Rang 3' },
+  { id:4, icon:'📕', name:'Abitur',       desc:'Ab Job-Rang 4' },
+  { id:5, icon:'🎓', name:'Bachelor',     desc:'Ab Job-Rang 5' },
+  { id:6, icon:'🏛️', name:'Master',       desc:'Ab Job-Rang 6' },
+  { id:7, icon:'🎖️', name:'Doktor',       desc:'Ab Job-Rang 7' },
+  { id:8, icon:'👑', name:'Professor',    desc:'Ab Job-Rang 8' },
+  { id:9, icon:'🌟', name:'Nobelpreis',   desc:'Ab Job-Rang 9' },
+  { id:10,icon:'💫', name:'Genie-Level',  desc:'Ab Job-Rang 10' },
+];
+
+const CAREERS = {
+  // === EINZELHANDEL & GASTRO ===
+  supermarkt:{icon:'🛒',name:'Supermarkt',ranks:[
+    {t:'Kassierer:in',w:60},{t:'Schichtleiter:in',w:180},{t:'Abteilungsleiter:in',w:450},
+    {t:'Filialleiter:in',w:1200},{t:'Regionalleiter:in',w:3500},{t:'CEO',w:10000}]},
+  baeckerei:{icon:'🥐',name:'Bäckerei',ranks:[
+    {t:'Verkäufer:in',w:50},{t:'Bäcker:in',w:150},{t:'Filialleiter:in',w:400},
+    {t:'Betriebsleiter:in',w:1000},{t:'CEO',w:3000}]},
+  restaurant:{icon:'🍽️',name:'Restaurant',ranks:[
+    {t:'Kellner:in',w:45},{t:'Koch/Köchin',w:140},{t:'Sous-Chef:in',w:400},
+    {t:'Chefköchin',w:1100},{t:'Restaurantleiter:in',w:3000}]},
+  fastfood:{icon:'🍔',name:'Fast Food',ranks:[
+    {t:'Crew-Mitglied',w:40},{t:'Schichtleiter:in',w:120},{t:'Store Manager:in',w:350},
+    {t:'Bezirksleiter:in',w:900},{t:'CEO',w:2500}]},
+  cafe:{icon:'☕',name:'Café',ranks:[
+    {t:'Barista',w:45},{t:'Schichtleiter:in',w:130},{t:'Filialleiter:in',w:400},{t:'CEO',w:1500}]},
+  hotel:{icon:'🏨',name:'Hotel',ranks:[
+    {t:'Rezeptionist:in',w:55},{t:'Concierge',w:180},{t:'Abteilungsleiter:in',w:500},{t:'Hoteldirektor:in',w:2000}]},
+
+  // === SICHERHEIT, RECHT & RETTUNG ===
+  polizei:{icon:'👮',name:'Polizeivollzugsdienst',ranks:[
+    {t:'Polizeimeister:in',w:80},{t:'Polizeiobermeister:in',w:130},{t:'Polizeihauptmeister:in',w:180},
+    {t:'Polizeikommissar:in',w:280},{t:'Polizeioberkommissar:in',w:400},{t:'Polizeihauptkommissar:in',w:600},
+    {t:'Erster Polizeihauptkommissar:in',w:900},{t:'Polizeirat:rätin',w:1300},{t:'Polizeioberrat:rätin',w:1800},
+    {t:'Polizeidirektor:in',w:2500},{t:'Leitender Polizeidirektor:in',w:3500},{t:'Polizeipräsident:in',w:5000}]},
+  justizvollzug:{icon:'🔒',name:'Justizvollzugsdienst',ranks:[
+    {t:'Justizvollzugsbeamt:in i.E.',w:70},{t:'Justizvollzugsobersekretär:in',w:130},
+    {t:'Justizvollzugshauptsekretär:in',w:200},{t:'Justizvollzugsamtsinspektor:in',w:300},
+    {t:'Justizvollzugsinspektor:in',w:450},{t:'Justizvollzugsoberinspektor:in',w:650},
+    {t:'Justizvollzugsamtmann:frau',w:900},{t:'Justizvollzugsrat:rätin',w:1300},
+    {t:'Justizvollzugsoberrat:rätin',w:1800},{t:'Justizvollzugsdirektor:in',w:2500},
+    {t:'Leitender Justizvollzugsdirektor:in',w:3500},{t:'Anstaltsleiter:in',w:5000}]},
+  feuerwehr:{icon:'🚒',name:'Feuerwehr',ranks:[
+    {t:'Feuerwehrmann:frau',w:75},{t:'Oberfeuerwehrmann:frau',w:110},{t:'Hauptfeuerwehrmann:frau',w:150},
+    {t:'Löschmeister:in',w:200},{t:'Oberlöschmeister:in',w:260},{t:'Hauptlöschmeister:in',w:330},
+    {t:'Brandmeister:in',w:420},{t:'Oberbrandmeister:in',w:540},{t:'Hauptbrandmeister:in',w:680},
+    {t:'Brandinspektor:in',w:850},{t:'Brandoberinspektor:in',w:1100},{t:'Brandamtmann:frau',w:1400},
+    {t:'Brandamtsrat:rätin',w:1800},{t:'Brandoberamtsrat:rätin',w:2300},{t:'Brandrat:rätin',w:3000},
+    {t:'Brandoberrat:rätin',w:4000},{t:'Branddirektor:in',w:5500},{t:'Leitender Branddirektor:in',w:7500},
+    {t:'Landesbranddirektor:in',w:10000}]},
+  rettungsdienst:{icon:'🚑',name:'Rettungsdienst',ranks:[
+    {t:'Rettungssanitäter:in',w:60},{t:'Notfallsanitäter:in',w:180},{t:'Rettungsassistent:in',w:500},{t:'Rettungsleiter:in',w:1500}]},
+  security:{icon:'🛡️',name:'Sicherheitsdienst',ranks:[
+    {t:'Sicherheitsmitarbeiter:in',w:50},{t:'Objektleiter:in',w:180},{t:'Sicherheitschef:in',w:600},{t:'CEO',w:2000}]},
+  bundeswehr:{icon:'🎖️',name:'Bundeswehr',ranks:[
+    {t:'Rekrut:in',w:50},{t:'Gefreite:r',w:70},{t:'Obergefreite:r',w:90},{t:'Hauptgefreite:r',w:110},
+    {t:'Stabsgefreite:r',w:140},{t:'Oberstabsgefreite:r',w:180},{t:'Unteroffizier:in',w:250},
+    {t:'Stabsunteroffizier:in',w:320},{t:'Feldwebel:in',w:420},{t:'Oberfeldwebel:in',w:550},
+    {t:'Hauptfeldwebel:in',w:700},{t:'Stabsfeldwebel:in',w:900},{t:'Oberstabsfeldwebel:in',w:1100},
+    {t:'Leutnant:in',w:1400},{t:'Oberleutnant:in',w:1800},{t:'Hauptmann:frau',w:2400},
+    {t:'Major:in',w:3200},{t:'Oberstleutnant:in',w:4200},{t:'Oberst:in',w:5500},
+    {t:'Brigadegeneral:in',w:7000},{t:'Generalmajor:in',w:9000},{t:'Generalleutnant:in',w:11000},
+    {t:'General:in',w:15000}]},
+  justiz:{icon:'🔨',name:'Justiz',ranks:[
+    {t:'Justizfachangestellte:r',w:70},{t:'Justizobersekretär:in',w:130},{t:'Justizhauptsekretär:in',w:200},
+    {t:'Justizinspektor:in',w:300},{t:'Justizoberinspektor:in',w:450},{t:'Justizamtmann:frau',w:650},
+    {t:'Justizamtsrat:rätin',w:900},{t:'Justizoberamtsrat:rätin',w:1300},{t:'Richter:in am Amtsgericht',w:2000},
+    {t:'Richter:in am Landgericht',w:3000},{t:'Richter:in am Oberlandesgericht',w:4500},
+    {t:'Richter:in am Bundesgerichtshof',w:6500},{t:'Präsident:in des Gerichts',w:10000}]},
+  anwaltskanzlei:{icon:'⚖️',name:'Rechtsanwaltskanzlei',ranks:[
+    {t:'Referendar:in',w:50},{t:'Rechtsanwält:in',w:500},{t:'Partner:in',w:2000},{t:'Senior Partner:in',w:6000}]},
+  zoll:{icon:'🛃',name:'Zoll',ranks:[
+    {t:'Zollbeamt:in',w:75},{t:'Zollsekretär:in',w:220},{t:'Zollrät:in',w:700},{t:'Zolldirektor:in',w:2500}]},
+
+  // === GESUNDHEIT ===
+  krankenhaus:{icon:'🏥',name:'Krankenhaus',ranks:[
+    {t:'Pflegefachfrau/-mann',w:70},{t:'Examinierte Pflegefachkraft',w:120},{t:'Stationsleitung',w:220},
+    {t:'Pflegedienstleitung',w:400},{t:'Assistenzärzt:in',w:500},{t:'Fachärzt:in',w:900},
+    {t:'Oberärzt:in',w:1400},{t:'Leitende:r Oberärzt:in',w:2000},{t:'Chefärzt:in',w:3000},
+    {t:'Ärztliche:r Direktor:in',w:4500},{t:'Klinikdirektor:in',w:6000}]},
+  zahnarzt:{icon:'🦷',name:'Zahnarztpraxis',ranks:[
+    {t:'Zahnmedizinische:r Fachangestellte:r',w:60},{t:'Zahnärzt:in',w:400},{t:'Oberärzt:in',w:1000},{t:'Praxisleiter:in',w:2500}]},
+  apotheke:{icon:'💊',name:'Apotheke',ranks:[
+    {t:'Pharmazeutisch-kaufmännische:r Angestellte:r',w:55},{t:'Apotheker:in',w:300},{t:'Filialleiter:in',w:800},{t:'CEO',w:2500}]},
+  psychiatrie:{icon:'🧠',name:'Psychiatrie',ranks:[
+    {t:'Pfleger:in',w:65},{t:'Therapeut:in',w:220},{t:'Psycholog:in',w:600},
+    {t:'Chefärzt:in',w:1800},{t:'Direktor:in',w:5000}]},
+  tierarzt:{icon:'🐾',name:'Tierarztpraxis',ranks:[
+    {t:'Tiermedizinische:r Fachangestellte:r',w:50},{t:'Tierärzt:in',w:350},{t:'Spezialist:in',w:900},{t:'Praxisleiter:in',w:2200}]},
+  pflegedienst:{icon:'🩺',name:'Pflegedienst',ranks:[
+    {t:'Pflegehilfskraft',w:45},{t:'Pflegefachkraft',w:180},{t:'Wohnbereichsleitung',w:500},{t:'Pflegedirektor:in',w:1800}]},
+
+  // === WIRTSCHAFT & BÜRO ===
+  bank:{icon:'🏦',name:'Bank',ranks:[
+    {t:'Bankkaufmann:frau',w:90},{t:'Kundenberater:in',w:180},{t:'Kreditsachbearbeiter:in',w:280},
+    {t:'Filialleiter:in',w:800},{t:'Bereichsleiter:in',w:1500},{t:'Direktor:in Privatkunden',w:2500},
+    {t:'Direktor:in Firmenkunden',w:4000},{t:'Vorstandsmitglied',w:6000},{t:'Vorstandsvorsitzende:r',w:8000},
+    {t:'CEO',w:12000}]},
+  versicherung:{icon:'📋',name:'Versicherung',ranks:[
+    {t:'Sachbearbeiter:in',w:70},{t:'Berater:in',w:220},{t:'Teamleiter:in',w:600},
+    {t:'Direktor:in',w:1800},{t:'CEO',w:5000}]},
+  steuerberatung:{icon:'🧾',name:'Steuerberatung',ranks:[
+    {t:'Steuerfachangestellte:r',w:70},{t:'Steuerberater:in',w:400},{t:'Partner:in',w:1500},{t:'CEO',w:4500}]},
+  immobilien:{icon:'🏘️',name:'Immobilien',ranks:[
+    {t:'Immobilienmakler:in',w:100},{t:'Senior-Makler:in',w:350},{t:'Teamleiter:in',w:1000},{t:'CEO',w:3500}]},
+  buchhaltung:{icon:'📊',name:'Buchhaltung',ranks:[
+    {t:'Buchhalter:in',w:75},{t:'Senior Accountant',w:240},{t:'Leiter:in',w:700},{t:'CFO',w:3000}]},
+  beratung:{icon:'💼',name:'Unternehmensberatung',ranks:[
+    {t:'Junior Consultant',w:100},{t:'Consultant',w:350},{t:'Senior Consultant',w:1000},
+    {t:'Partner:in',w:3000},{t:'CEO',w:8000}]},
+  investment:{icon:'📈',name:'Investmentfonds',ranks:[
+    {t:'Analyst:in',w:150},{t:'Portfoliomanager:in',w:500},{t:'Senior Fondsmanager:in',w:1800},{t:'Investmentdirektor:in',w:6000}]},
+
+  // === TECHNIK & IT ===
+  softwarefirma:{icon:'💻',name:'Softwareunternehmen',ranks:[
+    {t:'Praktikant:in',w:50},{t:'Junior Developer',w:200},{t:'Senior Developer',w:600},
+    {t:'Team Lead',w:1500},{t:'CTO',w:5000}]},
+  itsupport:{icon:'🖥️',name:'IT-Support',ranks:[
+    {t:'Helpdesk-Mitarbeiter:in',w:55},{t:'Systemadministrator:in',w:200},{t:'IT-Leiter:in',w:700},{t:'CIO',w:2500}]},
+  gamestudio:{icon:'🎮',name:'Spieleentwicklung',ranks:[
+    {t:'QA-Tester:in',w:40},{t:'Game Designer:in',w:180},{t:'Senior Developer',w:600},
+    {t:'Producer:in',w:1800},{t:'CEO',w:6000}]},
+  kifirma:{icon:'🤖',name:'KI-Unternehmen',ranks:[
+    {t:'Data Analyst',w:120},{t:'ML Engineer',w:500},{t:'KI-Forscher:in',w:1500},{t:'CTO',w:6000}]},
+  webagentur:{icon:'🌐',name:'Webagentur',ranks:[
+    {t:'Junior Designer:in',w:40},{t:'Designer:in',w:200},{t:'Art Director',w:800},{t:'CEO',w:3000}]},
+  cybersecurity:{icon:'🔐',name:'Cybersecurity',ranks:[
+    {t:'Security Analyst',w:200},{t:'Penetration Tester',w:600},{t:'Security Engineer',w:1500},{t:'CISO',w:6000}]},
+
+  // === BILDUNG ===
+  schule:{icon:'🏫',name:'Schule',ranks:[
+    {t:'Referendar:in',w:50},{t:'Studienrät:in',w:150},{t:'Oberstudienrät:in',w:400},
+    {t:'Studiendirektor:in',w:800},{t:'Oberstudiendirektor:in',w:1200},{t:'Schulleiter:in',w:2000}]},
+  universitaet:{icon:'🎓',name:'Universität',ranks:[
+    {t:'Wissenschaftliche Hilfskraft',w:60},{t:'Wissenschaftliche:r Mitarbeiter:in',w:180},
+    {t:'Akademische:r Rat:rätin',w:400},{t:'Juniorprofessor:in',w:800},{t:'Professor:in',w:1500},
+    {t:'Lehrstuhlinhaber:in',w:2500},{t:'Dekan:in',w:4000},{t:'Prorektor:in',w:5500},
+    {t:'Rektor:in',w:8000}]},
+  kindergarten:{icon:'🧸',name:'Kindergarten',ranks:[
+    {t:'Kinderpfleger:in',w:45},{t:'Erzieher:in',w:90},{t:'Gruppenleitung',w:180},
+    {t:'Stellv. Kita-Leitung',w:350},{t:'Kita-Leitung',w:600},{t:'Fachbereichsleitung',w:1000}]},
+  nachhilfe:{icon:'📚',name:'Nachhilfeinstitut',ranks:[
+    {t:'Nachhilfelehrer:in',w:40},{t:'Center-Leiter:in',w:200},{t:'CEO',w:800}]},
+
+  // === MEDIEN ===
+  youtube:{icon:'📹',name:'YouTube',ranks:[
+    {t:'Creator:in',w:30},{t:'Partner:in',w:200},{t:'Netzwerk-Manager:in',w:800},{t:'CEO',w:3000}]},
+  filmstudio:{icon:'🎬',name:'Filmproduktion',ranks:[
+    {t:'Produktionsassistent:in',w:40},{t:'Aufnahmeleiter:in',w:200},{t:'Produzent:in',w:1000},
+    {t:'Studio-Chef:in',w:3000}]},
+  musiklabel:{icon:'🎵',name:'Musiklabel',ranks:[
+    {t:'A&R-Assistent:in',w:60},{t:'A&R-Manager:in',w:250},{t:'Label-Manager:in',w:900},{t:'Label-Chef:in',w:3000}]},
+  zeitung:{icon:'📰',name:'Zeitungsverlag',ranks:[
+    {t:'Volontär:in',w:40},{t:'Redakteur:in',w:180},{t:'Chefredakteur:in',w:800},{t:'Verleger:in',w:3000}]},
+  werbeagentur:{icon:'📢',name:'Werbeagentur',ranks:[
+    {t:'Junior Texter:in',w:50},{t:'Texter:in',w:200},{t:'Creative Director',w:800},{t:'CEO',w:3000}]},
+  radio:{icon:'📻',name:'Radio',ranks:[
+    {t:'Radiomoderator:in',w:80},{t:'Redakteur:in',w:250},{t:'Programmdirektor:in',w:1200},{t:'Intendant:in',w:3500}]},
+
+  // === HANDWERK ===
+  bau:{icon:'🏗️',name:'Bauunternehmen',ranks:[
+    {t:'Bauhelfer:in',w:50},{t:'Bauarbeiter:in',w:120},{t:'Vorarbeiter:in',w:350},
+    {t:'Bauleiter:in',w:900},{t:'Bauunternehmer:in',w:3000}]},
+  elektrik:{icon:'⚡',name:'Elektrobetrieb',ranks:[
+    {t:'Auszubildende:r',w:35},{t:'Elektroniker:in',w:150},{t:'Meister:in',w:450},{t:'Betriebsleiter:in',w:1200}]},
+  autowerkstatt:{icon:'🔧',name:'KFZ-Werkstatt',ranks:[
+    {t:'Auszubildende:r',w:35},{t:'KFZ-Mechatroniker:in',w:150},{t:'KFZ-Meister:in',w:500},{t:'Werkstattleiter:in',w:1500}]},
+  fabrik:{icon:'🏭',name:'Produktion',ranks:[
+    {t:'Produktionsmitarbeiter:in',w:60},{t:'Vorarbeiter:in',w:180},{t:'Schichtleiter:in',w:450},
+    {t:'Betriebsleiter:in',w:1200},{t:'CEO',w:4000}]},
+  schreinerei:{icon:'🪚',name:'Schreinerei',ranks:[
+    {t:'Auszubildende:r',w:35},{t:'Schreiner:in',w:140},{t:'Meister:in',w:420},{t:'Werkstattleiter:in',w:1100}]},
+
+  // === TRANSPORT ===
+  fluggesellschaft:{icon:'✈️',name:'Fluggesellschaft',ranks:[
+    {t:'Check-in-Agent:in',w:50},{t:'Flugbegleiter:in',w:180},{t:'Pilot:in',w:800},
+    {t:'Kapitän:in',w:2500},{t:'CEO',w:8000}]},
+  bahn:{icon:'🚆',name:'Deutsche Bahn',ranks:[
+    {t:'Zugbegleiter:in',w:55},{t:'Triebfahrzeugführer:in',w:220},{t:'Fahrdienstleiter:in',w:600},
+    {t:'Betriebsleiter:in',w:1200},{t:'Regionalleiter:in',w:2500},{t:'Vorstandsvorsitzende:r',w:8000}]},
+  spedition:{icon:'🚛',name:'Spedition',ranks:[
+    {t:'Kraftfahrer:in',w:70},{t:'Fernfahrer:in',w:250},{t:'Disponent:in',w:600},
+    {t:'Flottenmanager:in',w:1200},{t:'CEO',w:3000}]},
+  taxi:{icon:'🚕',name:'Taxiunternehmen',ranks:[
+    {t:'Taxifahrer:in',w:50},{t:'Mietwagenunternehmer:in',w:150},{t:'Flottenbesitzer:in',w:800}]},
+  schifffahrt:{icon:'🚢',name:'Schifffahrt',ranks:[
+    {t:'Matrose',w:60},{t:'Bootsmann',w:200},{t:'Kapitän:in',w:900},{t:'Reederei-Chef:in',w:3500}]},
+
+  // === STAAT & VERWALTUNG ===
+  politik:{icon:'🏛️',name:'Politik',ranks:[
+    {t:'Gemeinderatsmitglied',w:200},{t:'Stadtrat:rätin',w:500},{t:'Bürgermeister:in',w:1200},
+    {t:'Oberbürgermeister:in',w:2200},{t:'Landrat:rätin',w:3500},{t:'Regierungspräsident:in',w:5000},
+    {t:'Staatssekretär:in',w:7000},{t:'Minister:in',w:10000},{t:'Ministerpräsident:in',w:14000},
+    {t:'Bundeskanzler:in',w:20000}]},
+  finanzamt:{icon:'💰',name:'Finanzamt',ranks:[
+    {t:'Finanzanwärter:in',w:55},{t:'Steuersekretär:in',w:120},{t:'Steuerobersekretär:in',w:180},
+    {t:'Steuerhauptsekretär:in',w:250},{t:'Steuerinspektor:in',w:350},{t:'Steueroberinspektor:in',w:500},
+    {t:'Steueramtmann:frau',w:700},{t:'Steueramtsrat:rätin',w:1000},{t:'Steueroberamtsrat:rätin',w:1400},
+    {t:'Regierungsdirektor:in',w:2000},{t:'Leitende:r Regierungsdirektor:in',w:3000},
+    {t:'Vorsteher:in des Finanzamts',w:4500}]},
+  rathaus:{icon:'🏤',name:'Rathaus',ranks:[
+    {t:'Verwaltungsangestellte:r',w:70},{t:'Sachgebietsleiter:in',w:250},{t:'Amtsleiter:in',w:700},{t:'Bürgermeister:in',w:1500}]},
+  arbeitsamt:{icon:'💼',name:'Arbeitsamt',ranks:[
+    {t:'Arbeitsvermittler:in',w:70},{t:'Teamleiter:in',w:250},{t:'Geschäftsführer:in',w:1000}]},
+
+  // === LANDWIRTSCHAFT ===
+  bauernhof:{icon:'🚜',name:'Landwirtschaft',ranks:[
+    {t:'Landwirt:in',w:60},{t:'Hofmanager:in',w:250},{t:'Großbauer:Großbäuerin',w:900},{t:'Agrarkonzern-Chef:in',w:3500}]},
+  fischerei:{icon:'🐟',name:'Fischerei',ranks:[
+    {t:'Fischer:in',w:70},{t:'Kapitän:in',w:350},{t:'Flottenmanager:in',w:1200},{t:'Fischereikonzern-Chef:in',w:4000}]},
+  forstwirtschaft:{icon:'🌲',name:'Forstwirtschaft',ranks:[
+    {t:'Forstwirt:in',w:60},{t:'Revierförster:in',w:280},{t:'Forstamtsleiter:in',w:900},{t:'Landesforstchef:in',w:3000}]},
+  gartenbau:{icon:'🌷',name:'Garten- und Landschaftsbau',ranks:[
+    {t:'Landschaftsgärtner:in',w:55},{t:'Vorarbeiter:in',w:200},{t:'Bauleiter:in',w:700},{t:'Firmenchef:in',w:2500}]},
+  weinbau:{icon:'🍷',name:'Weinbau',ranks:[
+    {t:'Winzergehilfe:in',w:50},{t:'Winzer:in',w:250},{t:'Weingut-Manager:in',w:900},{t:'Weingut-Besitzer:in',w:3500}]},
+
+  // === BUSINESS ===
+  startup:{icon:'🚀',name:'Start-up',ranks:[
+    {t:'Gründer:in',w:0},{t:'Seed Funding',w:500},{t:'Series A',w:2000},
+    {t:'Unicorn',w:8000},{t:'IPO',w:25000}]},
+  foodtruck:{icon:'🌮',name:'Gastronomie-Kette',ranks:[
+    {t:'Restaurantbesitzer:in',w:150},{t:'3 Filialen',w:500},{t:'10 Filialen',w:1500},
+    {t:'Kette',w:5000},{t:'Konzern-Chef:in',w:15000}]},
+  onlineshop:{icon:'🛍️',name:'E-Commerce',ranks:[
+    {t:'Online-Händler:in',w:80},{t:'Top-Seller',w:400},{t:'Marke',w:1500},{t:'Konzern',w:6000}]},
+  kryptoboerse:{icon:'₿',name:'Krypto-Börse',ranks:[
+    {t:'Krypto-Trader:in',w:100},{t:'Senior Trader:in',w:600},{t:'Floor Manager:in',w:3000},{t:'CEO',w:15000}]},
+
+  // === SPORT ===
+  esport:{icon:'🎯',name:'E-Sport',ranks:[
+    {t:'Amateurspieler:in',w:50},{t:'Profispieler:in',w:300},{t:'Team-Captain',w:1200},{t:'Team-Owner:in',w:5000}]},
+  fussball:{icon:'⚽',name:'Profifußball',ranks:[
+    {t:'Amateurspieler:in',w:50},{t:'Profispieler:in',w:500},{t:'Star',w:3000},
+    {t:'Cheftrainer:in',w:8000},{t:'Präsident:in',w:25000}]},
+  fitness:{icon:'💪',name:'Fitnessstudio',ranks:[
+    {t:'Fitnesstrainer:in',w:60},{t:'Studioleiter:in',w:300},{t:'Kettenbesitzer:in',w:1500}]},
+  leichtathletik:{icon:'🏃',name:'Profi-Leichtathletik',ranks:[
+    {t:'Regionalathlet:in',w:100},{t:'Nationalathlet:in',w:800},{t:'Olympionik:in',w:3000},{t:'Trainer:in',w:6000}]},
+
+  // === TECHNIK / SPEZIAL ===
+  luftraumfahrt:{icon:'🛰️',name:'Luft- und Raumfahrt',ranks:[
+    {t:'Luftfahrtingenieur:in',w:200},{t:'Testpilot:in',w:600},{t:'Astronaut:in',w:1800},{t:'Missionsleiter:in',w:5000}]},
+  chemie:{icon:'⚗️',name:'Chemieindustrie',ranks:[
+    {t:'Laborant:in',w:80},{t:'Chemikant:in',w:250},{t:'Betriebsingenieur:in',w:700},{t:'Werkleiter:in',w:2500}]},
+  maschinenbau:{icon:'⚙️',name:'Maschinenbau',ranks:[
+    {t:'Industriemechaniker:in',w:80},{t:'Techniker:in',w:250},{t:'Ingenieur:in',w:700},{t:'Konstruktionsleiter:in',w:2500}]},
+  fotostudio:{icon:'📷',name:'Fotostudio',ranks:[
+    {t:'Fotografieassistent:in',w:50},{t:'Fotograf:in',w:250},{t:'Studioleiter:in',w:800},{t:'Agenturchef:in',w:2500}]},
+  volkshochschule:{icon:'📖',name:'Volkshochschule',ranks:[
+    {t:'Kursleiter:in',w:60},{t:'Programmleiter:in',w:250},{t:'Direktor:in',w:1000}]},
+  bibliothek:{icon:'📚',name:'Bibliothek',ranks:[
+    {t:'Bibliotheksassistent:in',w:50},{t:'Bibliothekar:in',w:180},{t:'Bibliotheksleiter:in',w:600}]},
+};
+
+const ACHIEVEMENTS = [
+  {id:'first_euro',icon:'💶',name:'Erster Euro',desc:'Verdiene 1 €',reward:10,check:s=>s.total_earned>=1},
+  {id:'money_100',icon:'💰',name:'Taschengeld',desc:'Habe 100 €',reward:50,check:s=>s.money>=100},
+  {id:'money_1k',icon:'💵',name:'Tausender',desc:'Habe 1.000 €',reward:200,check:s=>s.money>=1000},
+  {id:'money_10k',icon:'💸',name:'Zehntausender',desc:'Habe 10.000 €',reward:1000,check:s=>s.money>=10000},
+  {id:'money_100k',icon:'🏦',name:'Hunderttausend',desc:'Habe 100.000 €',reward:5000,check:s=>s.money>=100000},
+  {id:'money_1m',icon:'💎',name:'Millionär:in',desc:'Habe 1.000.000 €',reward:50000,check:s=>s.money>=1000000},
+  {id:'money_1b',icon:'👑',name:'Milliardär:in',desc:'Habe 1 Mrd €',reward:1000000,check:s=>s.money>=1000000000},
+  {id:'day_30',icon:'🗓️',name:'Ein Monat',desc:'Spiele 30 Tage',reward:5000,check:s=>s.day>=30},
+  {id:'day_365',icon:'📆',name:'Ein Jahr',desc:'Spiele 365 Tage',reward:100000,check:s=>s.day>=365},
+  {id:'edu_5',icon:'🎓',name:'Bachelor',desc:'Ausbildung 5',reward:10000,check:s=>s.education_level>=5},
+  {id:'edu_10',icon:'🎖️',name:'Genie',desc:'Ausbildung 10',reward:500000,check:s=>s.education_level>=10},
+  {id:'job_first',icon:'💼',name:'Erster Job',desc:'Erster Job',reward:100,check:s=>s.current_job_key&&s.current_job_key!=='arbeitslos'},
+  {id:'job_ceo',icon:'🏢',name:'CEO',desc:'Werde CEO',reward:50000,check:s=>{const c=CAREERS[s.current_job_key];return c&&c.ranks[s.current_rank]&&c.ranks[s.current_rank].t==='CEO';}},
+  {id:'job_rank5',icon:'📈',name:'Führungskraft',desc:'Rang 5',reward:25000,check:s=>s.current_rank>=4},
+  {id:'job_rank10',icon:'🏆',name:'Top-Manager:in',desc:'Rang 10',reward:200000,check:s=>s.current_rank>=9},
+  {id:'click_100',icon:'👆',name:'Fleißig',desc:'100 Klicks',reward:500,check:s=>(s.click_count||0)>=100},
+  {id:'follower_1k',icon:'📱',name:'Influencer:in',desc:'1k Follower',reward:1000,check:s=>s.followers>=1000},
+  {id:'follower_100k',icon:'🌟',name:'Star',desc:'100k Follower',reward:50000,check:s=>s.followers>=100000},
+  {id:'biz_5',icon:'🏭',name:'Tycoon',desc:'5 Businesses',reward:100000,check:()=>ownedBiz.size>=5},
+  {id:'mayor',icon:'🏛️',name:'Bürgermeister:in',desc:'Werde Bürgermeister:in',reward:50000,check:()=>mayorData&&mayorData.username===username},
+];
+
+const THINGS = [
+  {id:1,icon:'📱',name:'Smartphone',cost:500},{id:2,icon:'💻',name:'Laptop',cost:2000},
+  {id:3,icon:'🚗',name:'Auto',cost:15000},{id:4,icon:'🏠',name:'Eigenes Haus',cost:100000},
+  {id:5,icon:'🏝️',name:'Insel',cost:1000000},{id:6,icon:'🚀',name:'Rakete',cost:5000000},
+];
+
+const SOCIAL = [
+  {id:1,icon:'📸',name:'Foto posten',cost:0,gain:5,cooldown:30},
+  {id:2,icon:'🎬',name:'Video drehen',cost:50,gain:25,cooldown:120},
+  {id:3,icon:'📢',name:'Werbung kaufen',cost:500,gain:200,cooldown:300},
+  {id:4,icon:'🌟',name:'Influencer-Kampagne',cost:5000,gain:1500,cooldown:900},
+];
+
+const BUSINESSES = [
+  {id:1,icon:'☕',name:'Café',cost:5000,passive:150},{id:2,icon:'🍕',name:'Pizzeria',cost:20000,passive:700},
+  {id:3,icon:'🏪',name:'Supermarkt-Kette',cost:100000,passive:4000},{id:4,icon:'🏭',name:'Fabrik',cost:500000,passive:22000},
+  {id:5,icon:'🌐',name:'Tech-Konzern',cost:2000000,passive:100000},{id:6,icon:'🛰️',name:'Satelliten-Firma',cost:10000000,passive:600000},
+];
+
+const JOB_APPS = {
+  polizei:[{icon:'🚨',name:'Notruf-Zentrale',action:'getMoney',min:50,max:200,cooldown:1800},{icon:'🔍',name:'Fahndung',action:'getMoney',min:80,max:300,cooldown:3600}],
+  krankenhaus:[{icon:'💉',name:'Notaufnahme',action:'getMoney',min:60,max:250,cooldown:1800},{icon:'🩺',name:'OP-Assistenz',action:'getMoney',min:150,max:500,cooldown:3600}],
+  bank:[{icon:'💹',name:'Trading-Desk',action:'getMoney',min:100,max:800,cooldown:2400},{icon:'💳',name:'Kredit-Genehmigung',action:'getMoney',min:80,max:400,cooldown:3600}],
+  softwarefirma:[{icon:'🐛',name:'Bug fixen',action:'getMoney',min:50,max:300,cooldown:1200},{icon:'💻',name:'Feature entwickeln',action:'getMoney',min:150,max:600,cooldown:2400}],
+  youtube:[{icon:'🎥',name:'Video drehen',action:'getMoney',min:30,max:400,cooldown:1800},{icon:'📊',name:'Analytics checken',action:'getFollowers',min:5,max:30,cooldown:1200}],
+  feuerwehr:[{icon:'🔥',name:'Brand löschen',action:'getMoney',min:80,max:350,cooldown:2400},{icon:'🚒',name:'Einsatz fahren',action:'getMoney',min:60,max:250,cooldown:1800}],
+  justiz:[{icon:'⚖️',name:'Verhandlung',action:'getMoney',min:100,max:500,cooldown:3600},{icon:'📜',name:'Urteil verkünden',action:'getMoney',min:150,max:700,cooldown:5400}],
+  politik:[{icon:'🏛️',name:'Rede halten',action:'getMoney',min:200,max:1000,cooldown:3600},{icon:'📜',name:'Gesetz einbringen',action:'getMoney',min:300,max:1500,cooldown:7200}],
+  bauernhof:[{icon:'🌾',name:'Ernte',action:'getMoney',min:40,max:250,cooldown:1800},{icon:'🐄',name:'Vieh füttern',action:'getMoney',min:30,max:180,cooldown:1200}],
+};
+
+const STOCK_IDS = [1,2,3,4,5];
+
+let ownedJobs = new Set();
+let ownedEdu = new Set();
+let ownedThings = new Set();
+let ownedBiz = new Set();
+let myHoldings = {};
+let jobPositions = {};
+let myTodayTasks = [];
+let myTodayDone = new Set();
+let myAchievements = new Set();
+let socialCooldowns = {};
+let appCooldowns = {};
+let stockCache = {};
+
+// Mayor
+let mayorData = { username:null, tax_rate:5, city_treasury:0, tax_collected:0 };
+let currentElection = null;
+let currentCandidates = [];
+let myVote = null;
+let allTaxes = [];
+
+window.login = async function() {
+  const name = document.getElementById('loginName').value.trim();
+  if (!name || name.length < 3) { document.getElementById('loginMsg').textContent = 'Name zu kurz (min. 3 Zeichen)'; return; }
+  document.getElementById('loginMsg').textContent = 'Lade...';
+  username = name;
+
+  const { data: existing, error: eErr } = await supabase.from('players').select('*').eq('username', name).maybeSingle();
+  if (eErr) { document.getElementById('loginMsg').textContent = 'Fehler: ' + eErr.message; return; }
+
+  if (!existing) {
+    const np = { username: name, money:0, day:1, last_day_timestamp: Date.now(), total_earned:0, followers:0,
+      education_level:1, last_click:0, last_stock_update:0, current_job_key:'arbeitslos', current_rank:0,
+      last_daily_claim:'', daily_streak:0, shield_until:0, click_count:0 };
+    const { error } = await supabase.from('players').insert(np);
+    if (error) { document.getElementById('loginMsg').textContent = 'Fehler: ' + error.message; return; }
+    state = np;
+    await supabase.from('player_education').insert({ username, edu_id: 1 });
+  } else {
+    state = existing;
+    if (!state.current_job_key) state.current_job_key = 'arbeitslos';
+    if (!state.current_rank) state.current_rank = 0;
+    if (!state.education_level || state.education_level < 1) state.education_level = 1;
+    if (!state.last_daily_claim) state.last_daily_claim = '';
+    if (!state.daily_streak) state.daily_streak = 0;
+    if (!state.shield_until) state.shield_until = 0;
+    if (!state.click_count) state.click_count = 0;
+  }
+
+  await catchUpMonths();
+  document.getElementById('loginScreen').style.display = 'none';
+  await Promise.all([
+    loadPlayerJobs(), loadPlayerEducation(), loadOwnedThings(),
+    loadBusinesses(), loadStockHoldings(), loadJobPositions(),
+    loadMyJobTasks(), loadMyAchievements(), loadMayor()
+  ]);
+  await updateStockPrices();
+  renderAll();
+  renderDailyReward();
+  checkAchievements();
+  startLoops();
+};
+
+// Nachholen verpasster Monate
+async function catchUpMonths() {
+  let changed = false;
+  const now = Date.now();
+  await loadMayor();
+  const MS_PER_MONTH = 30 * 24 * 60 * 60 * 1000; // ~ 30 Tage = 1 Monat
+  while (now - state.last_day_timestamp >= MS_PER_MONTH) {
+    state.last_day_timestamp += MS_PER_MONTH;
+    state.day += 1;
+    const grossWage = currentJobWage() + bizPassiveTotal();
+    const taxRate = Number(mayorData?.tax_rate || 0) / 100;
+    const tax = Math.floor(grossWage * taxRate);
+    state.money += (grossWage - tax);
+    state.total_earned += grossWage;
+    changed = true;
+  }
+  if (changed) await savePlayer();
+}
+
+function currentJobWage() {
+  if (!state.current_job_key || state.current_job_key === 'arbeitslos') return 0;
+  const c = CAREERS[state.current_job_key];
+  if (!c) return 0;
+  const base = c.ranks[state.current_rank]?.w || 0;
+  const bonus = Math.max(0, (state.education_level - 1) * 0.05);
+  return Math.floor(base * (1 + bonus));
+}
+
+async function savePlayer() {
+  await supabase.from('players').update({
+    money: Math.floor(state.money), day: state.day,
+    last_day_timestamp: state.last_day_timestamp,
+    total_earned: Math.floor(state.total_earned),
+    followers: Math.floor(state.followers),
+    education_level: state.education_level,
+    last_click: state.last_click || 0,
+    last_stock_update: state.last_stock_update || 0,
+    current_job_key: state.current_job_key || 'arbeitslos',
+    current_rank: state.current_rank || 0,
+    last_daily_claim: state.last_daily_claim || '',
+    daily_streak: state.daily_streak || 0,
+    shield_until: state.shield_until || 0,
+    click_count: state.click_count || 0,
+    updated_at: new Date().toISOString()
+  }).eq('username', username);
+}
+
+async function loadPlayerJobs() { const {data} = await supabase.from('player_jobs').select('job_id').eq('username', username); ownedJobs = new Set((data||[]).map(r=>r.job_id)); }
+async function loadPlayerEducation() {
+  const {data} = await supabase.from('player_education').select('edu_id').eq('username', username);
+  ownedEdu = new Set((data||[]).map(r=>r.edu_id));
+  if (!ownedEdu.has(1)) { await supabase.from('player_education').insert({username, edu_id:1}); ownedEdu.add(1); }
+}
+async function loadOwnedThings() { const {data} = await supabase.from('owned_things').select('thing_id').eq('username', username); ownedThings = new Set((data||[]).map(r=>r.thing_id)); }
+async function loadBusinesses() { const {data} = await supabase.from('businesses').select('biz_id').eq('username', username); ownedBiz = new Set((data||[]).map(r=>r.biz_id)); }
+async function loadStockHoldings() {
+  const {data} = await supabase.from('stock_holdings').select('*').eq('username', username);
+  myHoldings = {}; (data||[]).forEach(r => myHoldings[r.stock_id] = r.shares);
+}
+async function loadJobPositions() {
+  const {data} = await supabase.from('job_positions').select('*');
+  jobPositions = {};
+  (data||[]).forEach(p => { if (p.username) jobPositions[p.job_key+'_'+p.rank] = p.username; });
+}
+async function loadMyAchievements() { const {data} = await supabase.from('player_achievements').select('ach_id').eq('username', username); myAchievements = new Set((data||[]).map(r=>r.ach_id)); }
+async function loadMayor() {
+  const {data} = await supabase.from('mayor').select('*').eq('id',1).maybeSingle();
+  if (data) mayorData = data;
+}
+function bizPassiveTotal() {
+  let t = 0;
+  ownedBiz.forEach(id => { const b = BUSINESSES.find(x=>x.id===id); if (b) t += b.passive; });
+  return t;
+}
+
+// ✅ Ausbildung automatisch durch Job-Rang
+async function grantEducationForRank(rank) {
+  const newEduLevel = Math.min(10, rank + 1);
+  if (newEduLevel > state.education_level) {
+    for (let lvl = state.education_level + 1; lvl <= newEduLevel; lvl++) {
+      const { error } = await supabase.from('player_education').insert({ username, edu_id: lvl });
+      if (!error) {
+        ownedEdu.add(lvl);
+        toast(`🎓 ${EDUCATION[lvl-1].name} automatisch erhalten!`, 'good');
+      }
+    }
+    state.education_level = newEduLevel;
+  }
+}
+
+async function loadMyJobTasks() {
+  if (!state.current_job_key || state.current_job_key === 'arbeitslos') { myTodayTasks=[]; myTodayDone=new Set(); return; }
+  const {data: tasks} = await supabase.from('job_tasks').select('*').eq('rank', state.current_rank);
+  const dayKey = todayKey();
+  const seed = (username+dayKey).split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const shuffled = (tasks||[]).slice().sort((a,b)=>((a.id*seed)%1000)-((b.id*seed)%1000)).slice(0,4);
+  myTodayTasks = shuffled;
+  const {data: done} = await supabase.from('my_tasks').select('task_id').eq('username', username).eq('day_key', dayKey);
+  myTodayDone = new Set((done||[]).map(d=>d.task_id));
+}
+
+window.go = function(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.navItem').forEach(n => n.classList.toggle('active', n.dataset.scr === id));
+  document.getElementById('content').scrollTop = 0;
+  document.getElementById('chatBar').style.display = id === 'scr-chat' ? 'flex' : 'none';
+  if (id === 'scr-myjob') loadMyJobTasks().then(renderMyJob);
+  if (id === 'scr-jobs') renderJobs();
+  if (id === 'scr-edu') renderEdu();
+  if (id === 'scr-apps') renderApps();
+  if (id === 'scr-social') renderSocial();
+  if (id === 'scr-owned') renderOwned();
+  if (id === 'scr-stocks') renderStocks();
+  if (id === 'scr-casino') renderCasino();
+  if (id === 'scr-biz') renderBiz();
+  if (id === 'scr-pvp') renderPvp();
+  if (id === 'scr-ach') renderAchievements();
+  if (id === 'scr-news') renderNews();
+  if (id === 'scr-chat') renderChat();
+  if (id === 'scr-leaderboard') renderLeaderboard();
+};
+
+function fmt(n) { return Math.floor(Number(n)).toLocaleString('de-DE'); }
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  clearTimeout(t._to); t._to = setTimeout(()=>t.className='', 2600);
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function formatDuration(ms) {
+  if (ms <= 0) return '0m';
+  const d = Math.floor(ms/86400000);
+  const h = Math.floor((ms%86400000)/3600000);
+  const m = Math.floor((ms%3600000)/60000);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function renderAll() {
+  if (!state) return;
+  document.getElementById('hudDay').textContent = '📅 Monat ' + state.day;
+  document.getElementById('homeMoney').innerHTML = fmt(state.money) + ' <small>€</small>';
+  const totalDaily = currentJobWage() + bizPassiveTotal();
+  document.getElementById('homeNextWage').textContent = 'Monatslohn: ' + fmt(totalDaily) + ' €';
+  renderHomeCareer();
+  updateCountdown();
+  updateClickBtn();
+  renderDailyReward();
+}
+
+function renderHomeCareer() {
+  const el = document.getElementById('homeCareer'); if (!el) return;
+  if (!state.current_job_key || state.current_job_key === 'arbeitslos') {
+    el.innerHTML = `<div class="careerCard"><div class="cTitle">💼 Arbeitslos</div><div class="cCompany">Wähle einen Job im Jobs-Tab</div><div class="cSalary">0 <small>€ / Monat</small></div></div>`;
+    return;
+  }
+  const c = CAREERS[state.current_job_key]; const r = c.ranks[state.current_rank];
+  const nextRank = state.current_rank + 1;
+  const canPromote = nextRank < c.ranks.length && !jobPositions[state.current_job_key+'_'+nextRank];
+  el.innerHTML = `<div class="careerCard">
+    <div class="cTop"><div><div class="cTitle">${c.icon} ${r.t}</div><div class="cCompany">${c.name} · Rang ${state.current_rank+1}/${c.ranks.length}</div></div>
+    ${canPromote ? `<button class="btn gold" onclick="go('scr-myjob')">⬆️ Check!</button>` : ''}</div>
+    <div class="cSalary">${fmt(currentJobWage())} <small>€ / Monat</small></div>
+  </div>`;
+}
+
+function updateCountdown() {
+  if (!state) return;
+  const remaining = msUntilMonthEnd();
+  const d = Math.floor(remaining/86400000);
+  const h = Math.floor((remaining%86400000)/3600000);
+  const m = Math.floor((remaining%3600000)/60000);
+  const s = Math.floor((remaining%60000)/1000);
+  let txt;
+  if (d > 0) txt = `${d}d ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  else txt = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const el = document.getElementById('homeCountdown'); if (el) el.textContent = txt;
+}
+
+const CLICK_CD = 10000;
+window.doClick = async function() {
+  const now = Date.now(); const last = state.last_click || 0;
+  if (now - last < CLICK_CD) return;
+  const bonus = Math.max(1, Math.floor(currentJobWage()/100));
+  const earn = 5 + bonus;
+  state.money += earn; state.total_earned += earn; state.last_click = now;
+  state.click_count = (state.click_count || 0) + 1;
+  await savePlayer();
+  renderAll();
+  checkAchievements();
+  toast('+' + earn + ' € ⚡', 'good');
+};
+function updateClickBtn() {
+  const btn = document.getElementById('clickBtn'); if (!btn || !state) return;
+  const now = Date.now(); const diff = now - (state.last_click || 0);
+  if (diff >= CLICK_CD) {
+    const bonus = Math.max(1, Math.floor(currentJobWage()/100));
+    btn.disabled = false;
+    btn.textContent = '⚡ ARBEITEN (+' + (5 + bonus) + ' €)';
+  } else {
+    btn.disabled = true;
+    btn.textContent = '⏳ Warte ' + Math.ceil((CLICK_CD - diff)/1000) + 's';
+  }
+}
+
+function renderDailyReward() {
+  const el = document.getElementById('dailyRewardBox'); if (!el || !state) return;
+  const today = todayKey();
+  if (state.last_daily_claim === today) { el.innerHTML = ''; return; }
+  const streak = (state.daily_streak || 0) + 1;
+  const reward = Math.min(100 * streak, 5000);
+  el.innerHTML = `<div class="careerCard" style="background:linear-gradient(135deg,#2a1b3d,#1a1230); border-color:#a855f7;">
+    <div class="cTitle">🎁 Tägliche Belohnung</div>
+    <div class="cCompany">Streak: ${streak} Tage</div>
+    <div class="cSalary" style="color:#e9d5ff;">+${fmt(reward)} <small>€</small></div>
+    <button class="btn green" style="width:100%; margin-top:10px;" onclick="claimDaily()">Abholen</button>
+  </div>`;
+}
+window.claimDaily = async function() {
+  const today = todayKey();
+  if (state.last_daily_claim === today) return;
+  const streak = (state.daily_streak || 0) + 1;
+  const reward = Math.min(100 * streak, 5000);
+  state.money += reward; state.total_earned += reward;
+  state.last_daily_claim = today; state.daily_streak = streak;
+  await supabase.from('daily_rewards').insert({ username, day_key: today, amount: reward });
+  await savePlayer();
+  renderAll();
+  toast(`🎁 +${fmt(reward)} € Tagesbonus!`, 'good');
+};
+
+function renderJobs() {
+  const el = document.getElementById('jobList'); if (!el) return;
+  el.innerHTML = Object.entries(CAREERS).map(([key, c]) => {
+    const isMine = state.current_job_key === key;
+    const rankList = c.ranks.map((r, i) => {
+      const occ = jobPositions[key+'_'+i];
+      const isMineRank = isMine && state.current_rank === i;
+      let badge = '';
+      if (isMineRank) badge = '<span class="badge green">DU</span>';
+      else if (!occ) badge = '<span class="badge blue">FREI</span>';
+      else badge = '<span class="badge red">' + escapeHtml(occ.substring(0,10)) + '</span>';
+      return `<div class="rankRow"><span>${i+1}. ${r.t} ${badge}</span><span style="color:#4ade80; font-weight:700;">${fmt(r.w)} €</span></div>`;
+    }).join('');
+    let btn;
+    if (isMine) {
+      const nextRank = state.current_rank + 1;
+      const canPromote = nextRank < c.ranks.length && !jobPositions[key+'_'+nextRank];
+      btn = canPromote ? `<button class="btn gold" onclick="tryPromote('${key}')">⬆️ BEFÖRDERN!</button>` : `<button class="btn owned" disabled>✓</button>`;
+    } else {
+      let targetRank = -1;
+      for (let r = c.ranks.length - 1; r >= 0; r--) { if (!jobPositions[key+'_'+r]) { targetRank = r; break; } }
+      btn = targetRank === -1 ? `<button class="btn" disabled>Besetzt</button>` : `<button class="btn green" onclick="joinCareer('${key}')">Beitreten (${c.ranks[targetRank].t})</button>`;
+    }
+    return `<div class="job ${isMine?'current':''}">
+      <div class="jHead"><div class="jico">${c.icon}</div>
+      <div class="info"><div class="jname">${c.name}</div><div class="jmeta">${c.ranks.length} Ränge</div></div>${btn}</div>
+      <div>${rankList}</div>
+    </div>`;
+  }).join('');
+}
+
+window.joinCareer = async function(jobKey) {
+  const c = CAREERS[jobKey];
+  if (state.current_job_key && state.current_job_key !== 'arbeitslos') {
+    await supabase.from('job_positions').update({ username: null }).eq('job_key', state.current_job_key).eq('rank', state.current_rank);
+  }
+  let targetRank = -1;
+  for (let r = c.ranks.length - 1; r >= 0; r--) { if (!jobPositions[jobKey+'_'+r]) { targetRank = r; break; } }
+  if (targetRank === -1) return toast('Kein Rang frei', 'bad');
+  await supabase.from('job_positions').update({ username, since: new Date().toISOString() }).eq('job_key', jobKey).eq('rank', targetRank);
+  state.current_job_key = jobKey; state.current_rank = targetRank;
+  await grantEducationForRank(targetRank);
+  await savePlayer();
+  await loadJobPositions(); await loadMyJobTasks();
+  renderAll(); checkAchievements();
+  toast(`💼 ${c.ranks[targetRank].t}!`, 'good');
+};
+
+window.tryPromote = async function(jobKey) {
+  const c = CAREERS[jobKey]; const nextRank = state.current_rank + 1;
+  if (nextRank >= c.ranks.length) return toast('Maximal!', 'bad');
+  if (jobPositions[jobKey+'_'+nextRank]) return toast('Besetzt!', 'bad');
+  await supabase.from('job_positions').update({ username: null }).eq('job_key', jobKey).eq('rank', state.current_rank);
+  await supabase.from('job_positions').update({ username, since: new Date().toISOString() }).eq('job_key', jobKey).eq('rank', nextRank);
+  state.current_rank = nextRank;
+  await grantEducationForRank(nextRank);
+  await savePlayer(); await loadJobPositions(); await loadMyJobTasks();
+  renderAll(); checkAchievements();
+  toast(`🎉 ${c.ranks[nextRank].t}!`, 'good');
+};
+
+function renderMyJob() {
+  const el = document.getElementById('myJobInfo'); const taskEl = document.getElementById('myTaskList');
+  if (!el) return;
+  if (!state.current_job_key || state.current_job_key === 'arbeitslos') {
+    el.innerHTML = `<div class="careerCard"><div class="cTitle">💼 Arbeitslos</div><div class="cCompany">Wähle einen Job</div></div>`;
+    taskEl.innerHTML = '<div class="stat"><span class="k">Keine Aufgaben</span></div>';
+    document.getElementById('myTaskDone').textContent='0 / 0';
+    document.getElementById('myTaskWage').textContent='0 €';
+    document.getElementById('myTaskStatus').textContent='–';
+    return;
+  }
+  const c = CAREERS[state.current_job_key]; const r = c.ranks[state.current_rank];
+  const nextRank = state.current_rank + 1;
+  const nextRankFree = nextRank < c.ranks.length && !jobPositions[state.current_job_key+'_'+nextRank];
+  el.innerHTML = `<div class="careerCard">
+    <div class="cTop"><div><div class="cTitle">${c.icon} ${r.t}</div><div class="cCompany">${c.name} · Rang ${state.current_rank+1}/${c.ranks.length}</div></div><div class="cLevel">AKTIV</div></div>
+    <div class="cSalary">${fmt(currentJobWage())} <small>€ / Monat</small></div>
+    ${nextRank < c.ranks.length ? `<div style="margin-top:10px; font-size:12px; color:#8892b0;">Nächster: <b style="color:#ffcc00;">${c.ranks[nextRank].t}</b> ${nextRankFree ? ' – <span style="color:#4ade80;">FREI ✓</span>' : ' – <span style="color:#ff6b6b;">BESETZT</span>'}</div>` : '<div style="margin-top:10px; font-size:12px; color:#4ade80;">🏆 Max!</div>'}
+  </div>`;
+  taskEl.innerHTML = myTodayTasks.map(t => {
+    const done = myTodayDone.has(String(t.id));
+    return `<div class="task ${done?'done':''}">
+      <div class="tIco">${done?'✅':'📋'}</div>
+      <div class="tInfo"><div class="tName">${escapeHtml(t.title)}</div><div class="tReward">+${fmt(t.reward)} € Bonus</div></div>
+      ${done ? '<span class="badge green">FERTIG</span>' : `<button class="btn green" onclick="completeTask(${t.id})">Erledigen</button>`}
+    </div>`;
+  }).join('') || '<div class="stat"><span class="k">Keine Aufgaben</span></div>';
+  document.getElementById('myTaskDone').textContent = myTodayDone.size + ' / ' + myTodayTasks.length;
+  const totalReward = myTodayTasks.filter(t => myTodayDone.has(String(t.id))).reduce((s,t)=>s+t.reward,0);
+  document.getElementById('myTaskWage').textContent = fmt(totalReward) + ' €';
+  const statusEl = document.getElementById('myTaskStatus');
+  if (myTodayDone.size === 0) { statusEl.textContent='❌ Kein Lohn heute!'; statusEl.className='v red'; }
+  else if (myTodayDone.size === myTodayTasks.length) { statusEl.textContent='✅ Alle erledigt!'; statusEl.className='v green'; }
+  else { statusEl.textContent = '⚠️ ' + myTodayDone.size + '/' + myTodayTasks.length; statusEl.className='v yellow'; }
+}
+
+window.completeTask = async function(taskId) {
+  const t = myTodayTasks.find(x => x.id === taskId); if (!t) return;
+  if (myTodayDone.has(String(taskId))) return;
+  const dayKey = todayKey();
+  await supabase.from('my_tasks').insert({ username, task_id: String(taskId), day_key: dayKey, reward: t.reward });
+  myTodayDone.add(String(taskId));
+  renderMyJob();
+  toast(`✅ +${fmt(t.reward)} € Bonus`, 'good');
+};
+
+window.refreshMyJob = async function() {
+  toast('🔄 Prüfe...', '');
+  await loadJobPositions();
+  if (state.current_job_key && state.current_job_key !== 'arbeitslos') {
+    const c = CAREERS[state.current_job_key]; const nextRank = state.current_rank + 1;
+    if (nextRank < c.ranks.length && !jobPositions[state.current_job_key+'_'+nextRank]) {
+      await supabase.from('job_positions').update({ username: null }).eq('job_key', state.current_job_key).eq('rank', state.current_rank);
+      await supabase.from('job_positions').update({ username, since: new Date().toISOString() }).eq('job_key', state.current_job_key).eq('rank', nextRank);
+      state.current_rank = nextRank;
+      await grantEducationForRank(nextRank);
+      await savePlayer(); renderAll(); checkAchievements();
+      toast(`🎉 BEFÖRDERT: ${c.ranks[nextRank].t}!`, 'good');
+    } else { toast('Keine freie höhere Position', ''); }
+  }
+  await loadMyJobTasks();
+  renderMyJob();
+};
+
+function renderEdu() {
+  const el = document.getElementById('eduList'); if (!el) return;
+  el.innerHTML = EDUCATION.map(e => {
+    const owned = ownedEdu.has(e.id);
+    const isCurrent = state.education_level === e.id;
+    let badge = '';
+    if (isCurrent) badge = '<span class="badge green">AKTUELL</span>';
+    else if (owned) badge = '<span class="badge blue">✓</span>';
+    else badge = '<span class="badge red">🔒</span>';
+    return `<div class="job ${owned?'current':''}">
+      <div class="jHead"><div class="jico">${e.icon}</div>
+      <div class="info"><div class="jname">${e.name} ${badge}</div>
+      <div class="jmeta">${owned ? 'Automatisch durch Job-Rang erhalten' : 'Erreiche Rang ' + e.id + ' in einem Job'}</div></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderApps() {
+  const el = document.getElementById('appsList'); if (!el) return;
+  const key = state.current_job_key;
+  if (!key || key === 'arbeitslos') { el.innerHTML = '<div class="stat"><span class="k">Kein Job = keine Apps</span></div>'; return; }
+  const apps = JOB_APPS[key];
+  if (!apps) { el.innerHTML = `<div class="careerCard"><div class="cTitle">${CAREERS[key].icon} ${CAREERS[key].name}</div><div class="cCompany">Keine speziellen Apps</div></div>`; return; }
+  el.innerHTML = `<div class="careerCard"><div class="cTitle">${CAREERS[key].icon} ${CAREERS[key].name}-Apps</div><div class="cCompany">Spezial-Aktionen</div></div>
+  <div class="appGrid">${apps.map((a, i) => {
+    const cdKey = key+'_'+i;
+    const ready = (appCooldowns[cdKey] || 0) <= Date.now();
+    return `<div class="appTile" onclick="useApp('${key}', ${i})" style="${ready?'':'opacity:0.4;'}">
+      <div class="apIco">${a.icon}</div><div class="apName">${a.name}</div>
+      <div style="font-size:10px; color:#4ade80; margin-top:5px;">${ready?'Bereit':'⏳'}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+window.useApp = async function(key, idx) {
+  const a = JOB_APPS[key][idx]; const cdKey = key+'_'+idx;
+  if ((appCooldowns[cdKey] || 0) > Date.now()) return toast('Cooldown', 'bad');
+  if (a.action === 'getMoney') {
+    const gain = Math.floor(a.min + Math.random() * (a.max - a.min));
+    state.money += gain; state.total_earned += gain;
+    toast(`💰 +${fmt(gain)} €`, 'good');
+  } else if (a.action === 'getFollowers') {
+    const gain = Math.floor(a.min + Math.random() * (a.max - a.min));
+    state.followers += gain;
+    toast(`📱 +${gain} Follower`, 'good');
+  }
+  appCooldowns[cdKey] = Date.now() + a.cooldown * 1000;
+  await savePlayer(); renderAll(); renderApps();
+};
+
+function renderSocial() {
+  const el = document.getElementById('socialActions'); if (!el) return;
+  document.getElementById('smFollowers').textContent = fmt(state.followers);
+  el.innerHTML = SOCIAL.map(s => {
+    const cd = socialCooldowns[s.id] || 0; const ready = cd <= Date.now();
+    const canDo = ready && state.money >= s.cost;
+    return `<div class="job"><div class="jHead">
+      <div class="jico">${s.icon}</div>
+      <div class="info"><div class="jname">${s.name}</div><div class="jmeta">+${fmt(s.gain)} Follower | ${fmt(s.cost)} €</div></div>
+      <button class="btn" ${canDo?'':'disabled'} onclick="doSocial(${s.id})">${ready?'Posten':'⏳'}</button>
+    </div></div>`;
+  }).join('');
+}
+window.doSocial = async function(id) {
+  const s = SOCIAL.find(x => x.id === id);
+  if (state.money < s.cost) return toast('Zu wenig Geld', 'bad');
+  const now = Date.now();
+  if ((socialCooldowns[id] || 0) > now) return toast('Cooldown', 'bad');
+  state.money -= s.cost; state.followers += s.gain;
+  socialCooldowns[id] = now + s.cooldown * 1000;
+  await savePlayer(); renderAll(); renderSocial(); checkAchievements();
+  toast(`+${s.gain} Follower`, 'good');
+};
+
+function renderOwned() {
+  const el = document.getElementById('ownedList'); if (!el) return;
+  el.innerHTML = THINGS.map(t => {
+    const owned = ownedThings.has(t.id);
+    const canBuy = !owned && state.money >= t.cost;
+    let btn = owned ? '<button class="btn owned" disabled>✓</button>' : `<button class="btn" ${canBuy?'':'disabled'} onclick="buyThing(${t.id})">${fmt(t.cost)} €</button>`;
+    return `<div class="job ${owned?'current':''}">
+      <div class="jHead"><div class="jico">${t.icon}</div>
+      <div class="info"><div class="jname">${t.name}</div><div class="jmeta">${fmt(t.cost)} €</div></div>${btn}</div>
+    </div>`;
+  }).join('');
+}
+window.buyThing = async function(id) {
+  const t = THINGS.find(x => x.id === id);
+  if (state.money < t.cost) return toast('Zu wenig', 'bad');
+  state.money -= t.cost;
+  await supabase.from('owned_things').insert({ username, thing_id: id });
+  ownedThings.add(id);
+  await savePlayer(); renderAll(); renderOwned();
+  toast(`🛍️ ${t.name}!`, 'good');
+};
+
+async function updateStockPrices() {
+  const now = Date.now();
+  const {data: prices} = await supabase.from('stock_prices').select('*');
+  if (!prices || prices.length === 0) {
+    const init = [
+      {stock_id:1,name:'TechCorp',price:100,last_update:0},{stock_id:2,name:'BioGen',price:250,last_update:0},
+      {stock_id:3,name:'SpaceXy',price:800,last_update:0},{stock_id:4,name:'CryptoCoin',price:1500,last_update:0},
+      {stock_id:5,name:'VirLife Inc',price:5000,last_update:0}
+    ];
+    for (const s of init) await supabase.from('stock_prices').insert(s);
+    return updateStockPrices();
+  }
+  const needsUpdate = prices.some(p => !p.last_update || now - p.last_update > 120000);
+  if (needsUpdate) {
+    for (const p of prices) {
+      const change = (Math.random() - 0.48) * 0.15;
+      let newPrice = Math.max(10, Math.floor(p.price * (1 + change)));
+      await supabase.from('stock_prices').update({ price: newPrice, last_update: now }).eq('stock_id', p.stock_id);
+      p.price = newPrice;
+    }
+  }
+  prices.forEach(p => {
+    stockCache[p.stock_id] = { name: p.name, price: p.price, prev: stockCache[p.stock_id]?.price || p.price };
+  });
+}
+function renderStocks() {
+  const el = document.getElementById('stockList'); if (!el) return;
+  el.innerHTML = STOCK_IDS.map(id => {
+    const s = stockCache[id]; if (!s) return '';
+    const held = myHoldings[id] || 0;
+    const change = s.prev ? ((s.price - s.prev) / s.prev * 100) : 0;
+    const changeTxt = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+    const cls = change >= 0 ? 'up' : 'down';
+    return `<div class="stock">
+      <div class="sTop">
+        <div><div class="sName">${s.name}</div><div class="sChange ${cls}">${changeTxt}</div></div>
+        <div style="text-align:right;"><div class="sPrice">${fmt(s.price)} €</div>
+        <div class="sInfo">Du: <b>${held}</b> = ${fmt(held*s.price)} €</div></div>
+      </div>
+      <div class="sRow">
+        <input id="sh-${id}" type="number" value="1" min="1">
+        <button class="btn green" onclick="buyStock(${id})">Kaufen</button>
+        <button class="btn red" onclick="sellStock(${id})">Verkaufen</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+window.buyStock = async function(id) {
+  const s = stockCache[id];
+  const shares = parseInt(document.getElementById('sh-'+id).value, 10) || 0;
+  if (shares <= 0) return;
+  const cost = shares * s.price;
+  if (state.money < cost) return toast('Zu wenig', 'bad');
+  state.money -= cost;
+  const newShares = (myHoldings[id] || 0) + shares;
+  myHoldings[id] = newShares;
+  await supabase.from('stock_holdings').upsert({username, stock_id:id, shares:newShares}, {onConflict:'username,stock_id'});
+  await savePlayer(); renderAll(); renderStocks();
+  toast(`📈 ${shares}x gekauft`, 'good');
+};
+window.sellStock = async function(id) {
+  const s = stockCache[id];
+  const shares = parseInt(document.getElementById('sh-'+id).value, 10) || 0;
+  const held = myHoldings[id] || 0;
+  if (shares <= 0 || held < shares) return toast('Ungültig', 'bad');
+  const gain = shares * s.price;
+  state.money += gain; state.total_earned += gain;
+  myHoldings[id] = held - shares;
+  await supabase.from('stock_holdings').upsert({username, stock_id:id, shares:myHoldings[id]}, {onConflict:'username,stock_id'});
+  await savePlayer(); renderAll(); renderStocks();
+  toast(`📉 +${fmt(gain)} €`, 'good');
+};
+
+function renderCasino() { document.getElementById('caMoney').textContent = fmt(state.money) + ' €'; }
+window.playCasino = async function(mult) {
+  const bet = parseInt(document.getElementById('caBet').value, 10) || 0;
+  if (bet < 10) return toast('Min 10 €', 'bad');
+  if (state.money < bet) return toast('Zu wenig', 'bad');
+  const winChance = mult === 2 ? 0.48 : mult === 3 ? 0.30 : 0.15;
+  const won = Math.random() < winChance;
+  if (won) {
+    const gain = bet * (mult - 1);
+    state.money += gain; state.total_earned += gain;
+    document.getElementById('casinoResult').innerHTML = `<div class="stat"><span class="k">🎉 GEWONNEN</span><span class="v green">+${fmt(gain)} €</span></div>`;
+    toast(`🎉 +${fmt(gain)} €`, 'good');
+  } else {
+    state.money -= bet;
+    document.getElementById('casinoResult').innerHTML = `<div class="stat"><span class="k">💀 VERLOREN</span><span class="v red">-${fmt(bet)} €</span></div>`;
+    toast(`💀 -${fmt(bet)} €`, 'bad');
+  }
+  await savePlayer(); renderAll(); renderCasino();
+};
+
+function renderBiz() {
+  const el = document.getElementById('bizList'); if (!el) return;
+  document.getElementById('bizOwned').textContent = ownedBiz.size;
+  document.getElementById('bizPassive').textContent = fmt(bizPassiveTotal()) + ' €';
+  el.innerHTML = BUSINESSES.map(b => {
+    const owned = ownedBiz.has(b.id);
+    const canBuy = !owned && state.money >= b.cost;
+    let btn = owned ? '<button class="btn owned" disabled>✓</button>' : `<button class="btn" ${canBuy?'':'disabled'} onclick="buyBiz(${b.id})">${fmt(b.cost)} €</button>`;
+    return `<div class="job ${owned?'current':''}">
+      <div class="jHead"><div class="jico">${b.icon}</div>
+      <div class="info"><div class="jname">${b.name}</div>
+      <div class="jmeta">Passiv: <b style="color:#4ade80;">+${fmt(b.passive)} €</b>/Monat</div></div>${btn}</div>
+    </div>`;
+  }).join('');
+}
+window.buyBiz = async function(id) {
+  const b = BUSINESSES.find(x => x.id === id);
+  if (state.money < b.cost) return toast('Zu wenig', 'bad');
+  state.money -= b.cost;
+  await supabase.from('businesses').insert({ username, biz_id: id });
+  ownedBiz.add(id);
+  await savePlayer(); renderAll(); renderBiz(); checkAchievements();
+  toast(`🏭 ${b.name}!`, 'good');
+};
+
+async function renderPvp() {
+  const shieldEl = document.getElementById('pvpShield');
+  const remaining = (state.shield_until || 0) - Date.now();
+  if (remaining > 0) {
+    const h = Math.floor(remaining/3600000); const m = Math.floor((remaining%3600000)/60000);
+    shieldEl.textContent = `🛡️ ${h}h ${m}m`; shieldEl.className = 'v green';
+  } else { shieldEl.textContent = 'Kein Schild'; shieldEl.className = 'v red'; }
+  const {data: players} = await supabase.from('players').select('username, money, shield_until').neq('username', username).order('money', {ascending:false}).limit(30);
+  const el = document.getElementById('pvpList');
+  el.innerHTML = (players||[]).map(p => {
+    const shielded = (p.shield_until || 0) > Date.now();
+    return `<div class="pvpRow"><div><div class="pName">${escapeHtml(p.username)}</div>
+      <div class="pMoney">${fmt(p.money)} € ${shielded?'🛡️':''}</div></div>
+      <button class="btn red" ${shielded?'disabled':''} onclick="attackPlayer('${escapeHtml(p.username)}')">Angreifen</button></div>`;
+  }).join('') || '<div class="stat"><span class="k">Keine Spieler</span></div>';
+}
+window.buyShield = async function() {
+  if (state.money < 5000) return toast('Zu wenig (5.000 €)', 'bad');
+  state.money -= 5000;
+  state.shield_until = Date.now() + 24*60*60*1000;
+  await savePlayer(); renderAll(); renderPvp();
+  toast('🛡️ Schild aktiv für 24h!', 'good');
+};
+window.attackPlayer = async function(target) {
+  const {data: t} = await supabase.from('players').select('*').eq('username', target).single();
+  if (!t) return toast('Spieler weg', 'bad');
+  if ((t.shield_until || 0) > Date.now()) return toast('🛡️ Geschützt!', 'bad');
+  const won = Math.random() < 0.4;
+  if (won) {
+    const stolen = Math.floor(t.money * 0.1);
+    if (stolen <= 0) return toast('Nichts zu holen', 'bad');
+    state.money += stolen; state.total_earned += stolen;
+    await supabase.from('players').update({ money: Math.max(0, t.money - stolen) }).eq('username', target);
+    await supabase.from('pvp_attacks').insert({ attacker: username, target, success: true, stolen });
+    await savePlayer(); renderAll();
+    toast(`⚔️ +${fmt(stolen)} € von ${target}!`, 'good');
+  } else {
+    const lost = Math.floor(state.money * 0.05);
+    state.money = Math.max(0, state.money - lost);
+    await supabase.from('pvp_attacks').insert({ attacker: username, target, success: false, stolen: lost });
+    await savePlayer(); renderAll();
+    toast(`💀 Fehlgeschlagen! -${fmt(lost)} €`, 'bad');
+  }
+};
+
+// ============ BÜRGERMEISTER & WAHLEN ============
+
+function getCampaignStart() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1, 18, 0, 0); }
+function getVotingStart() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1, 20, 0, 0); }
+function getVotingEnd() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 2, 0, 0, 0); }
+
+async function loadOrCreateElection() {
+  const mk = monthKey();
+  let {data} = await supabase.from('elections').select('*').eq('month_key', mk).maybeSingle();
+  if (!data) {
+    const {data: created} = await supabase.from('elections').insert({
+      month_key: mk, phase:'idle',
+      campaign_start: getCampaignStart().toISOString(),
+      voting_start: getVotingStart().toISOString(),
+      voting_end: getVotingEnd().toISOString()
+    }).select().single();
+    data = created;
+  }
+  currentElection = data;
+}
+async function loadCandidates() {
+  if (!currentElection) return;
+  const {data} = await supabase.from('candidates').select('*').eq('election_id', currentElection.id).order('created_at', {ascending:true}).limit(5);
+  currentCandidates = data || [];
+}
+async function loadMyVote() {
+  if (!currentElection) return;
+  const {data} = await supabase.from('votes').select('*').eq('election_id', currentElection.id).eq('voter', username).maybeSingle();
+  myVote = data || null;
+}
+async function loadTaxes() {
+  const {data} = await supabase.from('taxes').select('*').eq('active', true);
+  allTaxes = data || [];
+}
+async function updateElectionPhase() {
+  if (!currentElection) return;
+  const now = Date.now();
+  const cs = new Date(currentElection.campaign_start).getTime();
+  const vs = new Date(currentElection.voting_start).getTime();
+  const ve = new Date(currentElection.voting_end).getTime();
+  let newPhase = 'idle';
+  if (now >= ve) newPhase = 'done';
+  else if (now >= vs) newPhase = 'voting';
+  else if (now >= cs) newPhase = 'campaign';
+  if (newPhase !== currentElection.phase) {
+    currentElection.phase = newPhase;
+    await supabase.from('elections').update({ phase: newPhase }).eq('id', currentElection.id);
+    if (newPhase === 'done') await finishElection();
+  }
+}
+async function finishElection() {
+  await loadCandidates();
+  if (currentCandidates.length === 0) {
+    await supabase.from('news').insert({ title:'🏛️ Wahl ohne Kandidat:innen', body:'Niemand ist angetreten. Amtsinhaber:in bleibt.' });
+    return;
+  }
+  let winner = currentCandidates[0];
+  for (const c of currentCandidates) if (c.votes > winner.votes) winner = c;
+  await supabase.from('elections').update({ winner: winner.username }).eq('id', currentElection.id);
+  await supabase.from('mayor').update({ username: winner.username, since: new Date().toISOString() }).eq('id', 1);
+  await supabase.from('news').insert({ title:'👑 Neue:r Bürgermeister:in!', body: `${winner.username} gewinnt mit ${winner.votes} Stimmen!` });
+  await loadMayor();
+}
+
+window.goMayor = async function() {
+  await loadMayor();
+  await loadOrCreateElection();
+  await loadCandidates();
+  await loadMyVote();
+  await updateElectionPhase();
+  await loadTaxes();
+  renderMayorPage();
+};
+
+function renderMayorPage() {
+  const elecEl = document.getElementById('electionInfo');
+  const mayorEl = document.getElementById('mayorInfo');
+  const actEl = document.getElementById('mayorActions');
+  const taxEl = document.getElementById('taxList');
+  if (!elecEl) return;
+
+  const now = Date.now();
+  const phase = currentElection ? currentElection.phase : 'idle';
+  let phaseText = ''; let phaseColor = '#5b8cff'; let timeInfo = '';
+  if (phase === 'idle') {
+    phaseText = '⏳ Nächste Wahl';
+    const cs = new Date(currentElection.campaign_start).getTime();
+    timeInfo = 'Kampagne startet in ' + formatDuration(cs - now);
+    phaseColor = '#8892b0';
+  } else if (phase === 'campaign') {
+    phaseText = '🗣️ KAMPAGNE-Phase';
+    const vs = new Date(currentElection.voting_start).getTime();
+    timeInfo = 'Wahl startet in ' + formatDuration(vs - now);
+    phaseColor = '#fbbf24';
+  } else if (phase === 'voting') {
+    phaseText = '🗳️ WÄHLEN!';
+    const ve = new Date(currentElection.voting_end).getTime();
+    timeInfo = 'Wahl endet in ' + formatDuration(ve - now);
+    phaseColor = '#4ade80';
+  } else {
+    phaseText = '✅ Wahl beendet';
+    timeInfo = currentElection.winner ? 'Gewinner:in: ' + currentElection.winner : 'Kein Gewinner';
+    phaseColor = '#4ade80';
+  }
+  let elecHtml = `<div class="careerCard" style="background:linear-gradient(135deg,#1b2a52,#0f1730); border-color:${phaseColor};">
+    <div class="cTitle" style="color:${phaseColor};">${phaseText}</div>
+    <div class="cCompany">${timeInfo}</div>
+  </div>`;
+
+  if (phase === 'campaign' || phase === 'voting' || phase === 'done') {
+    if (currentCandidates.length === 0) {
+      elecHtml += `<div class="stat"><span class="k">Noch keine Kandidat:innen</span></div>`;
+    } else {
+      elecHtml += `<div class="section-title">Kandidat:innen (${currentCandidates.length}/5)</div>`;
+      elecHtml += currentCandidates.map((c, i) => {
+        const isMe = c.username === username;
+        const votedForMe = myVote && myVote.candidate === c.username;
+        let voteBtn = '';
+        if (phase === 'voting') {
+          if (myVote) voteBtn = votedForMe ? '<span class="badge green">DEINE STIMME</span>' : `<span class="badge blue">${c.votes} Stimmen</span>`;
+          else voteBtn = `<button class="btn green" onclick="voteFor('${escapeHtml(c.username)}')">Wählen (${c.votes})</button>`;
+        } else if (phase === 'done') voteBtn = `<span class="badge yellow">${c.votes} Stimmen</span>`;
+        else voteBtn = `<span class="badge blue">${c.votes} Stimmen</span>`;
+        return `<div class="job ${isMe?'current':''}">
+          <div class="jHead"><div class="jico">👤</div>
+          <div class="info"><div class="jname">${i+1}. ${escapeHtml(c.username)} ${isMe?'<span class="badge green">DU</span>':''}</div>
+          <div class="jmeta" style="white-space:normal; line-height:1.4; margin-top:6px; color:#b0b8d0;">"${escapeHtml(c.manifesto||'Kein Programm')}"</div></div>
+          ${voteBtn}</div>
+        </div>`;
+      }).join('');
+    }
+    if (phase === 'campaign') {
+      const alreadyCand = currentCandidates.find(c => c.username === username);
+      if (alreadyCand) elecHtml += `<div class="stat"><span class="k">✅ Du kandidierst</span><span class="v green">Platz ${currentCandidates.indexOf(alreadyCand)+1}</span></div>`;
+      else if (currentCandidates.length >= 5) elecHtml += `<div class="stat"><span class="k">❌ Alle 5 Plätze belegt</span></div>`;
+      else elecHtml += `<button class="btn gold" style="width:100%; padding:14px; margin-top:10px;" onclick="openCandidateDialog()">📢 KANDIDIEREN</button>`;
+    }
+  }
+  elecEl.innerHTML = elecHtml;
+
+  if (mayorData && mayorData.username) {
+    const isMe = mayorData.username === username;
+    const since = new Date(mayorData.since).toLocaleDateString('de-DE');
+    mayorEl.innerHTML = `<div class="careerCard" style="background:linear-gradient(135deg,#3d2a1b,#1a1230); border-color:#fbbf24;">
+      <div class="cTop"><div><div class="cTitle">👑 Bürgermeister:in</div>
+      <div class="cCompany">${escapeHtml(mayorData.username)} · seit ${since}</div></div>
+      <div class="cLevel" style="background:rgba(251,191,36,0.2); color:#fbbf24;">${isMe?'DU':'AKTIV'}</div></div>
+      <div class="stat"><span class="k">💸 Steuer</span><span class="v yellow">${Number(mayorData.tax_rate||0).toFixed(1)}%</span></div>
+      <div class="stat"><span class="k">💰 Stadtkasse</span><span class="v green">${fmt(mayorData.city_treasury||0)} €</span></div>
+      <div class="stat"><span class="k">📊 Steuern gesammelt</span><span class="v blue">${fmt(mayorData.tax_collected||0)} €</span></div>
+    </div>`;
+  } else {
+    mayorEl.innerHTML = `<div class="careerCard" style="background:linear-gradient(135deg,#3d2a1b,#1a1230); border-color:#fbbf24;">
+      <div class="cTitle">🏛️ Kein:e Bürgermeister:in</div>
+      <div class="cCompany">Kandidiere bei der nächsten Wahl!</div>
+    </div>`;
+  }
+
+  if (mayorData && mayorData.username === username) {
+    actEl.innerHTML = `
+      <div class="section-title">⚙️ Bürgermeister-Aktionen (kein Cooldown)</div>
+      <div class="careerCard">
+        <div class="cTitle">💸 Basis-Steuersatz</div>
+        <input id="taxInput" type="number" placeholder="Steuersatz %" value="${Number(mayorData.tax_rate||0)}" min="0" max="50" step="0.5"
+          style="width:100%; padding:12px; border-radius:10px; background:#0a0e1a; border:1px solid rgba(91,140,255,0.3); color:#fff; font-size:16px; margin-top:10px;">
+        <button class="btn green" style="width:100%; margin-top:10px;" onclick="setMainTax()">Setzen</button>
+      </div>
+      <div class="careerCard">
+        <div class="cTitle">➕ Neue Steuer</div>
+        <input id="newTaxName" placeholder="Name (z.B. Luxussteuer)"
+          style="width:100%; padding:12px; border-radius:10px; background:#0a0e1a; border:1px solid rgba(91,140,255,0.3); color:#fff; font-size:14px; margin-top:8px;">
+        <input id="newTaxRate" type="number" placeholder="Rate %" value="1" min="0" max="20" step="0.5"
+          style="width:100%; padding:12px; border-radius:10px; background:#0a0e1a; border:1px solid rgba(91,140,255,0.3); color:#fff; font-size:14px; margin-top:8px;">
+        <button class="btn" style="width:100%; margin-top:8px;" onclick="createTax()">Erstellen</button>
+      </div>
+      <div class="careerCard">
+        <div class="cTitle">💰 Stadtkasse</div>
+        <div class="cCompany">${fmt(mayorData.city_treasury||0)} €</div>
+        <button class="btn gold" style="width:100%; margin-top:10px;" onclick="giveCitizenMoney()">🎁 10% an alle</button>
+        <button class="btn" style="width:100%; margin-top:8px;" onclick="mayorTakeSalary()">💼 5% Gehalt</button>
+      </div>
+      <div class="careerCard">
+        <div class="cTitle">📢 Stadt-Nachricht</div>
+        <input id="newsTitle" placeholder="Titel"
+          style="width:100%; padding:12px; border-radius:10px; background:#0a0e1a; border:1px solid rgba(91,140,255,0.3); color:#fff; font-size:14px; margin-top:8px;">
+        <textarea id="newsBody" placeholder="Nachricht..." rows="3"
+          style="width:100%; padding:12px; border-radius:10px; background:#0a0e1a; border:1px solid rgba(91,140,255,0.3); color:#fff; font-size:14px; margin-top:8px; resize:vertical;"></textarea>
+        <button class="btn green" style="width:100%; margin-top:8px;" onclick="sendCityNews()">Senden</button>
+      </div>
+      <div class="careerCard">
+        <div class="cTitle">📜 Gesetze</div>
+        <button class="btn" style="width:100%; margin-top:10px;" onclick="passLaw('double_wage')">💰 Doppelter Lohn</button>
+        <button class="btn" style="width:100%; margin-top:8px;" onclick="passLaw('no_casino')">🚫 Casino sperren</button>
+        <button class="btn" style="width:100%; margin-top:8px;" onclick="passLaw('tax_holiday')">🎉 Steuerfrei</button>
+      </div>
+      <div class="careerCard">
+        <div class="cTitle">👮 Spieler:innen bestrafen</div>
+        <div id="fineList"></div>
+      </div>
+      <div class="careerCard" style="border-color:#ff5b5b;">
+        <div class="cTitle" style="color:#ff6b6b;">⚠️ Abdanken</div>
+        <button class="btn red" style="width:100%; margin-top:10px;" onclick="resignMayor()">Amt abgeben</button>
+      </div>
+    `;
+    loadFineList();
+  } else {
+    actEl.innerHTML = '';
+  }
+
+  if (allTaxes.length > 0) {
+    taxEl.innerHTML = `<div class="section-title">📊 Aktive Steuern</div>` +
+      allTaxes.map(t => `<div class="stat"><span class="k">💸 ${escapeHtml(t.name)}</span><span class="v yellow">${Number(t.rate).toFixed(1)}%</span></div>`).join('');
+  } else taxEl.innerHTML = '';
+}
+
+window.openCandidateDialog = function() {
+  const manifesto = prompt('Dein Wahlprogramm (was du als Bürgermeister:in machen willst):');
+  if (!manifesto || manifesto.trim().length < 10) return toast('Programm min. 10 Zeichen!', 'bad');
+  submitCandidacy(manifesto.trim());
+};
+async function submitCandidacy(manifesto) {
+  await loadOrCreateElection();
+  const {error} = await supabase.from('candidates').insert({ election_id: currentElection.id, username, manifesto });
+  if (error) return toast('Fehler: ' + error.message, 'bad');
+  await supabase.from('news').insert({ title:'🗳️ Neue:r Kandidat:in', body: `${username} kandidiert: "${manifesto.substring(0,80)}..."` });
+  toast('📢 Du kandidierst!', 'good');
+  await loadCandidates(); renderMayorPage();
+}
+window.voteFor = async function(candidateName) {
+  await loadOrCreateElection();
+  await loadMyVote();
+  if (myVote) return toast('Du hast schon gewählt!', 'bad');
+  if (currentElection.phase !== 'voting') return toast('Wahl läuft nicht!', 'bad');
+  const {error} = await supabase.from('votes').insert({ election_id: currentElection.id, voter: username, candidate: candidateName });
+  if (error) return toast('Fehler: ' + error.message, 'bad');
+  const cand = currentCandidates.find(c => c.username === candidateName);
+  if (cand) await supabase.from('candidates').update({ votes: (cand.votes||0) + 1 }).eq('id', cand.id);
+  toast(`✅ Stimme für ${candidateName}!`, 'good');
+  await loadCandidates(); await loadMyVote(); renderMayorPage();
+};
+window.setMainTax = async function() {
+  const val = parseFloat(document.getElementById('taxInput').value);
+  if (isNaN(val) || val < 0 || val > 50) return toast('0-50%!', 'bad');
+  await supabase.from('mayor').update({ tax_rate: val }).eq('id', 1);
+  await loadMayor();
+  toast(`💸 Steuer: ${val}%`, 'good');
+  renderMayorPage();
+};
+window.createTax = async function() {
+  const name = document.getElementById('newTaxName').value.trim();
+  const rate = parseFloat(document.getElementById('newTaxRate').value);
+  if (!name || name.length < 3) return toast('Name min. 3 Zeichen', 'bad');
+  if (isNaN(rate) || rate < 0 || rate > 20) return toast('Rate 0-20%', 'bad');
+  await supabase.from('taxes').insert({ name, rate, active: true, created_by: username });
+  await supabase.from('news').insert({ title:'💸 Neue Steuer: ' + name, body: `Bürgermeister:in ${username} hat "${name}" (${rate}%) eingeführt.` });
+  document.getElementById('newTaxName').value = '';
+  document.getElementById('newTaxRate').value = '1';
+  await loadTaxes();
+  toast(`💸 ${name} erstellt!`, 'good');
+  renderMayorPage();
+};
+window.giveCitizenMoney = async function() {
+  const amount = Math.floor((mayorData.city_treasury || 0) * 0.1);
+  if (amount <= 0) return toast('Kasse leer', 'bad');
+  const {data: players} = await supabase.from('players').select('username, money');
+  for (const p of players || []) await supabase.from('players').update({ money: p.money + amount }).eq('username', p.username);
+  await supabase.from('mayor').update({ city_treasury: (mayorData.city_treasury||0) - amount }).eq('id', 1);
+  await loadMayor();
+  toast(`🎁 ${fmt(amount)} € an alle!`, 'good');
+  renderMayorPage();
+};
+window.mayorTakeSalary = async function() {
+  const amount = Math.floor((mayorData.city_treasury || 0) * 0.05);
+  if (amount <= 0) return toast('Kasse leer', 'bad');
+  state.money += amount; state.total_earned += amount;
+  await savePlayer();
+  await supabase.from('mayor').update({ city_treasury: (mayorData.city_treasury||0) - amount }).eq('id', 1);
+  await loadMayor();
+  toast(`💼 +${fmt(amount)} € Gehalt`, 'good');
+  renderAll(); renderMayorPage();
+};
+window.sendCityNews = async function() {
+  const title = document.getElementById('newsTitle').value.trim();
+  const body = document.getElementById('newsBody').value.trim();
+  if (!title || !body) return toast('Titel + Text nötig', 'bad');
+  await supabase.from('news').insert({ title:'📢 ' + title, body: `${body}\n\n— Bürgermeister:in ${username}` });
+  document.getElementById('newsTitle').value = '';
+  document.getElementById('newsBody').value = '';
+  toast('📢 Gesendet!', 'good');
+};
+window.passLaw = async function(key) {
+  const names = { double_wage:'Doppelter Lohn', no_casino:'Casino gesperrt', tax_holiday:'Steuerfrei' };
+  await supabase.from('news').insert({ title:'📜 Neues Gesetz: ' + names[key], body: `Bürgermeister:in ${username} hat "${names[key]}" erlassen!` });
+  toast('📜 Gesetz erlassen!', 'good');
+};
+window.resignMayor = async function() {
+  if (mayorData.username !== username) return;
+  if (!confirm('Wirklich abdanken?')) return;
+  await supabase.from('mayor').update({ username: null }).eq('id', 1);
+  await supabase.from('news').insert({ title:'🏛️ Bürgermeister:in zurückgetreten', body: `${username} hat das Amt abgegeben.` });
+  await loadMayor();
+  toast('Amt abgegeben', '');
+  renderMayorPage();
+};
+async function loadFineList() {
+  const el = document.getElementById('fineList'); if (!el) return;
+  const {data: players} = await supabase.from('players').select('username, money').neq('username', username).limit(15);
+  el.innerHTML = (players||[]).map(p => `<div class="pvpRow"><div><div class="pName">${escapeHtml(p.username)}</div>
+    <div class="pMoney">${fmt(p.money)} €</div></div>
+    <button class="btn red" onclick="finePlayer('${escapeHtml(p.username)}')">Strafe 1000 €</button></div>`).join('')
+    || '<div class="stat"><span class="k">Keine Spieler:innen</span></div>';
+}
+window.finePlayer = async function(target) {
+  const {data: t} = await supabase.from('players').select('money').eq('username', target).single();
+  if (!t) return;
+  const fine = Math.min(1000, t.money);
+  await supabase.from('players').update({ money: t.money - fine }).eq('username', target);
+  await supabase.from('mayor').update({ city_treasury: (mayorData.city_treasury||0) + fine }).eq('id', 1);
+  await loadMayor();
+  toast(`👮 ${target} bestraft: ${fmt(fine)} €`, 'good');
+  renderMayorPage();
+};
+
+function renderAchievements() {
+  const el = document.getElementById('achList'); if (!el) return;
+  document.getElementById('achCount').textContent = myAchievements.size + ' / ' + ACHIEVEMENTS.length;
+  el.innerHTML = ACHIEVEMENTS.map(a => {
+    const unlocked = myAchievements.has(a.id);
+    return `<div class="achCard ${unlocked?'unlocked':''}">
+      <div class="aIcon">${unlocked?a.icon:'🔒'}</div>
+      <div class="aName">${a.name}</div>
+      <div class="aDesc">${a.desc}</div>
+      <div class="aReward">${unlocked?'✓ +'+fmt(a.reward)+' €':'+'+fmt(a.reward)+' €'}</div>
+    </div>`;
+  }).join('');
+}
+async function checkAchievements() {
+  for (const a of ACHIEVEMENTS) {
+    if (myAchievements.has(a.id)) continue;
+    try {
+      if (a.check(state)) {
+        myAchievements.add(a.id);
+        state.money += a.reward; state.total_earned += a.reward;
+        await supabase.from('player_achievements').insert({ username, ach_id: a.id });
+        await savePlayer();
+        toast(`🏆 ${a.name}! +${fmt(a.reward)} €`, 'good');
+      }
+    } catch(e) {}
+  }
+  renderAchievements();
+}
+
+async function renderChat() {
+  const {data} = await supabase.from('chat_messages').select('*').order('created_at', {ascending:false}).limit(50);
+  const el = document.getElementById('chatList');
+  el.innerHTML = (data||[]).reverse().map(m => `<div class="msg"><div class="u">${escapeHtml(m.username)}</div><div class="t">${escapeHtml(m.message)}</div></div>`).join('');
+}
+window.sendChat = async function() {
+  const inp = document.getElementById('chatInput'); const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  await supabase.from('chat_messages').insert({ username, message: msg });
+  renderChat();
+};
+function subscribeChat() {
+  supabase.channel('chat_rt').on('postgres_changes', { event:'INSERT', schema:'public', table:'chat_messages' },
+    () => { if (document.getElementById('scr-chat').classList.contains('active')) renderChat(); }).subscribe();
+}
+async function renderLeaderboard() {
+  const {data} = await supabase.from('players').select('username,money,day').order('money', {ascending:false}).limit(100);
+  const el = document.getElementById('lbList');
+  el.innerHTML = (data||[]).map((p, i) => {
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`;
+    const me = p.username === username ? ' style="border-color:#5b8cff;"' : '';
+    return `<div class="stat"${me}><span class="k">${medal} ${escapeHtml(p.username)}</span><span class="v green">${fmt(p.money)} €</span></div>`;
+  }).join('') || '<div class="stat"><span class="k">Keine Spieler:innen</span></div>';
+}
+async function renderNews() {
+  const {data} = await supabase.from('news').select('*').order('created_at', {ascending:false}).limit(20);
+  const el = document.getElementById('newsList');
+  if (!data || data.length === 0) { el.innerHTML = '<div class="stat"><span class="k">Keine News</span></div>'; return; }
+  el.innerHTML = data.map(n => {
+    const d = new Date(n.created_at);
+    const dateStr = d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+    return `<div class="newsItem"><div class="nt">${escapeHtml(n.title)}</div><div class="nb">${escapeHtml(n.body)}</div><div class="nd">${dateStr}</div></div>`;
+  }).join('');
+}
+
+// Monatswechsel alle 30 Tage
+let lastMonthCheck = todayKey();
+function startLoops() {
+  setInterval(async () => {
+    updateCountdown();
+    updateClickBtn();
+    const tk = todayKey();
+    if (tk !== lastMonthCheck) {
+      lastMonthCheck = tk;
+      const taskBonus = myTodayTasks.filter(t => myTodayDone.has(String(t.id))).reduce((s,t)=>s+t.reward,0);
+      const hadTasks = myTodayDone.size > 0;
+      const grossWage = (hadTasks ? currentJobWage() : 0) + bizPassiveTotal() + taskBonus;
+      await loadMayor();
+      const taxRate = Number(mayorData?.tax_rate || 0) / 100;
+      const tax = Math.floor(grossWage * taxRate);
+      const netWage = grossWage - tax;
+      // Monatsende? Tag +1 alle 30 Tage
+      if (state.day === 1 || (Date.now() - state.last_day_timestamp) >= 30*24*60*60*1000) {
+        state.day += 1;
+        state.money += netWage;
+        state.total_earned += grossWage;
+        state.last_day_timestamp = Date.now();
+        if (tax > 0 && mayorData) {
+          await supabase.from('mayor').update({
+            city_treasury: (mayorData.city_treasury||0) + tax,
+            tax_collected: (mayorData.tax_collected||0) + tax
+          }).eq('id', 1);
+        }
+        await savePlayer();
+        myTodayDone = new Set();
+        await loadMyJobTasks();
+        renderAll(); checkAchievements();
+        if (hadTasks) toast(`🌅 Monat ${state.day}: +${fmt(netWage)} €!`, 'good');
+        else toast(`🌅 Monat ${state.day}: Kein Lohn!`, 'bad');
+      }
+    }
+  }, 1000);
+
+  setInterval(savePlayer, 20000);
+  subscribeChat();
+
+  setInterval(async () => {
+    await updateStockPrices();
+    if (document.getElementById('scr-stocks').classList.contains('active')) renderStocks();
+  }, 60000);
+
+  setInterval(async () => {
+    await loadJobPositions();
+    if (document.getElementById('scr-jobs').classList.contains('active')) renderJobs();
+    renderHomeCareer();
+  }, 15000);
+
+  setInterval(async () => {
+    if (document.getElementById('scr-mayor').classList.contains('active')) {
+      await loadOrCreateElection();
+      await updateElectionPhase();
+      await loadCandidates();
+      await loadMayor();
+      renderMayorPage();
+    }
+  }, 30000);
+}
+
+document.getElementById('loginName').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+</script>
+</body>
+</html>
