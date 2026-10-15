@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>MONDAY AGAIN</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#0a0a10;font-family:'Courier New',monospace;user-select:none;-webkit-tap-highlight-color:transparent}
+canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;width:100%;height:100%;position:fixed;inset:0}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10}
+#clock{position:fixed;top:14px;right:18px;background:#1a1a2a;border:3px solid #000;padding:10px 16px;color:#e8e8d8;font-weight:bold;letter-spacing:3px;box-shadow:4px 4px 0 rgba(0,0,0,.6);text-align:right;min-width:150px}
+#clock .day{font-size:10px;color:#c9a84a;letter-spacing:3px;display:block;margin-bottom:3px}
+#clock .time{font-size:20px}
+#wallet{position:fixed;top:14px;right:180px;background:#1a1a2a;border:3px solid #000;padding:10px 16px;color:#e8e8d8;font-weight:bold;letter-spacing:3px;box-shadow:4px 4px 0 rgba(0,0,0,.6);text-align:center;min-width:100px}
+#wallet .lbl{font-size:9px;color:#8a8a9a;letter-spacing:3px;display:block;margin-bottom:3px}
+#wallet .val{font-size:18px;color:#c9a84a}
+#affection{position:fixed;top:100px;right:18px;background:#1a1a2a;border:3px solid #000;padding:8px 14px;color:#e8e8d8;font-weight:bold;letter-spacing:2px;box-shadow:4px 4px 0 rgba(0,0,0,.6);text-align:right;min-width:150px;display:none}
+#affection .lbl{font-size:9px;color:#e88aa8;letter-spacing:3px;display:block;margin-bottom:3px}
+#affection .bar{height:8px;background:#0a0a10;border:1px solid #3a3a4a;margin-top:4px}
+#affection .fill{height:100%;background:linear-gradient(90deg,#a84a6a,#e88aa8,#ffaacc);width:0%;transition:width .3s}
+#roomTag{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#1a1a2a;border:3px solid #000;padding:6px 16px;font-size:10px;color:#c9a84a;letter-spacing:4px;text-transform:uppercase;box-shadow:4px 4px 0 rgba(0,0,0,.6);font-weight:bold;z-index:11}
+#taskList{position:fixed;top:14px;left:18px;background:#1a1a2a;border:3px solid #000;padding:12px 14px;font-size:11px;color:#e8e8d8;box-shadow:4px 4px 0 rgba(0,0,0,.6);max-width:250px;min-width:210px}
+#taskList h3{font-size:10px;color:#c9a84a;letter-spacing:4px;margin-bottom:10px;border-bottom:1px solid #3a3a4a;padding-bottom:6px;text-transform:uppercase}
+.task{font-size:11px;margin-bottom:6px;color:#b8b8c8;line-height:1.4}
+.task.done{color:#5a8a5a;text-decoration:line-through;opacity:.7}
+.task .box{display:inline-block;width:10px;height:10px;border:2px solid #8a8a9a;margin-right:8px;vertical-align:middle;position:relative;top:-1px}
+.task.done .box{background:#5a8a5a;border-color:#5a8a5a}
+#stressBar{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);width:320px;background:#1a1a2a;border:3px solid #000;padding:7px 9px;box-shadow:4px 4px 0 rgba(0,0,0,.6);z-index:15}
+#stressBar .lbl{font-size:9px;color:#8a8a9a;letter-spacing:4px;margin-bottom:5px;text-align:center;text-transform:uppercase}
+#stressBar .bar{height:12px;background:#0a0a10;border:1px solid #3a3a4a;position:relative;overflow:hidden}
+#stressFill{height:100%;background:linear-gradient(90deg,#5a8a5a,#c9a84a,#a83a3a);width:0%;transition:width .3s}
+#prompt{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#1a1a2a;border:3px solid #000;padding:10px 18px;font-size:12px;color:#e8e8d8;letter-spacing:2px;display:none;box-shadow:4px 4px 0 rgba(0,0,0,.6);font-weight:bold}
+#prompt b{color:#c9a84a;font-size:14px}
+#dialog{position:fixed;bottom:0;left:0;right:0;background:#1a1a2a;border-top:4px solid #000;padding:22px 26px 30px;font-size:14px;color:#e8e8d8;display:none;z-index:20;min-height:150px;box-shadow:0 -4px 0 rgba(0,0,0,.4)}
+#dialog .speaker{color:#c9a84a;font-size:12px;letter-spacing:4px;margin-bottom:10px;text-transform:uppercase;font-weight:bold;border-bottom:1px solid #3a3a4a;padding-bottom:6px;display:inline-block}
+#dialog .speaker.jess{color:#e88aa8}
+#dialog .line{line-height:1.6;font-size:15px;min-height:22px}
+#dialog .hint{position:absolute;bottom:10px;right:22px;font-size:10px;color:#6a6a7a;letter-spacing:3px;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
+#screen{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:150;display:none;align-items:center;justify-content:center;padding:20px}
+#screen.on{display:flex}
+.monitor{background:#0a0a15;border:6px solid #2a2a3a;border-radius:8px;width:min(760px,95vw);max-height:85vh;overflow-y:auto;box-shadow:0 0 40px rgba(74,122,154,.5)}
+.monitor .bar{background:#1a1a2a;border-bottom:2px solid #2a2a3a;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0}
+.monitor .bar .title{color:#8ab8d8;font-size:12px;letter-spacing:3px;text-transform:uppercase;font-weight:bold}
+.monitor .bar .close{background:#a83a3a;color:#fff;border:none;padding:4px 12px;font-family:inherit;font-size:11px;letter-spacing:2px;cursor:pointer;font-weight:bold}
+.monitor .body{padding:20px 24px;font-size:13px;color:#c8d8e8;line-height:1.6}
+.monitor .body .from{color:#8ab8d8;font-weight:bold;margin-bottom:4px;font-size:12px}
+.monitor .body .subj{color:#c9a84a;font-weight:bold;margin-bottom:10px;font-size:14px;border-bottom:1px solid #2a2a3a;padding-bottom:8px}
+.monitor .body .email{margin-bottom:22px;border-left:3px solid #3a3a4a;padding-left:14px}
+.monitor .body .file{margin-bottom:22px;border-left:3px solid #2a5a8a;background:rgba(42,90,138,.08);padding:14px;border-radius:4px}
+.monitor .body .file .name{color:#8ab8d8;font-weight:bold;margin-bottom:8px;font-size:12px;letter-spacing:1px}
+.monitor .body .file .content{color:#a8b8c8;font-style:italic;white-space:pre-wrap}
+.monitor .body h4{color:#c9a84a;font-size:11px;letter-spacing:3px;margin:18px 0 10px;text-transform:uppercase;border-bottom:1px solid #2a2a3a;padding-bottom:6px}
+#dayIntro{position:fixed;inset:0;background:#0a0a10;z-index:180;display:none;align-items:center;justify-content:center;flex-direction:column;opacity:0;transition:opacity .5s}
+#dayIntro.on{display:flex;opacity:1}
+#dayIntro .weekday{font-size:14px;color:#c9a84a;letter-spacing:12px;margin-bottom:16px}
+#dayIntro .date{font-size:48px;color:#e8e8d8;letter-spacing:8px;font-weight:bold;margin-bottom:12px;text-shadow:4px 4px 0 #000}
+#dayIntro .sub{font-size:12px;color:#6a6a7a;letter-spacing:5px;text-transform:uppercase}
+#overlay{position:fixed;inset:0;background:rgba(10,10,16,.96);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+#overlay.on{display:flex}
+.overlay-box{background:#1a1a2a;border:4px solid #000;padding:36px 32px;max-width:600px;width:100%;text-align:center;box-shadow:10px 10px 0 rgba(0,0,0,.6);max-height:90vh;overflow-y:auto}
+.overlay-box h1{font-size:36px;color:#c9a84a;letter-spacing:10px;margin-bottom:6px;font-weight:bold;text-shadow:3px 3px 0 #000}
+.overlay-box h2{font-size:16px;color:#8a8a9a;letter-spacing:5px;margin-bottom:24px;text-transform:uppercase}
+.overlay-box p{font-size:14px;color:#b8b8c8;line-height:1.7;margin-bottom:14px;text-align:left}
+.overlay-box .stats{font-size:11px;color:#8a8a9a;letter-spacing:2px;margin-top:20px;text-align:center;line-height:1.9;border-top:1px solid #3a3a4a;padding-top:16px}
+.overlay-box .stats b{color:#c9a84a}
+.overlay-box .stats .pink{color:#e88aa8}
+.overlay-box .btn{background:#c9a84a;color:#1a1a2a;border:3px solid #000;padding:14px 28px;font-family:inherit;font-size:13px;font-weight:bold;letter-spacing:4px;cursor:pointer;margin-top:20px;text-transform:uppercase;box-shadow:4px 4px 0 rgba(0,0,0,.6);transition:.1s}
+.overlay-box .btn:hover{background:#e8c86a;transform:translate(2px,2px);box-shadow:2px 2px 0 rgba(0,0,0,.6)}
+#start{position:fixed;inset:0;background:#0a0a10;z-index:250;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+#start .logo{font-size:clamp(40px,8vw,72px);color:#c9a84a;letter-spacing:clamp(6px,2vw,16px);font-weight:bold;text-shadow:5px 5px 0 #000;margin-bottom:8px;line-height:1}
+#start .sub{font-size:12px;color:#6a6a7a;letter-spacing:8px;margin-bottom:48px;text-transform:uppercase}
+#start input{background:#1a1a2a;border:3px solid #000;color:#e8e8d8;padding:14px 20px;font-family:inherit;font-size:15px;letter-spacing:3px;text-align:center;margin-bottom:16px;width:300px;max-width:80vw;box-shadow:4px 4px 0 rgba(0,0,0,.6);outline:none;font-weight:bold;text-transform:uppercase}
+#start input:focus{border-color:#c9a84a}
+#start .btn{background:#c9a84a;color:#1a1a2a;border:3px solid #000;padding:16px 40px;font-family:inherit;font-size:15px;font-weight:bold;letter-spacing:6px;cursor:pointer;text-transform:uppercase;box-shadow:5px 5px 0 rgba(0,0,0,.6);transition:.1s}
+#start .btn:hover{background:#e8c86a;transform:translate(2px,2px);box-shadow:3px 3px 0 rgba(0,0,0,.6)}
+#start .hint{font-size:11px;color:#5a5a6a;margin-top:36px;letter-spacing:3px;line-height:2.2;text-transform:uppercase}
+#start .hint b{color:#c9a84a}
+#toast{position:fixed;top:110px;left:50%;transform:translateX(-50%);background:#c9a84a;color:#1a1a2a;padding:9px 20px;font-size:11px;font-weight:bold;letter-spacing:3px;border:3px solid #000;box-shadow:4px 4px 0 rgba(0,0,0,.6);z-index:60;text-transform:uppercase;display:none}
+#objective{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.9);background:#1a1a2a;border:4px solid #c9a84a;padding:20px 32px;color:#e8e8d8;font-size:13px;letter-spacing:3px;font-weight:bold;text-transform:uppercase;z-index:80;opacity:0;transition:.4s;pointer-events:none;box-shadow:0 0 40px rgba(201,168,74,.4);max-width:80vw;text-align:center}
+#objective.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#objective .lbl{font-size:9px;color:#8a8a9a;letter-spacing:4px;margin-bottom:6px;display:block}
+#choice{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:170;display:none;align-items:center;justify-content:center;padding:20px}
+#choice.on{display:flex}
+.choice-box{background:#1a1a2a;border:4px solid #000;padding:28px 26px;max-width:560px;width:100%;box-shadow:8px 8px 0 rgba(0,0,0,.6)}
+.choice-box .q{color:#c9a84a;font-size:14px;font-weight:bold;margin-bottom:20px;text-align:center;line-height:1.5}
+.choice-box .ch{background:#2a2a3a;border:2px solid #000;color:#e8e8d8;padding:14px 18px;font-family:inherit;font-size:13px;font-weight:bold;text-align:left;cursor:pointer;margin-bottom:10px;width:100%;transition:.15s;letter-spacing:1px}
+.choice-box .ch:hover{background:#c9a84a;color:#1a1a2a}
+.choice-box .ch.love{border-color:#e88aa8}
+.choice-box .ch.love:hover{background:#e88aa8;color:#fff}
+#nlc-btn{position:fixed;bottom:80px;right:20px;z-index:99998;width:50px;height:50px;border-radius:50%;background:#4a9eff;color:#fff;border:2px solid #000;cursor:pointer;font-size:20px;box-shadow:3px 3px 0 rgba(0,0,0,.5);transition:transform .15s}
+#nlc-btn:hover{transform:scale(1.08)}
+#nlc-btn .badge{position:absolute;top:-4px;right:-4px;background:#e84a4a;color:#fff;font-size:10px;font-weight:bold;border-radius:10px;padding:1px 5px;border:2px solid #000;display:none}
+#nlc-panel{position:fixed;bottom:140px;right:20px;z-index:99999;width:320px;max-width:90vw;height:400px;background:#14141a;border:3px solid #000;border-radius:8px;box-shadow:6px 6px 0 rgba(0,0,0,.6);display:none;flex-direction:column;font-family:'Courier New',monospace;color:#d8d8d8}
+#nlc-panel.open{display:flex}
+#nlc-head{background:#1a1a2a;padding:8px 12px;border-bottom:2px solid #000;display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:bold;letter-spacing:2px;color:#4a9eff;text-transform:uppercase}
+#nlc-head .room{color:#8a8a9a;font-size:9px;letter-spacing:1px}
+#nlc-close{background:#a83a3a;color:#fff;border:none;padding:2px 8px;font-family:inherit;font-size:10px;cursor:pointer;font-weight:bold}
+#nlc-msgs{flex:1;overflow-y:auto;padding:8px 10px;font-size:11px;line-height:1.5}
+.nlc-msg{margin-bottom:5px;word-wrap:break-word}
+.nlc-msg b{color:#4a9eff}
+.nlc-msg small{color:#666;font-size:9px;margin-left:4px}
+.nlc-msg.me b{color:#5fc85f}
+.nlc-msg.system{color:#c9a84a;font-style:italic;font-size:10px;text-align:center;margin:6px 0}
+.nlc-msg.story{color:#e88aa8;font-style:italic;font-size:10px;text-align:center;margin:6px 0;border-left:2px solid #e88aa8;padding:3px 6px;background:rgba(232,138,168,.08)}
+#nlc-input-row{display:flex;border-top:2px solid #000}
+#nlc-input{flex:1;background:#0a0a10;border:none;color:#d8d8d8;padding:8px 10px;font-family:inherit;font-size:11px;outline:none}
+#nlc-input::placeholder{color:#555}
+#nlc-send{background:#4a9eff;color:#fff;border:none;padding:8px 12px;font-family:inherit;font-size:11px;font-weight:bold;cursor:pointer;letter-spacing:1px}
+#nlc-send:hover{background:#5aaeff}
+#nlc-name-modal{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center}
+#nlc-name-modal.open{display:flex}
+#nlc-name-box{background:#14141a;border:3px solid #000;border-radius:8px;padding:24px 20px;max-width:340px;width:90vw;box-shadow:6px 6px 0 rgba(0,0,0,.6);text-align:center}
+#nlc-name-box h3{color:#4a9eff;font-size:13px;letter-spacing:3px;margin-bottom:6px;text-transform:uppercase}
+#nlc-name-box p{color:#8a8a9a;font-size:11px;margin-bottom:16px;line-height:1.5}
+#nlc-name-input{width:100%;background:#0a0a10;border:2px solid #2a2a3a;color:#d8d8d8;padding:10px 12px;font-family:inherit;font-size:14px;outline:none;text-align:center;letter-spacing:2px;margin-bottom:12px}
+#nlc-name-input:focus{border-color:#4a9eff}
+#nlc-name-save{width:100%;background:#4a9eff;color:#fff;border:none;padding:12px;font-family:inherit;font-size:12px;font-weight:bold;letter-spacing:2px;cursor:pointer;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<div id="start">
+<div class="logo">MONDAY<br>AGAIN</div>
+<div class="sub">A Day at the Office</div>
+<input id="nameInput" placeholder="YOUR NAME" maxlength="14" value="ALEX">
+<button class="btn" onclick="startGame()">CLOCK IN</button>
+<div class="hint"><b>WASD</b> MOVE &nbsp; <b>E</b> INTERACT &nbsp; <b>SPACE</b> CONTINUE</div>
+</div>
+
+<canvas id="game"></canvas>
+
+<div id="ui">
+<div id="clock"><span class="day" id="dayLabel">MONDAY</span><span class="time" id="timeLabel">09:00</span></div>
+<div id="wallet"><span class="lbl">WALLET</span><span class="val">$<span id="moneyVal">50</span></span></div>
+<div id="affection"><span class="lbl">JESSICA</span><div class="bar"><div class="fill" id="affFill"></div></div></div>
+<div id="roomTag">Open Office</div>
+<div id="taskList"><h3>TASKS</h3><div id="tasksInner"></div></div>
+<div id="stressBar"><div class="lbl">STRESS</div><div class="bar"><div id="stressFill"></div></div></div>
+<div id="prompt"></div>
+</div>
+
+<div id="dialog">
+<div class="speaker" id="dlgSpeaker">Boss</div>
+<div class="line" id="dlgLine"></div>
+<div class="hint">[ SPACE ]</div>
+</div>
+
+<div id="screen">
+<div class="monitor">
+<div class="bar">
+<div class="title" id="scrTitle">E-MAIL CLIENT</div>
+<button class="close" onclick="closeScreen()">[ X ] CLOSE</button>
+</div>
+<div class="body" id="scrBody"></div>
+</div>
+</div>
+
+<div id="choice">
+<div class="choice-box">
+<div class="q" id="chQuestion"></div>
+<div id="chOptions"></div>
+</div>
+</div>
+
+<div id="dayIntro">
+<div class="weekday" id="diWeekday">MONDAY</div>
+<div class="date" id="diDate">DAY 1</div>
+<div class="sub" id="diSub">You clock in.</div>
+</div>
+
+<div id="objective"><span class="lbl">OBJECTIVE</span><span id="objText"></span></div>
+<div id="overlay"><div class="overlay-box" id="overlayContent"></div></div>
+<div id="toast"></div>
+
+<button id="nlc-btn">💬<span class="badge" id="nlc-badge">0</span></button>
+<div id="nlc-panel">
+<div id="nlc-head">
+<div>NL Chat <span class="room">#monday-again</span></div>
+<button id="nlc-close">✕</button>
+</div>
+<div id="nlc-msgs"></div>
+<div id="nlc-input-row">
+<input id="nlc-input" placeholder="Message..." autocomplete="off" maxlength="200">
+<button id="nlc-send">Send</button>
+</div>
+</div>
+<div id="nlc-name-modal">
+<div id="nlc-name-box">
+<h3>NL Chat</h3>
+<p>Was ist dein Name?</p>
+<input id="nlc-name-input" maxlength="16" placeholder="Name" autocomplete="off">
+<button id="nlc-name-save">Start</button>
+</div>
+</div>
+
+<script>
+var cv=document.getElementById('game'),ctx=cv.getContext('2d');
+var W,H,PX=4;
+function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;ctx.imageSmoothingEnabled=false;PX=Math.max(2,Math.min(5,Math.floor(Math.min(W,H)/240)))}
+addEventListener('resize',resize);resize();
+var T=32;
+var SCENE='office';
+
+var ROOMS=[
+{x:0,y:0,w:16,h:12,name:'Open Office',floor:'#3a3a4a',scene:'office'},
+{x:16,y:0,w:10,h:8,name:'Meeting Room',floor:'#4a3a4a',scene:'office'},
+{x:26,y:0,w:10,h:12,name:'Kitchen',floor:'#4a4a3a',scene:'office'},
+{x:0,y:12,w:14,h:10,name:'Lobby',floor:'#3a4a5a',scene:'office'},
+{x:14,y:12,w:12,h:10,name:'Hallway',floor:'#3a3a3a',scene:'office'},
+{x:26,y:12,w:10,h:10,name:'Boss Office',floor:'#4a3a3a',scene:'office'}
+];
+var DOORS=[
+{x:16*T,y:2*T,w:8,h:T*3,dir:'h'},
+{x:26*T,y:3*T,w:8,h:T*3,dir:'h'},
+{x:12*T,y:11*T,w:T*4,h:8,dir:'v'},
+{x:14*T,y:17*T,w:T*4,h:8,dir:'v'},
+{x:26*T,y:17*T,w:8,h:T*3,dir:'h'}
+];
+var CITY_ROOMS=[
+{x:0,y:0,w:14,h:12,name:'Café Aurora',floor:'#3a2a2a',scene:'city'},
+{x:14,y:0,w:14,h:12,name:'Riverside Park',floor:'#2a4a2a',scene:'city'},
+{x:0,y:12,w:14,h:10,name:'The Anchor Bar',floor:'#2a1a2a',scene:'city'},
+{x:14,y:12,w:14,h:10,name:'Cinema Rex',floor:'#1a1a3a',scene:'city'},
+{x:28,y:11,w:8,h:11,name:'Your Apartment',floor:'#3a3a3a',scene:'city'}
+];
+var CITY_DOORS=[
+{x:14*T,y:4*T,w:T*4,h:8,dir:'v'},
+{x:0*T,y:11*T,w:T*4,h:8,dir:'v'},
+{x:14*T,y:14*T,w:T*4,h:8,dir:'v'},
+{x:28*T,y:13*T,w:8,h:T*3,dir:'h'}
+];
+
+var objects=[
+{type:'desk',x:3,y:3,id:'myDesk',label:'Your Desk',scene:'office'},
+{type:'desk',x:7,y:3,id:'desk_karen',label:"Karen's Desk",scene:'office'},
+{type:'desk',x:11,y:3,id:'desk_dave',label:"Dave's Desk",scene:'office'},
+{type:'desk',x:3,y:8,id:'desk_jess',label:"Jessica's Desk",scene:'office'},
+{type:'desk',x:7,y:8,id:'desk_extra',label:'Empty Desk',scene:'office'},
+{type:'copier',x:13,y:9,id:'copier1',label:'Copier',scene:'office'},
+{type:'plant',x:1,y:1,id:'',label:'',scene:'office'},
+{type:'plant',x:15,y:1,id:'',label:'',scene:'office'},
+{type:'cooler',x:10,y:10,id:'cooler1',label:'Water Cooler',scene:'office'},
+{type:'vending',x:14,y:10,id:'vending',label:'Vending Machine',scene:'office'},
+{type:'desk',x:20,y:3,id:'meet_table',label:'Conference Table',scene:'office'},
+{type:'board',x:23,y:1,id:'whiteboard',label:'Whiteboard',scene:'office'},
+{type:'kitchen',x:28,y:1,id:'microwave',label:'Microwave',scene:'office'},
+{type:'kitchen',x:31,y:1,id:'fridge',label:'Fridge',scene:'office'},
+{type:'coffee',x:34,y:1,id:'coffee2',label:'Coffee Machine',scene:'office'},
+{type:'desk',x:28,y:5,id:'break_table',label:'Break Table',scene:'office'},
+{type:'reception',x:5,y:15,id:'reception',label:'Reception',scene:'office'},
+{type:'exit',x:7,y:21,id:'exit',label:'Exit Building',scene:'office'},
+{type:'desk',x:30,y:14,id:'bossDesk',label:'Boss Desk',scene:'office'},
+{type:'computer',x:30,y:13,id:'bossComputer',label:'Boss Computer',scene:'office'},
+{type:'safe',x:35,y:20,id:'safe',label:'Safe',scene:'office'},
+{type:'cafe_table',x:3,y:4,id:'cafe1',label:'Table for two',scene:'city'},
+{type:'cafe_table',x:7,y:4,id:'cafe2',label:'Table',scene:'city'},
+{type:'cafe_counter',x:5,y:1,id:'cafe_counter',label:'Counter',scene:'city'},
+{type:'park_bench',x:18,y:5,id:'park_bench1',label:'Bench',scene:'city'},
+{type:'park_bench',x:22,y:8,id:'park_bench2',label:'Bench',scene:'city'},
+{type:'park_tree',x:16,y:2,id:'',label:'',scene:'city'},
+{type:'park_tree',x:25,y:2,id:'',label:'',scene:'city'},
+{type:'park_tree',x:17,y:9,id:'',label:'',scene:'city'},
+{type:'park_tree',x:24,y:10,id:'',label:'',scene:'city'},
+{type:'bar',x:4,y:14,id:'bar_counter',label:'Bar',scene:'city'},
+{type:'bar_stool',x:3,y:17,id:'',label:'',scene:'city'},
+{type:'bar_stool',x:5,y:17,id:'',label:'',scene:'city'},
+{type:'bar_stool',x:7,y:17,id:'',label:'',scene:'city'},
+{type:'cinema_seat',x:17,y:15,id:'',label:'',scene:'city'},
+{type:'cinema_seat',x:19,y:15,id:'',label:'',scene:'city'},
+{type:'cinema_seat',x:21,y:15,id:'',label:'',scene:'city'},
+{type:'cinema_seat',x:23,y:15,id:'',label:'',scene:'city'},
+{type:'cinema_screen',x:20,y:12,id:'cinema_screen',label:'Screen',scene:'city'},
+{type:'apt_bed',x:31,y:14,id:'bed',label:'Your Bed',scene:'city'},
+{type:'apt_desk',x:34,y:17,id:'apt_desk',label:'Your Desk',scene:'city'},
+{type:'apt_window',x:30,y:12,id:'apt_window',label:'Window',scene:'city'}
+];
+
+var NPCS=[
+{id:'boss',name:'THE BOSS',x:30*T+16,y:16*T+16,shirt:'#a83a3a',hair:'#3a3a4a',scene:'office',lines:[
+['Morning. Hope you had a good weekend. I didn\'t.','We have a lot to get through today. A LOT.','The report is due Friday. Don\'t disappoint me.'],
+['Did you send that email I asked about?','No? Send it. Now.','Also the client called. Twice. Thanks for that.'],
+['I heard about the copier. Figure it out.','We\'re a family here. A very productive family.','Have you seen Karen? She\'s been weird lately.'],
+['Good news: the client is happy.','Bad news: we need it done by tomorrow.','Cancel your evening. And your morning.'],
+['End of the week. How do you feel?','Tired? Good. That means you worked.','See you Monday.']]},
+{id:'karen',name:'KAREN',x:7*T+16,y:6*T+16,shirt:'#a85050',hair:'#c9a84a',scene:'office',lines:[
+['Don\'t touch my stapler. I\'m serious.','I\'ve been here 14 years. FOURTEEN.','Do you ever wonder if any of this matters?'],
+['The copier jammed again?','It\'s cursed. I told you.','Don\'t use it after 3pm. I mean it.'],
+['Hey. Can I tell you something?','I\'m quitting. Don\'t tell anyone.','I just... can\'t do this anymore.'],
+['Did you hear? I told them.','The boss laughed.','I don\'t know why I expected anything else.'],
+['This is my last day.','I packed my desk this morning.','Good luck. You\'ll need it.']]},
+{id:'dave',name:'DAVE',x:11*T+16,y:6*T+16,shirt:'#4a6a9a',hair:'#5a4a3a',scene:'office',lines:[
+['Hey. Hey. Psst.','Sorry, I\'m just tired. Been here since 6.','I used to have hobbies. Now I have a mortgage.'],
+['You want to see something funny?','No? Cool. Cool cool cool.','I\'ll be at my desk if you need me. I won\'t be.'],
+['I heard Karen is quitting.','Wish I had the guts.','But the health insurance, you know?'],
+['I brought donuts. They\'re in the break room.','Actually I ate them all.','Sorry. Rough day.'],
+['Last day of the week.','We survived. Again.','Same time Monday?']]},
+{id:'jess',name:'JESSICA',x:3*T+16,y:9*T+16,shirt:'#4a9a6a',hair:'#8a4a3a',scene:'office',lines:[
+['Hi! You\'re the new one, right?','I\'m still learning everyone\'s names.','Is it always this quiet?'],
+['I tried the copier.','It yelled at me. Is that normal?','Okay. Cool. Cool.'],
+['Do you know why Karen is so...','Never mind. I shouldn\'t ask.','I\'m sorry, I talk too much.'],
+['I brought cookies!','They\'re a little burnt.','But they\'re made with love.'],
+['I survived a week!','Is it always like this?','Don\'t answer that.']]}
+];
+
+var S={
+started:false,playerName:'ALEX',day:0,
+px:8*T+16,py:10*T+16,dir:'down',frame:0,animT:0,moving:false,
+time:9*60,timeSpeed:1.6,stress:10,money:50,
+tasks:[],tasksDone:[],
+dialog:null,dialogIdx:0,
+ended:false,paused:false,dayEnding:false,
+currentRoom:0,
+overtimeT:0,overtimeActive:false,
+daveQuest:0,daveQuestResult:null,
+readEmails:{},filesFound:{},
+affection:0,jessicaStage:0,
+tasksCompleteShown:false,copierNotes:0
+};
+
+var DAYS=['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY'];
+var DAY_TASKS=[['emails','print','boss'],['emails','print','coffee','meeting'],['emails','print','coffee','meeting','karen'],['emails','print','coffee','meeting','karen'],['emails','print','coffee','meeting']];
+var TASK_TEXT={emails:'Read your emails',print:'Print a document',coffee:'Get coffee',meeting:'Attend the meeting',boss:'Talk to the boss',karen:'Talk to Karen'};
+
+var EMAILS={
+myDesk:[
+{from:'HR Department',subj:'Welcome to the team',body:'Welcome aboard! Your onboarding paperwork is due by Friday.'},
+{from:'IT Support',subj:'RE: Password reset',body:'Your password was reset 4 times this week. That is not normal. Please stop.'},
+{from:'Unknown Sender',subj:'[no subject]',body:'If you are reading this, you have already stayed too long. Look at your coworkers. Do you see it? That is not living. That is waiting.'}],
+desk_karen:[
+{from:'Karen M.',subj:'RE: Vacation request',body:'I have submitted this request 7 times. If it is denied again I will understand.'},
+{from:'Karen M. (draft)',subj:'I am writing to formally resign',body:'I am writing to formally resign. Not from the company. From trying.'},
+{from:'Karen M. (draft 2)',subj:'untitled',body:'There was a life I wanted. I had a list. Pottery. A small shop. A dog. Sunset over water.'}],
+desk_dave:[
+{from:'Dave\'s Wife',subj:'Did you mean to send this?',body:'Dave, you sent me an email at 3am that just said "I cannot do this anymore." Are you okay?'},
+{from:'Dave (draft)',subj:'resignation_draft.docx',body:'I have worked here for 9 years. I do not remember what I did before.'},
+{from:'Dave (notes)',subj:'untitled notes',body:'Things I used to do: Draw, Run, Laugh.\nThings I do now: Exist, Wait, Check the clock.'}],
+desk_jess:[
+{from:'Jessica R.',subj:'FWD: funny meme',body:'Haha look at this one! It\'s the cat again. I love the cat.'},
+{from:'Jessica R.',subj:'I think I made a mistake',body:'I said hello to the boss today and he looked at me for 4 seconds then walked away.'}],
+bossComputer:[
+{from:'Corporate HQ',subj:'Q1 Layoff Plan - CONFIDENTIAL',body:'Q1 reductions will affect 15% of staff. Attached is the list.'},
+{from:'CEO',subj:'Re: Numbers',body:'I don\'t care how. Cut whatever needs cutting. This is a family.'}]
+};
+
+var FILES={
+desk_karen:[{name:'dreams.txt',content:'A list, dated 6 years ago:\n\n- Take a pottery class\n- Open a small shop\n- Adopt a dog (Biscuit)\n- Drive to the coast\n\n(never started)'}],
+desk_dave:[
+{name:'resignation_draft.docx',content:'I have worked here for 9 years.\nI do not remember what I did before.\nThis is my resignation.\n\nI will probably not send this.'},
+{name:'letter_to_someone.txt',content:'Dear you,\n\nLook at the drawer. Third from the top. There is a photo. A beach.\n\nTake more days like that.\n\n— Dave'}],
+bossComputer:[{name:'layoffs_q1.xlsx',content:'Row 12: Karen M. — 14 years — TERMINATE\nRow 13: Dave R. — 9 years — TERMINATE\nRow 14: [YOUR NAME] — recent hire — TERMINATE'}],
+desk_jess:[{name:'note_to_self.txt',content:'Okay Jessica. Deep breaths. You are doing great. Everything is fine.'}]
+};
+
+var DAVE_QUEST_TRIGGER_DAY=2;
+var cam={x:0,y:0};
+function vw(){return W/PX}function vh(){return H/PX}
+function updateCam(){cam.x=S.px-vw()/2;cam.y=S.py-vh()/2;var mx=36*T-vw(),my=22*T-vh();if(cam.x<0)cam.x=0;if(cam.y<0)cam.y=0;if(cam.x>mx)cam.x=mx;if(cam.y>my)cam.y=my}
+function getActiveRooms(){return SCENE==='office'?ROOMS:CITY_ROOMS}
+function getActiveDoors(){return SCENE==='office'?DOORS:CITY_DOORS}
+function getActiveObjects(){return objects.filter(function(o){return o.scene===SCENE})}
+function getActiveNPCs(){return NPCS.filter(function(n){return n.scene===SCENE})}
+function getRoom(px,py){var rs=getActiveRooms(),tx=px/T,ty=py/T;for(var i=0;i<rs.length;i++){var r=rs[i];if(tx>=r.x&&tx<r.x+r.w&&ty>=r.y&&ty<r.y+r.h)return i}return 0}
+function updateRoomTag(){var r=getRoom(S.px,S.py),rs=getActiveRooms();if(r!==S.currentRoom){S.currentRoom=r;document.getElementById('roomTag').textContent=rs[r].name}}
+
+function drawRooms(){
+var rs=getActiveRooms();
+ctx.fillStyle='#0a0a10';ctx.fillRect(0,0,40*T,40*T);
+for(var i=0;i<rs.length;i++){var r=rs[i],px=r.x*T,py=r.y*T,pw=r.w*T,ph=r.h*T;ctx.fillStyle=r.floor;ctx.fillRect(px,py,pw,ph);
+for(var y=0;y<r.h;y++)for(var x=0;x<r.w;x++)if((x+y)%2===0){ctx.fillStyle='rgba(255,255,255,.025)';ctx.fillRect(px+x*T,py+y*T,T,T)}}
+for(var i=0;i<rs.length;i++){var r=rs[i],px=r.x*T,py=r.y*T,pw=r.w*T,ph=r.h*T;
+ctx.fillStyle='#2a2a3a';ctx.fillRect(px,py-4,pw,4);ctx.fillStyle='#4a4a5a';ctx.fillRect(px,py-4,pw,2);ctx.fillRect(px-4,py,4,ph);ctx.fillStyle='#3a3a4a';ctx.fillRect(px-2,py,2,ph)}
+var ds=getActiveDoors();
+for(var i=0;i<ds.length;i++){var d=ds[i];ctx.fillStyle=rs[0].floor;ctx.fillRect(d.x,d.y,d.w,d.h);ctx.fillStyle='#5a4a3a';
+if(d.dir==='h'){ctx.fillRect(d.x,d.y,4,d.h);ctx.fillRect(d.x+d.w-4,d.y,4,d.h)}else{ctx.fillRect(d.x,d.y,d.w,4);ctx.fillRect(d.x,d.y+d.h-4,d.w,4)}}
+}
+
+function drawDesk(x,y){var px=x*T-4,py=y*T+2;
+ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(px+3,py+3,40,26);
+ctx.fillStyle='#8a6a4a';ctx.fillRect(px,py,40,26);
+ctx.fillStyle='#7a5a3a';ctx.fillRect(px,py,40,3);ctx.fillRect(px,py+23,40,3);
+ctx.fillStyle='#2a2a2a';ctx.fillRect(px+12,py-14,16,12);
+var fl=(Date.now()%2000<100)?'#a8d8f8':'#4a7a9a';ctx.fillStyle=fl;ctx.fillRect(px+13,py-13,14,10);
+ctx.fillStyle='#8ab8d8';ctx.fillRect(px+14,py-12,12,2);ctx.fillRect(px+14,py-9,10,2);ctx.fillRect(px+14,py-6,12,2);
+ctx.fillStyle='#1a1a1a';ctx.fillRect(px+18,py-2,4,2);
+ctx.fillStyle='#d8d8d8';ctx.fillRect(px+10,py+8,20,6);
+ctx.fillStyle='#8a8a8a';for(var i=0;i<8;i++){ctx.fillRect(px+11+i*2.4,py+9,1.5,1.5);ctx.fillRect(px+11+i*2.4,py+11.5,1.5,1.5)}
+ctx.fillStyle='#c9a84a';ctx.fillRect(px+32,py+10,4,5)}
+
+function drawComputer(x,y){var px=x*T-8,py=y*T-16;
+ctx.fillStyle='#2a2a2a';ctx.fillRect(px+8,py,24,20);
+var fl=(Date.now()%1800<80)?'#a8d8f8':'#4a7a9a';ctx.fillStyle=fl;ctx.fillRect(px+10,py+2,20,16);
+ctx.fillStyle='#8ab8d8';for(var i=0;i<4;i++)ctx.fillRect(px+12,py+5+i*3,16,1);
+ctx.fillStyle='#1a1a1a';ctx.fillRect(px+18,py+20,4,4);ctx.fillRect(px+12,py+24,16,3)}
+
+function drawCopier(x,y){var px=x*T-8,py=y*T-8;
+ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(px+4,py+4,48,44);
+ctx.fillStyle='#d8d8d8';ctx.fillRect(px,py,48,44);
+ctx.fillStyle='#a8a8a8';ctx.fillRect(px,py,48,10);
+ctx.fillStyle='#3a3a3a';ctx.fillRect(px+4,py+3,3,3);
+ctx.fillStyle='#3a8a3a';ctx.fillRect(px+9,py+3,3,3);
+ctx.fillStyle='#8a3a3a';ctx.fillRect(px+14,py+3,3,3);
+ctx.fillStyle='#1a1a2a';ctx.fillRect(px+20,py+2,20,6);
+var jam=S.day>=3&&S.time>=15*60;ctx.fillStyle=jam?'#a83a3a':'#4a8a5a';ctx.fillRect(px+21,py+3,18,4);
+ctx.fillStyle='#2a2a2a';ctx.fillRect(px+5,py+16,38,6);
+ctx.fillStyle='#e8e8e8';ctx.fillRect(px+8,py+14,32,4);
+ctx.fillStyle='#f0f0f0';ctx.fillRect(px+12,py-6,24,8)}
+
+function drawCoffee(x,y){var px=x*T-8,py=y*T-16;
+ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(px+3,py+3,28,48);
+ctx.fillStyle='#2a2a2a';ctx.fillRect(px,py,28,48);
+ctx.fillStyle='#3a3a3a';ctx.fillRect(px,py,28,8);
+ctx.fillStyle='#5a8ab8';ctx.fillRect(px+4,py+2,10,4);
+ctx.fillStyle='#1a1a2a';ctx.fillRect(px+16,py+2,10,5);
+ctx.fillStyle='#c9a84a';ctx.fillRect(px+17,py+3,8,3);
+ctx.fillStyle='#1a1a1a';ctx.fillRect(px+4,py+14,20,10);
+ctx.fillStyle='#e8e8d8';ctx.fillRect(px+10,py+16,8,8);
+var t=Date.now()*0.003;ctx.fillStyle='rgba(200,200,200,'+(0.4+Math.sin(t)*0.3)+')';
+ctx.fillRect(px+12,py+10,1,3);ctx.fillRect(px+15,py+8,1,4)}
+
+function drawCooler(x,y){var px=x*T-8,py=y*T-14;
+ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(px+3,py+3,28,44);
+ctx.fillStyle='#8ab8d8';ctx.fillRect(px+4,py,20,20);
+ctx.fillStyle='#6a98b8';ctx.fillRect(px+4,py,20,3);
+ctx.fillStyle='#d8d8d8';ctx.fillRect(px,py+20,28,20);
+ctx.fillStyle='#a8a8a8';ctx.fillRect(px,py+20,28,3);
+ctx.fillStyle='#3a8a3a';ctx.fillRect(px+6,py+24,4,4);
+ctx.fillStyle='#8a3a3a';ctx.fillRect(px+18,py+24,4,4)}
+
+function drawVending(x,y){var px=x*T-10,py=y*T-20;
+ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(px+3,py+3,44,56);
+ctx.fillStyle='#2a3a4a';ctx.fillRect(px,py,44,56);
+ctx.fillStyle='#1a1a2a';ctx.fillRect(px+4,py+4,36,36);
+var c=['#c9a84a','#a83a3a','#3a8a5a','#3a5a8a'];
+for(var i=0;i<3;i++)for(var j=0;j<3;j++){ctx.fillStyle=c[(i+j)%4];ctx.fillRect(px+7+j*10,py+7+i*10,6,6)}
+ctx.fillStyle='#1a1a1a';ctx.fillRect(px+4,py+42,36,8);
+ctx.fillStyle='#c9a84a';ctx.font='bold 8px monospace';ctx.fillText('$2.00',px+10,py+49)}
+
+function drawPlant(x,y){var px=x*T+2,py=y*T+2,sw=Math.sin(Date.now()*0.001+x)*0.5;
+ctx.fillStyle='#8a4a3a';ctx.fillRect(px+4,py+18,16,10);
+ctx.fillStyle='#6a2a1a';ctx.fillRect(px+4,py+18,16,3);
+ctx.fillStyle='#3a7a3a';ctx.fillRect(px+2+sw,py+8,20,12);
+ctx.fillStyle='#4a8a4a';ctx.fillRect(px+4+sw,py+4,16,10);
+ctx.fillStyle='#5a9a5a';ctx.fillRect(px+8+sw,py+2,8,8)}
+
+function drawBoard(x,y){var px=x*T-4,py=y*T+4;
+ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(px+3,py+3,60,40);
+ctx.fillStyle='#e8e8d8';ctx.fillRect(px,py,60,40);
+ctx.fillStyle='#c9a84a';ctx.fillRect(px,py,60,4);
+ctx.fillStyle='#a83a3a';ctx.fillRect(px+8,py+12,20,2);ctx.fillRect(px+8,py+18,30,2);
+ctx.fillStyle='#3a5a8a';ctx.fillRect(px+8,py+24,15,2)}
+
+function drawChair(x,y){var px=x*T+6,py=y*T+8;
+ctx.fillStyle='#3a3a4a';ctx.fillRect(px,py,20,20);
+ctx.fillStyle='#2a2a3a';ctx.fillRect(px,py-6,20,6)}
+
+function drawKitchen(x,y,type){var px=x*T-8,py=y*T-20;
+if(type==='microwave'){ctx.fillStyle='#2a2a2a';ctx.fillRect(px,py+16,32,20);ctx.fillStyle='#1a1a2a';ctx.fillRect(px+3,py+20,18,12);ctx.fillStyle='#4a8a5a';ctx.fillRect(px+4,py+21,16,10)}
+else{ctx.fillStyle='#d8d8d8';ctx.fillRect(px,py,32,48);ctx.fillStyle='#a8a8a8';ctx.fillRect(px,py,32,3);ctx.fillRect(px,py+24,32,2);ctx.fillStyle='#c9a84a';ctx.fillRect(px+26,py+8,3,8);ctx.fillRect(px+26,py+30,3,8)}}
+
+function drawReception(x,y){var px=x*T-16,py=y*T-4;
+ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(px+3,py+3,80,36);
+ctx.fillStyle='#8a6a4a';ctx.fillRect(px,py,80,36);
+ctx.fillStyle='#7a5a3a';ctx.fillRect(px,py,80,4);
+ctx.fillStyle='#c9a84a';ctx.fillRect(px+20,py+10,40,8);
+ctx.fillStyle='#1a1a2a';ctx.fillRect(px+22,py+11,36,6)}
+
+function drawSafe(x,y){var px=x*T-4,py=y*T-4;
+ctx.fillStyle='#3a3a3a';ctx.fillRect(px,py,40,40);
+ctx.fillStyle='#2a2a2a';ctx.fillRect(px+2,py+2,36,36);
+ctx.fillStyle='#1a1a1a';ctx.fillRect(px+12,py+12,16,16);
+ctx.fillStyle='#c9a84a';ctx.beginPath();ctx.arc(px+20,py+20,4,0,Math.PI*2);ctx.fill()}
+
+function drawExit(x,y){var px=x*T-16,py=y*T-16;
+var gl=Math.sin(Date.now()*0.005)*0.3+0.7;
+ctx.fillStyle='rgba(90,200,90,'+gl+')';ctx.fillRect(px+10,py,44,10);
+ctx.fillStyle='#0a0a10';ctx.font='bold 8px monospace';ctx.fillText('EXIT',px+22,py+7);
+ctx.fillStyle='#5a4a3a';ctx.fillRect(px+12,py+12,40,60);
+ctx.fillStyle='#3a2a1a';ctx.fillRect(px+14,py+14,36,56);
+ctx.fillStyle='#c9a84a';ctx.fillRect(px+44,py+40,3,6);
+ctx.strokeStyle='rgba(90,200,90,.5)';ctx.lineWidth=2;ctx.strokeRect(px+10,py+10,44,64)}
+
+function drawCafeTable(x,y){var px=x*T-4,py=y*T+2;
+ctx.fillStyle='rgba(0,0,0,.3)';ctx.fillRect(px+3,py+3,40,26);
+ctx.fillStyle='#7a5a3a';ctx.fillRect(px,py,40,26);
+ctx.fillStyle='#5a4a2a';ctx.fillRect(px,py,40,3);
+ctx.fillStyle='#e8e8d8';ctx.fillRect(px+6,py+6,6,7);
+ctx.fillStyle='#3a2a1a';ctx.fillRect(px+6,py+6,6,2);
+ctx.fillRect(px+28,py+6,6,7);ctx.fillRect(px+28,py+6,6,2)}
+
+function drawCafeCounter(x,y){var px=x*T-16,py=y*T-4;
+ctx.fillStyle='#5a3a1a';ctx.fillRect(px,py,80,40);
+ctx.fillStyle='#3a2a0a';ctx.fillRect(px,py,80,4);
+ctx.fillStyle='#c9a84a';ctx.fillRect(px+10,py+12,10,10);
+ctx.fillStyle='#a86a3a';ctx.fillRect(px+25,py+12,10,10);
+ctx.fillStyle='#c9a84a';ctx.fillRect(px+40,py+12,10,10)}
+
+function drawParkBench(x,y){var px=x*T-4,py=y*T+4;
+ctx.fillStyle='#5a3a1a';ctx.fillRect(px,py,60,20);
+ctx.fillStyle='#3a2a0a';ctx.fillRect(px,py,60,3);ctx.fillRect(px,py+17,60,3);
+ctx.fillStyle='#2a1a0a';ctx.fillRect(px+4,py+20,3,10);ctx.fillRect(px+53,py+20,3,10)}
+
+function drawParkTree(x,y){var px=x*T+2,py=y*T+2,sw=Math.sin(Date.now()*0.0008+x)*1;
+ctx.fillStyle='#4a2a1a';ctx.fillRect(px+12,py+18,6,20);
+ctx.fillStyle='#2a5a2a';ctx.beginPath();ctx.arc(px+15+sw,py+14,20,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#3a7a3a';ctx.beginPath();ctx.arc(px+12+sw,py+10,14,0,Math.PI*2);ctx.fill()}
+
+function drawBarCounter(x,y){var px=x*T-16,py=y*T-4;
+ctx.fillStyle='#3a1a1a';ctx.fillRect(px,py,80,40);
+ctx.fillStyle='#1a0a0a';ctx.fillRect(px,py,80,4);
+ctx.fillStyle='#3a5a3a';ctx.fillRect(px+8,py+8,4,20);
+ctx.fillStyle='#5a3a1a';ctx.fillRect(px+14,py+10,4,18);
+ctx.fillStyle='#3a5a8a';ctx.fillRect(px+20,py+8,4,20)}
+
+function drawBarStool(x,y){var px=x*T+6,py=y*T+8;
+ctx.fillStyle='#2a1a1a';ctx.fillRect(px,py,20,16);
+ctx.fillStyle='#1a0a0a';ctx.fillRect(px+8,py+16,4,10)}
+
+function drawCinemaSeat(x,y){var px=x*T+6,py=y*T+8;
+ctx.fillStyle='#5a1a1a';ctx.fillRect(px,py,20,20);
+ctx.fillStyle='#3a0a0a';ctx.fillRect(px,py-6,20,6)}
+
+function drawCinemaScreen(x,y){var px=x*T-40,py=y*T-4;
+ctx.fillStyle='#0a0a1a';ctx.fillRect(px,py,80,44);
+var fl=(Date.now()%400<200)?'#a8b8e8':'#8a9ac8';ctx.fillStyle=fl;ctx.fillRect(px+2,py+2,76,40);
+ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(px+10,py+20,10,20);ctx.fillRect(px+30,py+15,12,25);ctx.fillRect(px+55,py+18,8,22)}
+
+function drawAptBed(x,y){var px=x*T-16,py=y*T-16;
+ctx.fillStyle='#5a3a3a';ctx.fillRect(px,py,60,60);
+ctx.fillStyle='#3a1a1a';ctx.fillRect(px,py,60,6);
+ctx.fillStyle='#8a6a6a';ctx.fillRect(px+4,py+8,52,20);
+ctx.fillStyle='#c9a8a8';ctx.fillRect(px+8,py+10,20,14)}
+
+function drawAptDesk(x,y){var px=x*T-4,py=y*T-4;
+ctx.fillStyle='#5a3a2a';ctx.fillRect(px,py,60,32);
+ctx.fillStyle='#3a1a0a';ctx.fillRect(px,py,60,4);
+ctx.fillStyle='#2a2a2a';ctx.fillRect(px+20,py-16,20,14);
+ctx.fillStyle='#4a7a9a';ctx.fillRect(px+21,py-15,18,12)}
+
+function drawAptWindow(x,y){var px=x*T-16,py=y*T-16;
+ctx.fillStyle='#3a3a4a';ctx.fillRect(px,py,60,50);
+ctx.fillStyle='#1a1a3a';ctx.fillRect(px+4,py+4,52,42);
+var st=[[10,10],[20,15],[35,8],[45,20],[15,30],[40,35],[25,25]];
+ctx.fillStyle='#e8e8d8';for(var i=0;i<st.length;i++)ctx.fillRect(px+4+st[i][0],py+4+st[i][1],2,2);
+ctx.beginPath();ctx.arc(px+40,py+12,6,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#3a3a4a';ctx.fillRect(px+28,py+4,2,42);ctx.fillRect(px+4,py+24,52,2)}
+
+function drawObjects(){
+var a=getActiveObjects();
+for(var i=0;i<a.length;i++){var o=a[i],ox=o.x*T,oy=o.y*T;
+if(ox<cam.x-120||ox>cam.x+vw()+120||oy<cam.y-120||oy>cam.y+vh()+120)continue;
+switch(o.type){
+case 'desk':drawDesk(o.x,o.y);break;case 'copier':drawCopier(o.x,o.y);break;case 'coffee':drawCoffee(o.x,o.y);break;
+case 'cooler':drawCooler(o.x,o.y);break;case 'plant':drawPlant(o.x,o.y);break;case 'board':drawBoard(o.x,o.y);break;
+case 'chair':drawChair(o.x,o.y);break;case 'kitchen':drawKitchen(o.x,o.y,o.id);break;case 'reception':drawReception(o.x,o.y);break;
+case 'safe':drawSafe(o.x,o.y);break;case 'exit':drawExit(o.x,o.y);break;case 'vending':drawVending(o.x,o.y);break;
+case 'computer':drawComputer(o.x,o.y);break;case 'cafe_table':drawCafeTable(o.x,o.y);break;case 'cafe_counter':drawCafeCounter(o.x,o.y);break;
+case 'park_bench':drawParkBench(o.x,o.y);break;case 'park_tree':drawParkTree(o.x,o.y);break;case 'bar':drawBarCounter(o.x,o.y);break;
+case 'bar_stool':drawBarStool(o.x,o.y);break;case 'cinema_seat':drawCinemaSeat(o.x,o.y);break;case 'cinema_screen':drawCinemaScreen(o.x,o.y);break;
+case 'apt_bed':drawAptBed(o.x,o.y);break;case 'apt_desk':drawAptDesk(o.x,o.y);break;case 'apt_window':drawAptWindow(o.x,o.y);break}}}
+
+function drawCharacter(x,y,dir,frame,moving,colors){
+var sk=colors.skin||'#e8c8a0',hair=colors.hair||'#4a3a2a',shirt=colors.shirt||'#4a6a9a',pants=colors.pants||'#2a2a3a';
+var bob=0,leg=0;if(moving){bob=Math.abs(Math.sin(frame*0.4))*1.5;leg=Math.sin(frame*0.4)*2}
+ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(x+8,y+22,8,3,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle=pants;ctx.fillRect(x+3,y+16-bob,4,6);ctx.fillRect(x+9,y+16-bob+leg,4,6);
+ctx.fillStyle='#1a1a1a';ctx.fillRect(x+2,y+21-bob,5,2);ctx.fillRect(x+9,y+21-bob+leg,5,2);
+ctx.fillStyle=shirt;ctx.fillRect(x+2,y+9-bob,12,8);
+ctx.fillStyle='#d8d8d8';ctx.fillRect(x+6,y+9-bob,4,2);
+ctx.fillStyle=sk;ctx.fillRect(x+3,y+2-bob,10,8);
+ctx.fillStyle=hair;
+if(dir==='up'){ctx.fillRect(x+3,y+2-bob,10,6)}
+else if(dir==='down'){ctx.fillRect(x+3,y+1-bob,10,3);ctx.fillRect(x+2,y+3-bob,1,5);ctx.fillRect(x+13,y+3-bob,1,5)}
+else{ctx.fillRect(x+3,y+1-bob,10,3);ctx.fillRect(x+2,y+3-bob,2,3);if(dir==='right')ctx.fillRect(x+10,y+3-bob,3,3);else ctx.fillRect(x+3,y+3-bob,3,3)}
+if(dir!=='up'){ctx.fillStyle='#1a1a1a';
+if(Date.now()%3000>100){if(dir==='down'){ctx.fillRect(x+5,y+6-bob,1,2);ctx.fillRect(x+10,y+6-bob,1,2)}
+else if(dir==='right'){ctx.fillRect(x+8,y+6-bob,1,2);ctx.fillRect(x+11,y+6-bob,1,2)}
+else if(dir==='left'){ctx.fillRect(x+4,y+6-bob,1,2);ctx.fillRect(x+7,y+6-bob,1,2)}}}}
+
+function drawNPC(n){var bob=(n.id==='dave')?Math.sin(Date.now()*0.002)*0.5:0;drawCharacter(n.x-8,n.y-12+bob,'down',S.frame,false,{shirt:n.shirt,hair:n.hair})}
+function getJessicaPos(){return{x:5*T+16,y:6*T+16}}
+function drawJessica(){if(SCENE!=='city')return;var j=getJessicaPos();drawCharacter(j.x-8,j.y-12,'down',S.frame,false,{shirt:'#4a9a6a',hair:'#8a4a3a'});if(S.affection>=50){var p=Math.sin(Date.now()*0.005)*2;ctx.fillStyle='#e88aa8';ctx.font='bold 12px monospace';ctx.fillText('♥',j.x-2,j.y-30+p)}}
+
+var keys={};
+addEventListener('keydown',function(e){var k=e.key.toLowerCase();keys[k]=true;if(k==='e')tryInteract();if(k===' '){e.preventDefault();advanceDialog()}if(k==='escape'){closeScreen();closeChoice()}});
+addEventListener('keyup',function(e){keys[e.key.toLowerCase()]=false});
+
+function updatePlayer(dt){
+if(S.paused||S.dialog||S.ended||S.dayEnding)return;
+if(document.getElementById('screen').classList.contains('on'))return;
+if(document.getElementById('choice').classList.contains('on'))return;
+var sp=65,dx=0,dy=0;
+if(keys['w']||keys['arrowup'])dy-=1;if(keys['s']||keys['arrowdown'])dy+=1;
+if(keys['a']||keys['arrowleft'])dx-=1;if(keys['d']||keys['arrowright'])dx+=1;
+if(dx&&dy){dx*=0.707;dy*=0.707}
+S.moving=!!(dx||dy);
+if(S.moving){S.px+=dx*sp*dt;S.py+=dy*sp*dt;S.animT+=dt;
+if(S.animT>0.08){S.animT=0;S.frame++}
+if(Math.abs(dx)>Math.abs(dy))S.dir=dx>0?'right':'left';else if(dy)S.dir=dy>0?'down':'up'}
+if(S.px<20)S.px=20;if(S.py<20)S.py=20;if(S.px>36*T-20)S.px=36*T-20;if(S.py>22*T-20)S.py=22*T-20}
+
+function findNearby(){
+var best=null,bd=70;
+var npcs=getActiveNPCs();
+for(var i=0;i<npcs.length;i++){var n=npcs[i],d=Math.hypot(n.x-S.px,n.y-S.py);if(d<bd){bd=d;best={t:'npc',o:n}}}
+if(SCENE==='city'){var j=getJessicaPos();var d=Math.hypot(j.x-S.px,j.y-S.py);if(d<bd){bd=d;best={t:'jess',o:j}}}
+var objs=getActiveObjects();
+for(var i=0;i<objs.length;i++){var o=objs[i];if(!o.id)continue;var ox=o.x*T+T/2,oy=o.y*T+T/2;var d=Math.hypot(ox-S.px,oy-S.py);if(d<bd){bd=d;best={t:'obj',o:o}}}
+return best}
+
+var COMPUTERS={myDesk:{owner:'self',label:'Your Computer'},desk_karen:{owner:'karen',label:"Karen's Computer"},desk_dave:{owner:'dave',label:"Dave's Computer"},desk_jess:{owner:'jess',label:"Jessica's Computer"},bossComputer:{owner:'boss',label:'Boss Computer'}};
+
+function tryInteract(){
+if(S.dialog){advanceDialog();return}
+if(S.paused||S.ended||S.dayEnding)return;
+if(document.getElementById('screen').classList.contains('on'))return;
+var near=findNearby();if(!near)return;
+if(near.t==='jess'){talkToJessica();return}
+if(near.t==='npc'){var lines=near.o.lines[Math.min(S.day,near.o.lines.length-1)];startDialog(near.o.name,lines);
+if(near.o.id==='boss')completeTask('boss');if(near.o.id==='karen')completeTask('karen');return}
+var o=near.o,id=o.id;
+if(SCENE==='city'){
+if(id==='bed'){showChoice('GO TO SLEEP?\n\nEnd the day?',[{label:'Sleep',fn:function(){closeChoice();advanceDay()}},{label:'Not yet',fn:function(){}}]);return}
+if(id==='cafe1'||id==='cafe2'){startDialog('CAFÉ AURORA',['Jazz plays quietly.','A couple laughs in the corner.','You feel like you are somewhere else.']);S.stress=Math.max(0,S.stress-3);return}
+if(id==='park_bench1'||id==='park_bench2'){startDialog('BENCH',['The river moves slowly.','A duck ignores you.','You stare at the sky.']);S.stress=Math.max(0,S.stress-5);return}
+if(id==='bar_counter'){startDialog('THE ANCHOR',['Someone is crying in the corner.','Or laughing. Hard to tell.']);S.stress=Math.max(0,S.stress-2);return}
+if(id==='cinema_screen'){startDialog('CINEMA REX',['A film about a man who leaves.','He never comes back.']);S.stress=Math.max(0,S.stress-4);return}
+if(id==='apt_window'){startDialog('WINDOW',['The city glows.','Somewhere, someone is having a worse day.']);return}
+if(id==='apt_desk'){startDialog('YOUR DESK',['A letter you never sent.','A photo of someone.']);return}
+return}
+if(COMPUTERS[id]){var owner=COMPUTERS[id].owner;
+if(owner==='self'){openSelfComputer();return}
+if(S.day>=DAVE_QUEST_TRIGGER_DAY){openOwnerComputer(id,owner);return}
+startDialog(COMPUTERS[id].label,['The screen is locked.','You could ask '+owner+' for permission.','But not yet.']);return}
+if(id==='exit'){if(canLeave()){showExitChoice()}else{startDialog('EXIT',['You haven\'t finished your tasks yet.','The exit will still be there later.'])}return}
+if(id==='vending'){if(S.money>=2){showChoice('VENDING MACHINE\n\nBuy a snack?',[
+{label:'Chips ($2)',fn:function(){S.money-=2;S.stress=Math.max(0,S.stress-6);updateMoney();toast('+SNACK -STRESS')}},
+{label:'Soda ($2)',fn:function(){S.money-=2;S.stress=Math.max(0,S.stress-4);updateMoney();toast('+DRINK')}},
+{label:'Never mind',fn:function(){}}])}else{startDialog('VENDING MACHINE',['You look at the prices.','You have $'+S.money+'.'])}return}
+if(id==='coffee2'||id==='coffee'){if(S.money>=1||!S.tasksDone.includes('coffee')){showChoice('COFFEE MACHINE\n\nBuy coffee for $1?',[
+{label:'Buy coffee ($1)',fn:function(){if(S.money>=1){S.money-=1;updateMoney()}S.stress=Math.max(0,S.stress-5);completeTask('coffee');toast('+COFFEE')}},
+{label:'Skip',fn:function(){}}])}else{startDialog('COFFEE MACHINE',['You have no money.','The machine blinks at you.'])}return}
+if(id==='copier1'){handleCopier();return}
+if(id==='cooler1'){startDialog('WATER COOLER',['You sip water.','"PLEASE REFILL" note.','6 months old.']);S.stress=Math.max(0,S.stress-1);return}
+if(id==='meet_table'){startDialog('CONFERENCE TABLE',['Eight chairs. Six dusty.','"ACTION ITEMS" — nothing below.']);completeTask('meeting');return}
+if(id==='whiteboard'){startDialog('WHITEBOARD',['A diagram that made sense once.','"SYNERGY" in all caps.','Since 2019.']);return}
+if(id==='microwave'){startDialog('MICROWAVE',['Something is in there.','Since Tuesday.']);return}
+if(id==='fridge'){startDialog('FRIDGE',['"DO NOT TOUCH - MIKE".','Who is Mike?']);return}
+if(id==='break_table'){startDialog('BREAK TABLE',['Crossword, half-done.','A chair that creaks.']);S.stress=Math.max(0,S.stress-2);return}
+if(id==='reception'){startDialog('RECEPTION',['The phone rings.','Nobody answers.']);return}
+if(id==='bossDesk'){startDialog('BOSS DESK',['Papers.','A photo of a family.','A stress ball. Squeezed flat.']);return}
+if(id==='safe'){startDialog('SAFE',['Locked.','"NOT 1234".','So it IS 1234.']);return}
+if(id==='myDesk'){completeTask('emails');openSelfComputer();return}
+startDialog(o.label||'?',['Nothing here.'])}
+
+function handleCopier(){
+var afterHours=S.time>=15*60;
+if(S.day>=2&&afterHours&&S.copierNotes<3){
+S.copierNotes++;
+var notes=[['You press.','Nothing.','A slip of paper.','"DO YOU REMEMBER MIKE?"'],
+['Again.','The light flickers.','"I WAS HERE. I AM STILL HERE."'],
+['The machine groans.','"TELL KAREN I AM SORRY."']];
+startDialog('COPIER',notes[Math.min(S.copierNotes-1,2)]);
+S.stress=Math.min(100,S.stress+3);toast('COPIER NOTE '+S.copierNotes+'/3');return}
+if(afterHours&&S.day>=3){startDialog('COPIER',['You press.','No response.','A soft hum.','Like breathing.']);S.stress=Math.min(100,S.stress+5);return}
+if(Math.random()<0.4){startDialog('COPIER',['You press.','JAM.','A red light.']);S.stress=Math.min(100,S.stress+5)}
+else{startDialog('COPIER',['The copier hums.','You stare at the ceiling.','Somehow this counts as work.']);completeTask('print')}}
+
+function talkToJessica(){
+if(S.affection<10){startDialog('JESSICA',['Oh! Hey!','I didn\'t expect to see you.','I come here to think.']);
+setTimeout(function(){showChoice('TALK TO JESSICA',[
+{label:'"Good place to be."',fn:function(){S.affection+=8;toast('+8 AFFECTION');updateAffection();checkJessStage()}},
+{label:'"Mind if I sit?"',fn:function(){S.affection+=12;toast('+12 AFFECTION');updateAffection();checkJessStage()}},
+{label:'"I should go."',fn:function(){S.affection+=2;updateAffection();checkJessStage()}}],true)},3000)}
+else if(S.affection<40){startDialog('JESSICA',['You again!','I keep seeing you around.','Okay that sounded weird.']);
+setTimeout(function(){showChoice('TALK TO JESSICA',[
+{label:'"I like running into you."',fn:function(){S.affection+=12;toast('+12 AFFECTION');updateAffection();checkJessStage()}},
+{label:'"How are you settling in?"',fn:function(){S.affection+=8;toast('+8 AFFECTION');updateAffection();checkJessStage()}},
+{label:'Just smile',fn:function(){S.affection+=5;toast('+5 AFFECTION');updateAffection();checkJessStage()}}],true)},3500)}
+else if(S.affection<70){startDialog('JESSICA',['I have to tell you something.','This job. It\'s heavy.']);
+setTimeout(function(){showChoice('JESSICA IS OPENING UP',[
+{label:'"I feel it too."',fn:function(){S.affection+=15;toast('+15 AFFECTION');updateAffection();checkJessStage()}},
+{label:'"You\'ll get used to it."',fn:function(){S.affection-=5;toast('-5 AFFECTION');updateAffection();checkJessStage()}},
+{label:'"Let\'s get out of here."',fn:function(){S.affection+=18;toast('+18 AFFECTION');updateAffection();checkJessStage()}}],true)},4000)}
+else{startDialog('JESSICA',['Hey. I was hoping you\'d come.','I\'ve been thinking about you.','But I meant it.']);
+setTimeout(function(){showChoice('JESSICA',[
+{label:'"I\'ve been thinking about you too."',fn:function(){S.affection+=15;S.jessicaStage=3;updateAffection();checkJessStage()}},
+{label:'"Tell me what you\'re thinking."',fn:function(){S.affection+=10;updateAffection();checkJessStage()}},
+{label:'Just sit.',fn:function(){S.affection+=12;updateAffection();checkJessStage()}}],true)},4500)}}
+
+function checkJessStage(){
+updateAffection();
+if(S.affection>=80&&S.jessicaStage<4){S.jessicaStage=4;
+setTimeout(function(){startDialog('JESSICA',['Alex.','This is the most real thing that has happened all week.']);
+setTimeout(function(){showChoice('JESSICA IS CLOSE',[
+{label:'"Yes."',fn:function(){S.affection=100;S.jessicaStage=5;toast('♥ MUTUAL');updateAffection();
+if(window.NLConnect)window.NLConnect.trigger('jessica','und Jessica sind sich näher gekommen.',S.playerName)}},
+{label:'"I\'m listening."',fn:function(){S.affection=95;S.jessicaStage=5;toast('♥ MUTUAL');updateAffection();
+if(window.NLConnect)window.NLConnect.trigger('jessica','und Jessica sind sich näher gekommen.',S.playerName)}}],true)},4500)},500)}}
+
+function endDay(burnout){
+if(S.ended)return;S.paused=true;S.dayEnding=true;S.overtimeActive=false;
+if(SCENE==='office'&&!burnout&&S.day>=2&&S.day<=4){
+showChoice('END OF DAY\n\nHead into the city?\n\nOr go straight home?',[
+{label:'Explore the city',fn:function(){closeChoice();goToCity()}},
+{label:'Go home',fn:function(){closeChoice();advanceDay(burnout)}}],false);return}
+advanceDay(burnout)}
+
+function goToCity(){SCENE='city';S.px=6*T+16;S.py=6*T+16;S.currentRoom=0;toast('CITY — EVENING');
+if(S.day>=2){setTimeout(function(){if(SCENE==='city'&&!S.dialog)startDialog('JESSICA',['Oh! Hey.','Fancy seeing you here.','...I come here every evening.'])},600)}}
+
+function advanceDay(burnout){
+if(burnout){showEnding('BURNOUT');return}
+if(S.day===0&&window.NLConnect)window.NLConnect.trigger('day1',S.playerName+' hat Tag 1 überlebt.',S.playerName);
+if(S.day>=DAYS.length-1){var good=S.tasksDone.length>=3||S.affection>=60;showEnding(good?'GOOD':'NEUTRAL');return}
+S.day++;SCENE='office';S.px=8*T+16;S.py=10*T+16;S.dir='down';
+var d=document.getElementById('dayIntro');
+document.getElementById('diWeekday').textContent=DAYS[S.day];
+document.getElementById('diDate').textContent='DAY '+(S.day+1);
+var subs=['You clock in.','The copier is angry.','Rumors fly.','The big deadline.','The end.'];
+document.getElementById('diSub').textContent=subs[S.day]||'';
+S.time=9*60;d.classList.add('on');
+setTimeout(function(){d.classList.remove('on');setTimeout(function(){
+S.paused=false;S.dayEnding=false;S.time=9*60;S.px=8*T+16;S.py=10*T+16;
+S.stress=Math.max(0,S.stress-10);initTasks();showObjective('DAY '+(S.day+1)+' — '+DAYS[S.day])},600)},2200)}
+
+function startGame(){
+S.playerName=document.getElementById('nameInput').value.trim().toUpperCase()||'ALEX';
+S.started=true;S.day=0;
+document.getElementById('start').style.display='none';
+SCENE='office';S.time=9*60;
+var d=document.getElementById('dayIntro');
+document.getElementById('diWeekday').textContent=DAYS[0];
+document.getElementById('diDate').textContent='DAY 1';
+document.getElementById('diSub').textContent='You clock in.';
+d.classList.add('on');
+setTimeout(function(){d.classList.remove('on');setTimeout(function(){
+S.paused=false;S.dayEnding=false;initTasks();showObjective('DAY 1 — MONDAY')},600)},2200)}
+
+function updateTime(dt){
+if(S.paused||S.dialog||S.ended||S.dayEnding)return;
+S.time+=dt*S.timeSpeed;
+if(S.time>=17*60){S.time=17*60;if(SCENE==='office'){endDay()}return}
+if(Math.random()<dt*0.02)S.stress=Math.min(100,S.stress+0.5);
+if(S.overtimeActive){S.overtimeT+=dt;if(S.overtimeT>=20){S.overtimeT=0;S.money+=5;updateMoney();toast('+$5 OVERTIME')}}
+updateClock();
+document.getElementById('stressFill').style.width=S.stress+'%';
+if(S.stress>=100&&!S.ended)endDay(true)}
+
+function updateClock(){var h=Math.floor(S.time/60),m=Math.floor(S.time%60);
+document.getElementById('timeLabel').textContent=(h<10?'0':'')+h+':'+(m<10?'0':'')+m;
+document.getElementById('dayLabel').textContent=DAYS[S.day]}
+function updateMoney(){document.getElementById('moneyVal').textContent=S.money}
+function updateAffection(){document.getElementById('affFill').style.width=S.affection+'%';
+document.getElementById('affection').style.display=S.affection>0?'block':'none'}
+
+function canLeave(){if(S.day>1)return false;if(S.tasksDone.length<S.tasks.length)return false;return true}
+function showExitChoice(){showChoice('LEAVE THE BUILDING?\n\nYou finished your tasks.',[
+{label:'Leave now',fn:function(){closeChoice();endDay()}},
+{label:'Stay for overtime',fn:function(){closeChoice();startOvertime()}},
+{label:'Never mind',fn:function(){}}])}
+function startOvertime(){toast('OVERTIME — +$5/20s');S.overtimeActive=true;S.overtimeT=0}
+
+function openSelfComputer(){showScreen('YOUR COMPUTER',EMAILS.myDesk||[],FILES.myDesk||[],'myDesk');completeTask('emails')}
+function openOwnerComputer(id,owner){
+if(owner==='dave'&&S.day>=DAVE_QUEST_TRIGGER_DAY&&S.daveQuest===0)S.daveQuest=1;
+var title=(owner==='boss'?'BOSS':owner.toUpperCase())+"'S COMPUTER";
+showScreen(title,EMAILS[id]||[],FILES[id]||[],id);
+if(!S.readEmails[id]){S.readEmails[id]=true;S.money+=5;updateMoney();toast('+$5')}}
+
+function showScreen(title,emails,files,id){
+document.getElementById('scrTitle').textContent=title;
+var body=document.getElementById('scrBody'),html='';
+if(emails.length){html+='<h4>INBOX</h4>';
+for(var i=0;i<emails.length;i++){var e=emails[i];
+html+='<div class="email"><div class="from">'+escHtml(e.from)+'</div><div class="subj">'+escHtml(e.subj)+'</div><div>'+escHtml(e.body).replace(/\n/g,'<br>')+'</div></div>'}}
+if(files.length){html+='<h4>FILES</h4>';
+for(var i=0;i<files.length;i++){var f=files[i];
+html+='<div class="file"><div class="name">'+escHtml(f.name)+'</div><div class="content">'+escHtml(f.content)+'</div></div>'}}
+if(!emails.length&&!files.length)html='<div style="color:#5a5a6a;text-align:center;padding:40px">No files.</div>';
+body.innerHTML=html;
+document.getElementById('screen').classList.add('on');S.paused=true;
+if(files.length&&!S.filesFound[id+'_bonus']){S.filesFound[id+'_bonus']=true;S.money+=10;updateMoney()}}
+
+function closeScreen(){document.getElementById('screen').classList.remove('on');S.paused=false;
+if(S.daveQuest===1&&!S.dialog)setTimeout(triggerDaveQuest,400)}
+function escHtml(s){return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+
+function showChoice(q,opts,love){
+document.getElementById('chQuestion').innerHTML=q.replace(/\n/g,'<br>');
+var o=document.getElementById('chOptions');o.innerHTML='';
+for(var i=0;i<opts.length;i++){(function(x){
+var b=document.createElement('button');
+b.className='ch'+(love?' love':'');b.textContent=x.label;
+b.onclick=function(){closeChoice();x.fn()};o.appendChild(b)})(opts[i])}
+document.getElementById('choice').classList.add('on');S.paused=true}
+function closeChoice(){document.getElementById('choice').classList.remove('on');
+if(!document.getElementById('screen').classList.contains('on'))S.paused=false}
+
+function triggerDaveQuest(){
+S.daveQuest=2;
+startDialog('DAVE',['Hey. I saw you at my desk.','It\'s okay. I was going to ask you anyway.','I need you to send this email for me.','To my wife. I can\'t do it myself.','Or... don\'t. It\'s fine.']);
+setTimeout(function(){showChoice('DAVE\'S REQUEST',[
+{label:'Send the email for him',fn:function(){S.daveQuestResult='sent';S.money+=20;updateMoney();toast('SENT');
+if(window.NLConnect)window.NLConnect.trigger('dave',S.playerName+' hat Daves E-Mail gesendet.',S.playerName)}},
+{label:'Delete the draft',fn:function(){S.daveQuestResult='deleted';toast('DELETED');
+if(window.NLConnect)window.NLConnect.trigger('dave',S.playerName+' hat Daves E-Mail gelöscht.',S.playerName)}},
+{label:'Talk to him about it',fn:function(){S.daveQuestResult='talk';toast('YOU LISTENED');
+if(window.NLConnect)window.NLConnect.trigger('dave',S.playerName+' hat mit Dave gesprochen.',S.playerName)}}])},3000)}
+
+function startDialog(sp,lines){
+S.dialog={sp:sp,lines:lines};S.dialogIdx=0;
+document.getElementById('dialog').style.display='block';
+document.getElementById('dlgSpeaker').textContent=sp;
+document.getElementById('dlgSpeaker').className='speaker'+(sp==='JESSICA'?' jess':'');
+document.getElementById('dlgLine').textContent=lines[0]}
+function advanceDialog(){if(!S.dialog)return;S.dialogIdx++;
+if(S.dialogIdx>=S.dialog.lines.length){S.dialog=null;document.getElementById('dialog').style.display='none'}
+else document.getElementById('dlgLine').textContent=S.dialog.lines[S.dialogIdx]}
+
+function initTasks(){
+S.tasks=DAY_TASKS[Math.min(S.day,DAY_TASKS.length-1)].slice();
+S.tasksDone=[];S.tasksCompleteShown=false;renderTasks()}
+
+function completeTask(id){
+if(!S.tasks.includes(id))return;
+if(S.tasksDone.includes(id))return;
+S.tasksDone.push(id);renderTasks();toast('TASK DONE');
+S.stress=Math.max(0,S.stress-3);checkAllTasksDone()}
+
+function checkAllTasksDone(){
+if(S.tasksCompleteShown)return;
+var all=true;
+for(var i=0;i<S.tasks.length;i++)if(S.tasksDone.indexOf(S.tasks[i])===-1){all=false;break}
+if(all){S.tasksCompleteShown=true;showObjective('TASKS COMPLETE');
+S.money+=10;updateMoney();setTimeout(function(){toast('ALL TASKS DONE — +$10')},200)}}
+
+function renderTasks(){
+var el=document.getElementById('tasksInner');el.innerHTML='';
+for(var i=0;i<S.tasks.length;i++){var t=S.tasks[i],done=S.tasksDone.indexOf(t)!==-1;
+var d=document.createElement('div');d.className='task'+(done?' done':'');
+d.innerHTML='<span class="box"></span>'+TASK_TEXT[t];el.appendChild(d)}
+checkAllTasksDone()}
+
+function showEnding(kind){
+S.ended=true;
+var ov=document.getElementById('overlay'),box=document.getElementById('overlayContent');
+var title,text;
+if(kind==='BURNOUT'){title='BURNOUT';text='The screen blurs. The walls close in. You stand up, walk out, and never come back.';
+if(window.NLConnect)window.NLConnect.trigger('burnout',S.playerName+' hat aufgegeben.',S.playerName)}
+else if(kind==='GOOD'){title='THE WEEK IS OVER';
+if(S.affection>=80)text='Friday, 5:00 PM. You survived. And you found something. Jessica is waiting outside. She smiles. Monday is coming. But you won\'t face it alone.';
+else if(S.daveQuestResult==='talk')text='Friday, 5:00 PM. You survived. Dave is still here. He talked to his wife. Small things count.';
+else if(S.daveQuestResult==='sent')text='Friday, 5:00 PM. Dave sent the email. He is leaving in two weeks. He meant it.';
+else text='Friday, 5:00 PM. It was a week. Just a week.';
+if(window.NLConnect)window.NLConnect.trigger('survived',S.playerName+' hat die Woche überlebt.',S.playerName)}
+else{title='SURVIVED';text='Friday, 5:00 PM. Some tasks remained. But you\'re still here.'}
+var aff=S.affection>0?'<br>JESSICA: <b class="pink">'+Math.min(100,Math.floor(S.affection))+'%</b>':'';
+box.innerHTML='<h1>'+title+'</h1><h2>'+S.playerName+' — End of Week</h2>'+'<p>'+text+'</p>'+
+'<div class="stats">TASKS: <b>'+S.tasksDone.length+'</b><br>STRESS: <b>'+Math.floor(S.stress)+'%</b><br>MONEY: <b>$'+S.money+'</b><br>DAYS: <b>'+Math.min(S.day+1,5)+'</b>'+aff+'</div>'+
+'<button class="btn" onclick="location.reload()">MONDAY AGAIN</button>';
+ov.classList.add('on')}
+
+var toastTO,objTO;
+function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.style.display='block';
+clearTimeout(toastTO);toastTO=setTimeout(function(){el.style.display='none'},1800)}
+function showObjective(txt){var el=document.getElementById('objective');
+document.getElementById('objText').textContent=txt;el.classList.add('on');
+clearTimeout(objTO);objTO=setTimeout(function(){el.classList.remove('on')},2200)}
+
+function render(){
+ctx.fillStyle='#0a0a10';ctx.fillRect(0,0,W,H);
+updateCam();
+ctx.save();ctx.scale(PX,PX);ctx.translate(-Math.floor(cam.x),-Math.floor(cam.y));
+drawRooms();drawObjects();
+var ents=[],npcs=getActiveNPCs();
+for(var i=0;i<npcs.length;i++)ents.push({y:npcs[i].y,fn:(function(n){return function(){drawNPC(n)}})(npcs[i])});
+if(SCENE==='city'){var j=getJessicaPos();ents.push({y:j.y,fn:drawJessica})}
+ents.push({y:S.py,fn:function(){drawCharacter(S.px-8,S.py-12,S.dir,S.frame,S.moving,{shirt:'#4a6a9a',hair:'#4a3a2a'})}});
+ents.sort(function(a,b){return a.y-b.y});
+for(var i=0;i<ents.length;i++)ents[i].fn();
+ctx.restore();
+var near=findNearby(),p=document.getElementById('prompt');
+if(near&&!S.dialog&&!S.paused&&!S.ended&&!S.dayEnding){
+if(document.getElementById('screen').classList.contains('on')||document.getElementById('choice').classList.contains('on')){p.style.display='none'}
+else{p.style.display='block';var nm=near.t==='npc'?near.o.name:(near.t==='jess'?'JESSICA':near.o.label);
+if(near.t==='obj'&&COMPUTERS[near.o.id])nm=COMPUTERS[near.o.id].label;
+p.innerHTML='[ <b>E</b> ] '+nm}}else p.style.display='none';
+updateRoomTag()}
+
+var last=performance.now();
+function loop(t){var dt=Math.min(0.05,(t-last)/1000);last=t;
+if(S.started){updatePlayer(dt);updateTime(dt);render()}
+requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+
+// ============================================================
+//  NL CONNECT — In-Game Chat
+// ============================================================
+(function(){
+const ROOM='monday-again',USER_KEY='nl_username',STORY_KEY='nl_story_'+ROOM;
+const SUPABASE_URL='https://iuunhphpbsqlpupyxeph.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_IvNzNXuOyglHWVk4CIhbTA_0fxueW4v';
+const btn=document.getElementById('nlc-btn'),panel=document.getElementById('nlc-panel');
+const msgsEl=document.getElementById('nlc-msgs'),inputEl=document.getElementById('nlc-input');
+const badgeEl=document.getElementById('nlc-badge'),nameModal=document.getElementById('nlc-name-modal');
+const nameInput=document.getElementById('nlc-name-input');
+let USERNAME=localStorage.getItem(USER_KEY)||null,unread=0,isOpen=false,sb=null;
+function askName(){nameModal.classList.add('open');nameInput.value=USERNAME||'';
+setTimeout(()=>nameInput.focus(),50);
+const save=()=>{const n=nameInput.value.trim()||'Anon';USERNAME=n;localStorage.setItem(USER_KEY,n);
+nameModal.classList.remove('open');sysMsg('Willkommen, '+n+'!')};
+document.getElementById('nlc-name-save').onclick=save;
+nameInput.onkeydown=e=>{if(e.key==='Enter')save();e.stopPropagation()};
+nameInput.onkeyup=e=>e.stopPropagation()}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c])}
+function addMsg(m){const d=document.createElement('div');const isStory=m.content.startsWith('[STORY]');
+const c=isStory?m.content.replace('[STORY]','').trim():m.content;
+d.className='nlc-msg'+(m.username===USERNAME?' me':'')+(isStory?' story':'');
+const time=new Date(m.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+if(isStory)d.innerHTML='📖 <b>'+esc(m.username)+'</b> '+esc(c);
+else d.innerHTML='<b>'+esc(m.username)+'</b><small>'+time+'</small><br>'+esc(c);
+msgsEl.appendChild(d);msgsEl.scrollTop=msgsEl.scrollHeight;
+if(!isOpen&&m.username!==USERNAME){unread++;badgeEl.textContent=unread>99?'99+':unread;badgeEl.style.display='block'}}
+function sysMsg(t){const d=document.createElement('div');d.className='nlc-msg system';d.textContent=t;
+msgsEl.appendChild(d);msgsEl.scrollTop=msgsEl.scrollHeight}
+async function loadMsgs(){const{data,error}=await sb.from('messages').select('*').eq('room',ROOM).order('created_at',{ascending:true}).limit(50);
+if(error){sysMsg('Error: '+error.message);return}data?.forEach(addMsg)}
+function subscribe(){sb.channel('nlc-'+ROOM)
+.on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room=eq.'+ROOM},p=>addMsg(p.new))
+.subscribe(st=>{if(st==='SUBSCRIBED')sysMsg('— #'+ROOM+' —')})}
+async function send(){if(!USERNAME){askName();return}
+const c=inputEl.value.trim();if(!c)return;inputEl.value='';
+const{error}=await sb.from('messages').insert({room:ROOM,username:USERNAME,content:c});
+if(error)sysMsg('Error: '+error.message)}
+btn.onclick=()=>{if(!USERNAME){askName();return}
+isOpen=!isOpen;panel.classList.toggle('open',isOpen);
+if(isOpen){unread=0;badgeEl.style.display='none';inputEl.focus()}};
+document.getElementById('nlc-close').onclick=()=>{isOpen=false;panel.classList.remove('open')};
+document.getElementById('nlc-send').onclick=send;
+inputEl.onkeydown=e=>{if(e.key==='Enter')send();e.stopPropagation()};
+inputEl.onkeyup=e=>e.stopPropagation();
+inputEl.onkeypress=e=>e.stopPropagation();
+window.NLConnect={
+send:async(c,u)=>{if(!sb)return false;const{error}=await sb.from('messages').insert({room:ROOM,username:u||USERNAME||'System',content:c});return!error},
+story:async(c,u)=>{if(!sb)return false;const{error}=await sb.from('messages').insert({room:ROOM,username:u||USERNAME||'Narrator',content:'[STORY] '+c});return!error},
+trigger:async(k,c,u)=>{const f=JSON.parse(localStorage.getItem(STORY_KEY)||'{}');if(f[k])return false;
+f[k]=true;localStorage.setItem(STORY_KEY,JSON.stringify(f));return window.NLConnect.story(c,u)},
+room:ROOM,getUser:()=>USERNAME,
+open:()=>{if(!USERNAME){askName();return}isOpen=true;panel.classList.add('open');inputEl.focus()}};
+import('https://esm.sh/@supabase/supabase-js@2').then(mod=>{
+sb=mod.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+loadMsgs();subscribe();console.log('[NL Connect] #'+ROOM)});
+})();
+</script>
+</body>
+</html>
