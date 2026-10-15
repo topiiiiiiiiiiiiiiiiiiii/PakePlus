@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#090c0d">
+<title>CONFLICT I · Mobile</title>
+<style>
+:root{--bg:#090c0d;--p:#141819;--p2:#1b2021;--bd:#303a3b;--bd2:#465252;--tx:#d4d8d5;--dim:#929a96;--ac:#727c70;--ac2:#a8afa2;--bl:#7794a5;--rd:#a87570;--yl:#b5a47b}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font-family:Inter,'Segoe UI',system-ui,sans-serif;font-size:14px;user-select:none;overscroll-behavior:none;touch-action:none}
+canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;background:radial-gradient(ellipse at 50% 0%,#14232c 0,#080d12 65%);z-index:5}
+.screen.on{display:flex}
+.wrap{max-width:560px;width:100%;margin:0 auto;padding:16px 12px 40px}
+.hero{text-align:center;padding:14px 0;margin-bottom:12px;border-bottom:1px solid var(--bd)}
+.hero h1{font-size:26px;letter-spacing:6px;font-weight:900;color:var(--ac2)}
+.hero .sub{color:var(--dim);font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-top:4px}
+.panel{background:linear-gradient(145deg,rgba(22,34,43,.97),rgba(13,20,27,.98));border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:10px}
+.panel h2{font-size:11px;color:var(--ac);margin-bottom:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700}
+input,select{background:#111c24;color:var(--tx);border:1px solid var(--bd);padding:12px;font-family:inherit;font-size:14px;width:100%;border-radius:8px;outline:none;margin-bottom:8px}
+input:focus,select:focus{border-color:var(--ac)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.btn{background:linear-gradient(180deg,#1d2b35,#15212a);color:var(--tx);border:1px solid var(--bd2);padding:13px 16px;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border-radius:9px;min-height:44px;transition:.12s}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn.pri{background:linear-gradient(135deg,#34502a,#24391e);border-color:#5b8144;color:#c8e0a8}
+.btn.dgr{background:#3a1a1a;border-color:#6a2a2a;color:#e0a8a8}
+.btn.redy{background:#1a2a1a;border-color:#3a5a3a;color:#a8d0a8}
+.btn.redy.on{background:#3a5a3a;border-color:#6a9a6a}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.full{width:100%}
+.tabs{display:flex;overflow-x:auto;gap:0;margin-bottom:12px;border-bottom:1px solid var(--bd);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:11px 14px;background:none;border:none;color:var(--dim);cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border-bottom:2px solid transparent;white-space:nowrap}
+.tab.on{color:var(--ac2);border-bottom-color:var(--ac2)}
+.tc{display:none}.tc.on{display:block}
+#serverList{display:flex;flex-direction:column;gap:8px}
+.sc{background:var(--p2);border:1px solid var(--bd);border-left:3px solid var(--ac);border-radius:8px;padding:12px;cursor:pointer}
+.sc.full{opacity:.5}
+.sc-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.sc-n{font-weight:700;font-size:13px;color:#fff}
+.sc-b{font-size:9px;padding:2px 6px;border-radius:2px;font-weight:700;letter-spacing:1px}
+.sc-b.o{background:#1a2a1a;color:var(--ac2)}
+.sc-b.f{background:#2a1a1a;color:#d08a8a}
+.sc-b.l{background:#2a2a1a;color:var(--yl)}
+.sc-m{font-size:10px;color:var(--dim);display:flex;gap:10px;margin-top:4px;flex-wrap:wrap}
+#playerList{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.pr{display:flex;justify-content:space-between;padding:9px 10px;background:var(--p2);border-radius:6px;font-size:12px;align-items:center}
+.pr .b{color:var(--bl)}.pr .r{color:var(--rd)}
+#chatBox{height:130px;overflow-y:auto;background:rgba(7,12,16,.88);padding:8px;border-radius:8px;margin-bottom:8px;font-size:11px;border:1px solid var(--bd)}
+.cm{margin-bottom:3px}.cm .n{color:var(--ac2)}
+#chatTabs{display:flex;gap:4px;margin-bottom:6px}
+.ctab{padding:7px 12px;background:var(--p2);border:1px solid var(--bd2);color:var(--dim);cursor:pointer;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:1.5px;border-radius:6px}
+.ctab.on{background:#2a3a20;border-color:var(--ac);color:var(--ac2)}
+#hud{position:fixed;left:0;right:0;bottom:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:rgba(10,16,21,.96);backdrop-filter:blur(10px);border-top:1px solid #354956;z-index:10;display:none;flex-direction:column;gap:4px}
+.hud-scroll{display:flex;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.hud-scroll::-webkit-scrollbar{display:none}
+.gb{background:#17232c;border:1px solid var(--bd2);padding:8px 10px;cursor:pointer;color:var(--tx);font-family:inherit;font-size:10px;letter-spacing:.5px;border-radius:8px;min-height:42px;min-width:66px;flex:0 0 auto;text-transform:uppercase;font-weight:700;display:flex;flex-direction:column;justify-content:center;align-items:center;line-height:1.15}
+.gb:active:not(.dis){transform:scale(.95);background:#1f2e38}
+.gb.dis{opacity:.32}
+.gb.act{background:#2a3a20;border-color:var(--ac);box-shadow:0 0 0 1px var(--ac2)}
+.gb-cost{font-size:7px;opacity:.85;margin-top:2px;color:#9fb3a0;font-weight:500;white-space:nowrap}
+.gb.agr{background:#2a1a1a;border-color:#5a2a2a;color:#e0a8a8}
+.gb.agr.d{background:#1a2a3a;border-color:#2a4a6a;color:#a8c8e0}
+.gb.agr.h{background:#2a2a1a;border-color:#5a5a2a;color:#e0d8a8}
+#hudTop{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.5px;padding:0 2px}
+#hudTop .oil{color:var(--yl);font-weight:700}
+#hudTop .grp{display:flex;gap:8px;align-items:center}
+#hudTop button{background:#17232c;border:1px solid var(--bd2);color:var(--tx);font-family:inherit;font-size:10px;padding:5px 8px;border-radius:6px;font-weight:700;letter-spacing:1px}
+#topbar{position:fixed;top:0;left:0;right:0;background:rgba(8,13,18,.94);backdrop-filter:blur(10px);padding:6px 8px;display:none;font-size:10px;z-index:10;gap:8px;border-bottom:1px solid var(--bd);align-items:center;letter-spacing:1px;flex-wrap:wrap}
+#topbar>span{white-space:nowrap}
+#minimap{position:fixed;right:6px;top:34px;background:rgba(10,10,10,.94);border:1px solid var(--bd2);z-index:10;display:none;border-radius:6px;overflow:hidden;width:110px;height:82px}
+#minimap canvas{position:static;width:110px;height:82px}
+#toast{position:fixed;top:44px;left:50%;transform:translateX(-50%);background:rgba(16,26,32,.97);border:1px solid #63884e;padding:9px 14px;border-radius:8px;font-size:12px;z-index:500;display:none;max-width:88%;text-align:center;pointer-events:none}
+#hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,10,10,.96);padding:12px 18px;border-radius:8px;font-size:13px;z-index:20;display:none;border:1px solid var(--ac);max-width:80%;text-align:center}
+#cd{position:fixed;inset:0;display:none;z-index:200;align-items:center;justify-content:center;background:rgba(5,5,5,.9);font-size:90px;color:#fff;font-weight:900}
+#resultScreen{position:fixed;inset:0;display:none;z-index:700;align-items:center;justify-content:center;background:rgba(0,0,0,.92);padding:16px}
+.result-card{width:100%;max-width:420px;background:linear-gradient(145deg,rgba(22,34,43,.97),rgba(13,20,27,.98));border:1px solid var(--bd2);border-top:3px solid var(--ac);padding:20px;text-align:center;border-radius:10px}
+.result-card h1{font-size:26px;letter-spacing:4px;margin-bottom:6px}
+.result-card .stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:14px 0;text-align:left;font-size:11px}
+.result-card .stats div{background:var(--p2);padding:9px;color:var(--dim);border-radius:6px}
+.result-card .stats b{float:right;color:var(--tx)}
+#econPanel{position:fixed;left:0;right:0;bottom:0;top:0;z-index:80;display:none;background:rgba(15,17,15,.99);overflow-y:auto;padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+#econPanel.on{display:block}
+.econ-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.econ-stat{background:var(--p2);padding:8px;border:1px solid var(--bd);font-size:10px;color:var(--dim);border-radius:6px}
+.econ-stat b{display:block;color:var(--tx);font-size:15px;margin-top:3px}
+.econ-row{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr 1fr;gap:4px;align-items:center;margin:4px 0;color:#aaa;font-size:10px}
+.econ-row input,.econ-row select{margin:0;padding:6px;font-size:10px}
+.market-box{background:var(--p2);border:1px solid var(--bd);padding:10px;margin:8px 0;border-radius:8px}
+.market-controls{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:center}
+.market-advice{margin-top:8px;padding:8px;border-left:3px solid var(--ac);background:#182018;color:#b8c8a8;font-size:10px;line-height:1.5;border-radius:4px}
+.econ-contract{background:var(--p2);padding:8px;margin:4px 0;display:flex;justify-content:space-between;gap:6px;font-size:10px;align-items:center;border-left:2px solid var(--ac);border-radius:4px}
+.lbl{font-size:10px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;display:block;font-weight:700}
+#joinModal{position:fixed;inset:0;display:none;z-index:300;align-items:center;justify-content:center;background:rgba(0,0,0,.9);padding:16px}
+#joinModal .jm{background:var(--p);border:1px solid var(--bd2);border-radius:10px;padding:20px;width:100%;max-width:380px}
+#touchHint{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:rgba(10,16,21,.94);border:1px solid var(--ac2);color:#d6e0c8;padding:6px 12px;border-radius:8px;font-size:11px;z-index:11;display:none;pointer-events:none;letter-spacing:.5px}
+@media(min-width:700px){.wrap{max-width:720px}}
+</style>
+</head>
+<body>
+
+<div class="screen on" id="nameScreen"><div class="wrap">
+<div class="hero"><h1>CONFLICT I</h1><div class="sub">Mobile · Identify Yourself</div></div>
+<div class="panel">
+<span class="lbl">Commander Name</span>
+<input id="nameInput" placeholder="Toasty991" maxlength="16" autocomplete="off" onkeydown="if(event.key==='Enter')trySetName()">
+<p id="nameError" style="color:#d08a8a;font-size:11px;margin-bottom:8px;display:none"></p>
+<button class="btn pri full" id="nameBtn" onclick="trySetName()">Continue</button>
+<div style="text-align:center;margin:12px 0;color:var(--dim);font-size:10px;letter-spacing:2px">— OR —</div>
+<button class="btn full" onclick="playAsGuest()">Play as Guest</button>
+</div></div></div>
+
+<div class="screen" id="menuScreen"><div class="wrap">
+<div id="profileBar" style="display:none;padding:10px;background:var(--p2);border:1px solid var(--bd);border-radius:8px;margin-bottom:10px;justify-content:space-between;align-items:center;font-size:11px">
+<div><span id="profileName" style="color:#fff;font-weight:700"></span><span id="profileRank" style="margin-left:6px"></span></div>
+<div style="display:flex;gap:8px;align-items:center">
+<span style="color:var(--dim)">W:<b style="color:#5f5" id="profileWins">0</b></span>
+<span style="color:var(--dim)">L:<b style="color:#d08a8a" id="profileLosses">0</b></span>
+<button class="btn" style="padding:4px 8px;font-size:10px;min-height:auto" onclick="changeName()">Name</button>
+</div></div>
+<div class="hero"><h1>CONFLICT I</h1><div class="sub">Real-Time Strategy · Mobile</div></div>
+<div class="tabs">
+<button class="tab on" onclick="tab(0)">Deploy</button>
+<button class="tab" onclick="tab(1)">Create</button>
+<button class="tab" onclick="tab(2)">Manual</button>
+<button class="tab" onclick="tab(3)">Ranks</button>
+<button class="tab" onclick="tab(5)">AI</button>
+</div>
+<div class="tc on" id="tc0"><div class="panel"><h2>Active Servers</h2><div id="serverList"><div style="color:var(--dim);padding:20px;text-align:center">Loading...</div></div></div></div>
+<div class="tc" id="tc1"><div class="panel"><h2>New Server</h2>
+<input id="sName" placeholder="Operation Alpha" maxlength="24">
+<input id="sPw" type="password" placeholder="Password (optional)" maxlength="20">
+<div class="row3">
+<div><span class="lbl">Max</span><select id="sMax"><option>2</option><option selected>4</option><option>6</option><option>8</option></select></div>
+<div><span class="lbl">Map</span><select id="sMap"><option value="small">SMALL</option><option value="middle">MIDDLE</option><option value="large" selected>LARGE</option><option value="extra">EXTRA</option></select></div>
+<div><span class="lbl">Oil</span><select id="sOil"><option value="slow">Slow</option><option value="normal" selected>Normal</option><option value="fast">Fast</option></select></div>
+</div>
+<div class="row">
+<div><span class="lbl">Mode</span><select id="sMode"><option value="classic" selected>Classic</option><option value="diplomacy">Diplomacy</option></select></div>
+<div><span class="lbl">Fog</span><select id="sFog"><option value="on" selected>On</option><option value="off">Off</option></select></div>
+</div>
+<button class="btn pri full" onclick="createServer()">Start Server</button></div></div>
+<div class="tc" id="tc2"><div class="panel"><h2>Touch Controls</h2>
+<p style="font-size:12px;line-height:1.9;color:#999">
+<b style="color:var(--tx)">TIPPEN auf Einheit:</b> auswählen<br>
+<b style="color:var(--tx)">TIPPEN auf Boden mit Auswahl:</b> bewegen<br>
+<b style="color:var(--tx)">TIPPEN auf Feind mit Auswahl:</b> angreifen<br>
+<b style="color:var(--tx)">TIPPEN auf leeren Boden:</b> Auswahl aufheben<br>
+<b style="color:var(--tx)">DOPPELTIPP:</b> alle vom selben Typ<br>
+<b style="color:var(--tx)">WISCHEN:</b> Kamera · <b style="color:var(--tx)">PINCH:</b> Zoom
+</p></div></div>
+<div class="tc" id="tc3"><div class="panel"><h2>Leaderboard</h2><div id="leaderboard">Loading...</div></div><div class="panel"><h2>Rank Tiers</h2><div id="rankTiers"></div></div></div>
+<div class="tc" id="tc5"><div class="panel">
+<h2>Skirmish vs AI</h2>
+<span class="lbl">Difficulty</span><select id="aiDifficulty"><option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option></select>
+<span class="lbl">Map</span><select id="soloMap"><option value="small">SMALL</option><option value="middle">MIDDLE</option><option value="large" selected>LARGE</option><option value="extra">EXTRA</option></select>
+<div class="row">
+<div><span class="lbl">Allies</span><select id="friendlyAI"><option value="0">0</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option></select></div>
+<div><span class="lbl">Enemies</span><select id="enemyAI"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></div>
+</div>
+<span class="lbl">Fog of War</span><select id="fogOfWar"><option value="on" selected>On</option><option value="off">Off</option></select>
+<span class="lbl">Your Color</span><select id="playerColor"><option value="#4a9cff">Blue</option><option value="#ff5252">Red</option><option value="#ffd740">Gold</option><option value="#c77dff">Violet</option><option value="#00d6a3">Teal</option><option value="#ff8c42">Orange</option><option value="#ff5fc8">Pink</option><option value="#c6ed45">Lime</option></select>
+<button class="btn pri full" onclick="startSkirmish()">Deploy vs AI</button>
+</div></div>
+</div></div>
+
+<div class="screen" id="lobbyScreen"><div class="wrap">
+<div class="hero"><h1 id="lobbyTitle" style="font-size:20px;letter-spacing:4px">LOBBY</h1></div>
+<div class="panel"><h2>Players</h2><div id="playerList"></div>
+<div class="row"><button class="btn" style="background:#1a2a4a;border-color:#3a5a8a;color:#a8c8e0" onclick="switchTeam('blue')">Team Blue</button><button class="btn" style="background:#4a1a1a;border-color:#8a3a3a;color:#e0a8a8" onclick="switchTeam('red')">Team Red</button></div>
+<div class="row" style="margin-top:8px"><button class="btn redy" id="readyBtn" onclick="toggleReady()">Ready</button><button class="btn pri" id="startBtn" onclick="startGame()" style="display:none">Deploy</button></div>
+<button class="btn dgr full" style="margin-top:8px" onclick="leaveLobby()">Leave</button></div>
+<div class="panel"><h2>Chat</h2>
+<div id="chatTabs"><button class="ctab on" data-ch="all" onclick="setChat('all')">ALL</button><button class="ctab" data-ch="blue" onclick="setChat('blue')">BLUE</button><button class="ctab" data-ch="red" onclick="setChat('red')">RED</button></div>
+<div id="chatBox"></div>
+<div style="display:flex;gap:6px"><input id="chatInput" placeholder="Message..." style="margin:0" onkeydown="if(event.key==='Enter')sendChat()"><button class="btn" onclick="sendChat()">Send</button></div></div>
+</div></div>
+
+<div id="resultScreen"><div class="result-card"><h1 id="resultTitle">BLUE WINS</h1><div id="resultSubtitle" style="color:var(--dim);letter-spacing:1px;font-size:11px">ENGAGEMENT COMPLETE</div><div class="stats" id="resultStats"></div><div style="display:flex;gap:8px"><button class="btn pri" style="flex:1" onclick="restartMatch()">Restart</button><button class="btn" style="flex:1" onclick="leaveMatch()">Menu</button></div></div></div>
+
+<div id="joinModal"><div class="jm">
+<h2 style="font-size:13px;color:var(--ac2);margin-bottom:6px;letter-spacing:2px;text-transform:uppercase">Join Server</h2>
+<p id="jmServerName" style="color:var(--dim);font-size:11px;margin-bottom:12px"></p>
+<div id="jmPwBlock" style="display:none"><span class="lbl">Password</span><input id="jmPw" type="password"></div>
+<p id="jmError" style="color:#d08a8a;font-size:11px;margin-bottom:8px;display:none"></p>
+<div style="display:flex;gap:8px"><button class="btn" style="flex:1" onclick="closeJoinModal()">Cancel</button><button class="btn pri" style="flex:1" onclick="confirmJoin()">Join</button></div>
+</div></div>
+
+<div id="topbar">
+<span>Commander: <span id="myName">-</span></span>
+<span style="color:var(--bl)">BLUE: <span id="blueCount">0</span></span>
+<span style="color:var(--rd)">RED: <span id="redCount">0</span></span>
+<span>Time: <span id="gameTime">0:00</span></span>
+<button class="gb" id="pauseBtn" onclick="toggleSoloPause()" style="display:none;min-height:auto;padding:4px 8px;font-size:10px;flex-direction:row">Pause</button>
+<button class="gb" onclick="toggleEconomy()" style="min-height:auto;padding:4px 8px;font-size:10px;flex-direction:row">Economy</button>
+<span id="fogToggle" style="color:#929a96;font-size:9px">FOG: ON</span>
+</div>
+
+<div id="minimap"><canvas id="mmc" width="110" height="82"></canvas></div>
+
+<div id="hud">
+<div id="hudTop">
+<div class="grp">
+<span>Cr: <span class="oil" id="creditsHud">0</span></span>
+<span>Oil: <span class="oil" id="oil">0</span></span>
+<span>Sel: <span id="selCount">0</span></span>
+</div>
+<div class="grp">
+<button id="aggrBtn" onclick="cycleAggr()">Aggr</button>
+<button id="artBtn" onclick="toggleBombard()">Arty</button>
+</div>
+</div>
+<div class="hud-scroll" id="hudBuild">
+<button class="gb" id="bBarracks" onclick="startBuild('barracks')">Barracks<span class="gb-cost">100C 45Fe 8L</span></button>
+<button class="gb" id="bFactory" onclick="startBuild('factory')">Factory<span class="gb-cost">150C 75Fe 12L</span></button>
+<button class="gb" id="bRefinery" onclick="startBuild('refinery')">Refinery<span class="gb-cost">200C 55Fe 10L</span></button>
+<button class="gb" id="bTower" onclick="startBuild('tower')">Tower<span class="gb-cost">100C 35Fe 7L</span></button>
+<button class="gb" id="bWall" onclick="startBuild('wall')">Wall<span class="gb-cost">30C 8Fe 2L</span></button>
+<button class="gb" id="bRadar" onclick="startBuild('radar')">Radar<span class="gb-cost">150C 60Fe 8L</span></button>
+</div>
+<div class="hud-scroll" id="hudUnits">
+<button class="gb" id="bInf" onclick="tryBuild('inf')">Inf<span class="gb-cost">50C 8Fe 1L</span></button>
+<button class="gb" id="bTank" onclick="tryBuild('tank')">Tank<span class="gb-cost">150C 38Fe 4L</span></button>
+<button class="gb" id="bRocket" onclick="tryBuild('rocket')">Arty<span class="gb-cost">180C 30Fe 3L</span></button>
+<button class="gb" id="bHeli" onclick="tryBuild('heli')">Heli<span class="gb-cost">220C 42Fe 4L</span></button>
+<button class="gb" id="bSniper" onclick="tryBuild('sniper')">Sniper<span class="gb-cost">120C 16Fe 2L</span></button>
+<button class="gb" id="bMedic" onclick="tryBuild('medic')">Medic<span class="gb-cost">80C 12Fe 2L</span></button>
+</div>
+</div>
+
+<div id="touchHint"></div>
+<div id="cd"></div><div id="hint"></div><div id="toast"></div>
+
+<div id="econPanel">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+<h2 style="color:var(--ac2);letter-spacing:2px;font-size:14px">War Economy</h2>
+<button class="btn" onclick="toggleEconomy(false)" style="min-height:auto;padding:6px 10px;font-size:11px">Close</button>
+</div>
+<div id="econStats" class="econ-grid"></div>
+<div style="color:var(--dim);font-size:10px;margin:6px 0">Assign workers to produce Credits, Iron, Oil, Labor.</div>
+<div class="econ-row" style="font-weight:700;color:var(--ac2)"><span>Commander</span><span>Fe</span><span>Oil</span><span>Lab</span><span>Cr</span></div>
+<div id="econWorkforce"></div>
+<button class="btn pri full" onclick="saveEconomyJobs()" style="margin:8px 0">Apply Workforce</button>
+<h2 style="margin:10px 0 4px;color:var(--ac2);letter-spacing:2px;font-size:13px">Resource Market</h2>
+<div class="market-box">
+<div class="market-controls">
+<select id="marketResource" onchange="renderMarketAdvice()"><option value="iron">Iron — 3 Cr</option><option value="oil">Oil — 4 Cr</option><option value="labor">Labor — 2 Cr</option></select>
+<input id="marketAmount" type="number" min="1" max="500" value="10" oninput="renderMarketAdvice()">
+<button class="btn pri" onclick="tradeMarket('buy')">Buy</button>
+<button class="btn" onclick="tradeMarket('sell')">Sell</button>
+</div>
+<div id="marketAdvice" class="market-advice">Choose a resource and amount.</div>
+</div>
+<h2 style="margin:10px 0 4px;color:var(--ac2);letter-spacing:2px;font-size:13px">Trade Contracts</h2>
+<div class="econ-row" style="grid-template-columns:1fr 1fr 1fr 1fr">
+<select id="contractTarget"></select>
+<select id="contractResource"><option value="iron">Iron</option><option value="oil">Oil</option><option value="labor">Labor</option><option value="credits">Credits</option></select>
+<input id="contractAmount" type="number" min="1" max="500" value="3">
+<input id="contractEvery" type="number" min="1" max="3600" value="3">
+</div>
+<button class="btn pri full" onclick="createEconomyContract()" style="margin:6px 0">Create Contract</button>
+<div id="econContracts"></div>
+</div>
+
+<canvas id="game"></canvas>
+
+<script type="module">
+import{createClient}from"https://esm.sh/@supabase/supabase-js@2";
+window.__sb=null;
+try{window.__sb=createClient("https://mcdushtqptgnyzxunsdi.supabase.co","sb_publishable_QY3q7l4WqcVc4-CTqhq8Xg_Dlj_BlFP",{realtime:{params:{eventsPerSecond:20}}});console.log("[SB] ok")}catch(e){console.error(e)}
+window.__onSB?.();
+</script>
+
+<script>
+const MOBILE={dprMax:1.5,fogGrid:60,hudInterval:400,minimapInterval:200,particleCap:220,shotParticleCount:3,explosionParticles:10,smokeParticles:3,stateSyncMs:250};
+const BUILDS={base:{c:0,hp:800,r:220,w:80,h:80,n:'Headquarters'},barracks:{c:100,hp:200,r:130,w:60,h:60,n:'Barracks'},factory:{c:150,hp:250,r:150,w:70,h:70,n:'Factory'},refinery:{c:200,hp:180,r:120,w:55,h:55,n:'Refinery'},tower:{c:100,hp:260,r:0,w:42,h:52,n:'Defense Tower',dmg:18,rng:230,cd:1600},wall:{c:30,hp:360,r:0,w:48,h:20,n:'Wall'},radar:{c:150,hp:160,r:0,w:58,h:58,n:'Radar'}};
+const UNITS={inf:{c:50,hp:60,dmg:8,rng:120,spd:2.8,r:12,n:'Infantry',needs:'barracks',cd:900,armor:0,pierce:0},tank:{c:150,hp:360,dmg:30,rng:180,spd:1.8,r:20,n:'Tank',needs:'factory',cd:900,proj:1,armor:.3,pierce:0},rocket:{c:180,hp:240,dmg:45,rng:320,spd:1.5,r:15,n:'Artillery',needs:'factory',cd:1500,proj:1,big:1,armor:0,pierce:.7},heli:{c:220,hp:130,dmg:25,rng:150,spd:4.2,r:16,n:'Helicopter',needs:'factory',cd:600,fly:1,armor:0,pierce:0},sniper:{c:120,hp:50,dmg:55,rng:420,spd:2.1,r:10,n:'Sniper',needs:'barracks',cd:2500,armor:0,pierce:.5},medic:{c:80,hp:70,dmg:0,rng:0,spd:2.8,r:11,n:'Medic',needs:'barracks',cd:0,heal:1,armor:0,pierce:0}};
+const OIL={slow:.08,normal:.15,fast:.3};
+const MAPS={small:{w:1200,h:900},middle:{w:1600,h:1200},large:{w:2200,h:1600},extra:{w:3200,h:2200}};
+const MAP_LABELS={small:'[SMALL]',middle:'[MIDDLE]',large:'[LARGE]',extra:'[EXTRA]'};
+const RANKS=[{name:'Private',min:0,color:'#888888'},{name:'Corporal',min:4,color:'#9ab87a'},{name:'Sergeant',min:10,color:'#7a9a5a'},{name:'Staff Sergeant',min:20,color:'#5a8a4a'},{name:'Lieutenant',min:35,color:'#4a8ecf'},{name:'Captain',min:55,color:'#2a5a9a'},{name:'Major',min:80,color:'#8a5acf'},{name:'Colonel',min:110,color:'#cf8a4a'},{name:'General',min:150,color:'#cfaf4a'}];
+function getRank(w){let r=RANKS[0];for(const k of RANKS){if(w>=k.min)r=k;else break}return r}
+function rankBadge(w){const r=getRank(w);return `<span style="color:${r.color};font-size:9px;font-weight:700;letter-spacing:1px">${r.name.toUpperCase()}</span>`}
+function isGuestName(n){return typeof n==='string'&&n.startsWith('Guest_')}
+let SB=null,me=null,srv=null,MAPW=1600,MAPH=1200,inGame=false,pendingJoin=null;
+let myIP=null,myIPHash=null;
+const S={units:{},bldgs:{},oil:{blue:200,red:200},economy:{players:{},contracts:[],nextId:1},nid:1,winner:null,stats:{blue:{kills:0,losses:0,buildings:0},red:{kills:0,losses:0,buildings:0}}};
+const ECON_COSTS={builds:{barracks:{iron:45,labor:8},factory:{iron:75,labor:12},refinery:{iron:55,labor:10},tower:{iron:35,labor:7},wall:{iron:8,labor:2},radar:{iron:60,labor:8}},units:{inf:{iron:8,labor:1},tank:{iron:38,labor:4},rocket:{iron:30,labor:3},heli:{iron:42,labor:4},sniper:{iron:16,labor:2},medic:{iron:12,labor:2}}};
+const ECON_RATE={iron:.58,oil:1,labor:.24,credits:.72};
+let economyOpen=false,economyReady=false,economyUiAt=0;
+let soloMode=false,soloPaused=false,soloPausedAt=0,aiDifficulty='normal',activeMap='large',soloPlayerColor='#4a9cff',fogEnabled=true,aiCommanders=[],waterBodies=[],resourceNodes=[],fogSeen=[],fogVisible=[],fogCols=0,fogRows=0,lastFog=0,audioCtx=null;
+let sel=new Set(),cam={x:0,y:0},zm=1;
+let bMode=null,bombardMode=false,bValid=false;
+let particles=[],projs=[],obstacles=[],startT=0,gameCh=null,lobbyCh=null;
+let shakePower=0,shakeEnd=0;
+let chatChannel='all',chatHistory=[];
+let gameChatHistory=[];
+let heartbeatInterval=null,disconnectCheck=null,statsRecorded=false,stateSyncInterval=null;
+let loopRunning=false,lastT=0;
+const cv=document.getElementById('game'),cx=cv.getContext('2d',{alpha:false});
+const mm=document.getElementById('minimap'),mmc=document.getElementById('mmc'),mc=mmc.getContext('2d',{alpha:false});
+const MMW=110,MMH=82;let MMX=1,MMY=1,W=0,H=0;
+function resize(){const dpr=Math.min(devicePixelRatio||1,MOBILE.dprMax);W=innerWidth;H=innerHeight;cv.width=Math.floor(W*dpr);cv.height=Math.floor(H*dpr);cv.style.width=W+'px';cv.style.height=H+'px';cx.setTransform(dpr,0,0,dpr,0,0);cx.imageSmoothingEnabled=true}
+addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,120));resize();
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c])}
+function showToast(msg,dur=2200){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';clearTimeout(window.__toastT);window.__toastT=setTimeout(()=>t.style.display='none',dur)}
+function hint(t){const e=document.getElementById('hint');e.textContent=t;e.style.display='block';clearTimeout(window.__ht);window.__ht=setTimeout(()=>e.style.display='none',1400)}
+function touchHint(t){const e=document.getElementById('touchHint');e.textContent=t;e.style.display=t?'block':'none'}
+function tab(i){document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('on',i===j));document.querySelectorAll('.tc').forEach((t,j)=>t.classList.toggle('on',i===j));if(i===3){renderRankTiers();loadLeaderboard()}}
+async function hashString(str){const buf=new TextEncoder().encode(str);const h=await crypto.subtle.digest('SHA-256',buf);return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('')}
+async function fetchIP(){if(myIPHash)return myIPHash;try{const res=await fetch('https://api.ipify.org?format=json');const data=await res.json();myIP=data.ip;myIPHash=await hashString(myIP);return myIPHash}catch(e){const fallback=navigator.userAgent+screen.width+'x'+screen.height;myIPHash=await hashString(fallback);return myIPHash}}
+function getMyName(){return localStorage.getItem('ww3_name')||null}
+function isGuest(){return localStorage.getItem('ww3_guest')==='1'}
+async function trySetName(){
+  const inp=document.getElementById('nameInput'),err=document.getElementById('nameError'),n=inp.value.trim();
+  err.style.display='none';
+  if(!n||n.length<3){err.textContent='Name must be at least 3 characters.';err.style.display='block';return}
+  if(n.length>16){err.textContent='Name too long.';err.style.display='block';return}
+  if(isGuestName(n)){err.textContent='Name cannot start with "Guest_".';err.style.display='block';return}
+  if(!SB){err.textContent='Profile service unavailable.';err.style.display='block';return}
+  const btn=document.getElementById('nameBtn');btn.textContent='Checking...';btn.disabled=true;
+  try{
+    const ipHash=await fetchIP();
+    const {data:existing,error:lookupError}=await SB.from('player_stats').select('*').eq('name',n).maybeSingle();
+    if(lookupError)throw lookupError;
+    if(existing){
+      if(existing.ip_hash!==ipHash){err.textContent='Name already taken.';err.style.display='block';return}
+      await SB.from('player_stats').update({last_seen:new Date().toISOString()}).eq('name',n);
+    }else{
+      await SB.from('player_stats').insert({name:n,ip_hash:ipHash,wins:0,losses:0});
+    }
+    localStorage.setItem('ww3_name',n);localStorage.setItem('ww3_ip_hash',ipHash);localStorage.removeItem('ww3_guest');
+    document.getElementById('nameScreen').classList.remove('on');document.getElementById('menuScreen').classList.add('on');
+    await refreshProfileBar();renderList();
+  }catch(e){console.error(e);err.textContent='Could not verify. Try again or play as guest.';err.style.display='block'}
+  finally{btn.textContent='Continue';btn.disabled=false}
+}
+function playAsGuest(){
+  const num=Math.floor(Math.random()*9000)+1000,name='Guest_'+num;
+  localStorage.setItem('ww3_name',name);localStorage.setItem('ww3_guest','1');localStorage.removeItem('ww3_ip_hash');
+  document.getElementById('nameScreen').classList.remove('on');document.getElementById('menuScreen').classList.add('on');
+  showToast('Playing as '+name);refreshProfileBar();renderList();
+}
+function changeName(){if(confirm('Change name / leave guest mode?')){localStorage.removeItem('ww3_name');localStorage.removeItem('ww3_guest');localStorage.removeItem('ww3_ip_hash');location.reload()}}
+async function refreshProfileBar(){
+  const bar=document.getElementById('profileBar'),n=getMyName();
+  if(!n){bar.style.display='none';return}
+  if(isGuest()){bar.style.display='flex';document.getElementById('profileName').innerHTML=esc(n)+' <span style="color:#888;font-size:9px">[GUEST]</span>';document.getElementById('profileRank').innerHTML='';document.getElementById('profileWins').textContent='—';document.getElementById('profileLosses').textContent='—';return}
+  const {data:p}=await SB.from('player_stats').select('*').eq('name',n).maybeSingle();
+  if(!p){bar.style.display='none';return}
+  bar.style.display='flex';
+  document.getElementById('profileName').textContent=p.name;
+  document.getElementById('profileRank').innerHTML=rankBadge(p.wins);
+  document.getElementById('profileWins').textContent=p.wins;
+  document.getElementById('profileLosses').textContent=p.losses;
+}
+async function loadLeaderboard(){
+  const el=document.getElementById('leaderboard');
+  const {data}=await SB.from('player_stats').select('name,wins,losses').order('wins',{ascending:false}).limit(20);
+  if(!data?.length){el.innerHTML='<div style="color:var(--dim);padding:10px">No players yet.</div>';return}
+  el.innerHTML=data.map((p,i)=>{const tot=p.wins+p.losses,rate=tot?Math.round(p.wins/tot*100):0;return `<div style="display:flex;justify-content:space-between;padding:8px 10px;background:var(--p2);border-radius:6px;margin-bottom:4px;font-size:11px;align-items:center"><span><b style="color:var(--yl)">#${i+1}</b> ${esc(p.name)}</span><span style="display:flex;gap:8px"><span style="color:#5f5">${p.wins}W</span><span style="color:#d08a8a">${p.losses}L</span><span style="color:var(--dim)">${rate}%</span></span></div>`}).join('');
+}
+function renderRankTiers(){const el=document.getElementById('rankTiers');el.innerHTML=RANKS.map((r,i)=>{const nx=RANKS[i+1],range=nx?`${r.min}–${nx.min-1}`:`${r.min}+`;return `<div style="display:flex;justify-content:space-between;padding:9px 10px;background:var(--p2);border-radius:6px;margin-bottom:4px;font-size:11px;border-left:3px solid ${r.color}"><span style="color:${r.color};font-weight:700">${r.name}</span><span style="color:var(--dim)">${range}</span></div>`}).join('')}
+window.__onSB=async function(){
+  SB=window.__sb;
+  if(!SB){document.getElementById('serverList').innerHTML='<div style="color:#888;padding:20px;text-align:center">Supabase unavailable</div>';return}
+  await fetchIP();
+  const n=getMyName();
+  if(n&&isGuest()){document.getElementById('nameScreen').classList.remove('on');document.getElementById('menuScreen').classList.add('on');refreshProfileBar()}
+  else if(n){const {data:existing}=await SB.from('player_stats').select('*').eq('name',n).maybeSingle();if(existing&&existing.ip_hash===myIPHash){document.getElementById('nameScreen').classList.remove('on');document.getElementById('menuScreen').classList.add('on');await refreshProfileBar()}else if(existing){document.getElementById('nameInput').value=n;document.getElementById('nameError').textContent='IP changed. Confirm your name.';document.getElementById('nameError').style.display='block';localStorage.removeItem('ww3_name')}}
+  await renderList();
+  setInterval(renderList,5000);
+  SB.channel('sl').on('postgres_changes',{event:'*',schema:'public',table:'servers'},()=>renderList()).subscribe();
+};
+if(window.__sb)window.__onSB();
+async function renderList(){
+  if(!SB)return;
+  const cut=new Date(Date.now()-5*60*1000).toISOString();
+  const {data,err}=await SB.from('servers').select('*').eq('game_state','lobby').gte('updated_at',cut).order('created_at',{ascending:false});
+  const el=document.getElementById('serverList');
+  if(err){el.innerHTML='<div style="color:#888;padding:20px;text-align:center">Error</div>';return}
+  if(!data?.length){el.innerHTML='<div style="color:var(--dim);padding:20px;text-align:center">No active servers. Create one.</div>';return}
+  const ids=data.map(s=>s.id);
+  const {data:pl}=await SB.from('players').select('server_id').in('server_id',ids);
+  const cnt={};(pl||[]).forEach(p=>cnt[p.server_id]=(cnt[p.server_id]||0)+1);
+  el.innerHTML=data.map(s=>{const n=cnt[s.id]||0,full=n>=s.max_players,pw=!!s.password;return `<div class="sc${full?' full':''}" onclick="${full?'':`tryJoin('${s.id}')`}"><div class="sc-h"><div class="sc-n">${esc(s.name)} ${pw?'🔒':''}</div><div class="sc-b ${full?'f':pw?'l':'o'}">${full?'FULL':pw?'PW':'OPEN'}</div></div><div class="sc-m"><span>${n}/${s.max_players}</span><span>${MAP_LABELS[s.map_size]||s.map_size}</span><span>OIL ${s.oil_rate}</span></div></div>`}).join('');
+}
+async function createServer(){
+  if(!SB)return alert('Supabase unavailable');
+  const name=document.getElementById('sName').value.trim()||'Operation';
+  const pname=getMyName();
+  if(!pname)return alert('No name set.');
+  const pw=document.getElementById('sPw').value.trim()||null;
+  const max=parseInt(document.getElementById('sMax').value);
+  const map=document.getElementById('sMap').value;
+  const oil=document.getElementById('sOil').value;
+  const mode=document.getElementById('sMode').value;
+  const fog=document.getElementById('sFog').value==='on';
+  const {data:s,error}=await SB.from('servers').insert({name,host_name:pname,password:pw,max_players:max,map_size:map,oil_rate:oil,game_mode:mode,fog_enabled:fog,game_state:'lobby'}).select().single();
+  if(error)return alert('Error: '+error.message);
+  const {data:p,error:e2}=await SB.from('players').insert({server_id:s.id,name:pname,team:'blue',is_host:true}).select().single();
+  if(e2)return alert('Error: '+e2.message);
+  me=p;srv=s;
+  activeMap=MAPS[map]?map:'large';MAPW=MAPS[activeMap].w;MAPH=MAPS[activeMap].h;MMX=MMW/MAPW;MMY=MMH/MAPH;
+  enterLobby();
+}
+async function tryJoin(sid){
+  const {data:s}=await SB.from('servers').select('*').eq('id',sid).single();
+  if(!s)return;
+  const {data:pl}=await SB.from('players').select('*').eq('server_id',sid);
+  if(pl.length>=s.max_players){alert('Server full.');return}
+  pendingJoin=s;
+  document.getElementById('jmServerName').textContent=s.name+' | '+(MAP_LABELS[s.map_size]||s.map_size);
+  document.getElementById('jmPwBlock').style.display=s.password?'block':'none';
+  document.getElementById('jmPw').value='';
+  document.getElementById('jmError').style.display='none';
+  document.getElementById('joinModal').style.display='flex';
+}
+function closeJoinModal(){document.getElementById('joinModal').style.display='none';pendingJoin=null}
+async function confirmJoin(){
+  if(!pendingJoin)return;
+  const s=pendingJoin,errEl=document.getElementById('jmError');errEl.style.display='none';
+  if(s.password){if(document.getElementById('jmPw').value!==s.password){errEl.textContent='Wrong password.';errEl.style.display='block';return}}
+  const name=getMyName();
+  if(!name){errEl.textContent='No name.';errEl.style.display='block';return}
+  const {data:pl}=await SB.from('players').select('*').eq('server_id',s.id);
+  if(pl.length>=s.max_players){errEl.textContent='Server full.';errEl.style.display='block';return}
+  const bc=pl.filter(p=>p.team==='blue').length,rc=pl.filter(p=>p.team==='red').length,team=bc<=rc?'blue':'red';
+  const {data:p,error}=await SB.from('players').insert({server_id:s.id,name,team}).select().single();
+  if(error){errEl.textContent='Error: '+error.message;errEl.style.display='block';return}
+  me=p;srv=s;
+  activeMap=MAPS[s.map_size]?s.map_size:'large';MAPW=MAPS[activeMap].w;MAPH=MAPS[activeMap].h;MMX=MMW/MAPW;MMY=MMH/MAPH;
+  closeJoinModal();enterLobby();
+}
+function enterLobby(){
+  document.getElementById('menuScreen').classList.remove('on');
+  document.getElementById('lobbyScreen').classList.add('on');
+  document.getElementById('lobbyTitle').textContent=srv.name;
+  lobbyCh=SB.channel('lobby-'+srv.id)
+    .on('postgres_changes',{event:'*',schema:'public',table:'players',filter:'server_id=eq.'+srv.id},()=>refreshPlayers())
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'server_id=eq.'+srv.id},p=>addChat(p.new))
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'servers',filter:'id=eq.'+srv.id},p=>{srv=p.new;if(p.new.game_state==='countdown')showCD(p.new.start_at);if(p.new.game_state==='playing'&&!inGame)startPlay();if(p.new.game_state==='finished'&&p.new.winner)setWinner(p.new.winner)}).subscribe();
+  loadChat();refreshPlayers();updateRdyBtn();
+}
+async function loadChat(){const {data}=await SB.from('messages').select('*').eq('server_id',srv.id).order('created_at',{ascending:false}).limit(30);if(data){data.reverse().forEach(m=>chatHistory.push(m));if(chatHistory.length>50)chatHistory=chatHistory.slice(-50);renderChat()}}
+function setChat(ch){chatChannel=ch;document.querySelectorAll('.ctab').forEach(t=>t.classList.toggle('on',t.dataset.ch===ch));renderChat()}
+function shouldShowMsg(m){if(chatChannel==='all')return m.channel==='all'||!m.channel;return m.channel===chatChannel}
+function renderChat(){const box=document.getElementById('chatBox');box.innerHTML='';for(const m of chatHistory){if(!shouldShowMsg(m))continue;const d=document.createElement('div');d.className='cm';let prefix='';if(m.channel==='blue')prefix='<span style="color:#4a8ecf">[BLUE] </span>';else if(m.channel==='red')prefix='<span style="color:#cf4a4a">[RED] </span>';d.innerHTML=`${prefix}<span class="n">${esc(m.player_name)}:</span> ${esc(m.text)}`;box.appendChild(d)}box.scrollTop=box.scrollHeight}
+function addChat(m){if(!m)return;chatHistory.push(m);if(chatHistory.length>50)chatHistory.shift();if(shouldShowMsg(m))renderChat()}
+async function sendChat(){const i=document.getElementById('chatInput'),t=i.value.trim();if(!t)return;i.value='';let ch='all';if(chatChannel==='blue'||chatChannel==='red')ch=me.team===chatChannel?chatChannel:'all';await SB.from('messages').insert({server_id:srv.id,player_name:me.name,text:t,channel:ch})}
+async function refreshPlayers(){
+  const {data}=await SB.from('players').select('*').eq('server_id',srv.id).order('joined_at');
+  if(!data)return;
+  const names=data.map(p=>p.name).filter(n=>n&&!isGuestName(n));
+  let statsMap={};
+  if(names.length){const {data:stats}=await SB.from('player_stats').select('name,wins').in('name',names);(stats||[]).forEach(s=>statsMap[s.name]=s)}
+  const el=document.getElementById('playerList');
+  el.innerHTML=data.map(p=>{const tc=p.team==='blue'?'b':'r';const isMe=p.name===getMyName()?' (You)':'';const guest=isGuestName(p.name);let badge='';if(guest)badge='<span style="color:#666;font-size:9px">GUEST</span>';else{const st=statsMap[p.name];badge=st?rankBadge(st.wins):'<span style="color:#666;font-size:9px">NEW</span>'}const rt=p.is_host?'HOST':(p.is_ready?'READY':'WAITING');return `<div class="pr"><span class="${tc}">${p.team==='blue'?'BLUE':'RED'} | ${esc(p.name)}${isMe}</span><span style="display:flex;gap:6px;align-items:center">${badge}<span>${rt}</span></span></div>`}).join('');
+  const btn=document.getElementById('startBtn');
+  if(me.is_host){btn.style.display='inline-block';const allRdy=data.filter(p=>!p.is_host).every(p=>p.is_ready),enough=data.length>=2;btn.disabled=!(allRdy&&enough)}
+  else btn.style.display='none';
+}
+function updateRdyBtn(){const b=document.getElementById('readyBtn');b.textContent=me.is_ready?'READY ✓':'READY';b.classList.toggle('on',me.is_ready)}
+async function toggleReady(){me.is_ready=!me.is_ready;await SB.from('players').update({is_ready:me.is_ready}).eq('id',me.id);updateRdyBtn()}
+async function switchTeam(t){me.team=t;await SB.from('players').update({team:t}).eq('id',me.id)}
+async function leaveLobby(){
+  if(!me||!srv)return;
+  const {data:s}=await SB.from('servers').select('game_state').eq('id',srv.id).single();
+  if(s&&s.game_state==='playing'){const winner=me.team==='blue'?'red':'blue';gameCh?.send({type:'broadcast',event:'win',payload:{winner}});await SB.from('servers').update({game_state:'finished',winner,finish_reason:'forfeit'}).eq('id',srv.id);if(me.is_host)await recordMatchResult(winner)}
+  stopHeartbeat();if(disconnectCheck)clearInterval(disconnectCheck);
+  await SB.from('players').delete().eq('id',me.id);
+  if(me.is_host&&(!s||s.game_state!=='playing'))await SB.from('servers').delete().eq('id',srv.id);
+  location.reload();
+}
+async function startGame(){if(!me.is_host)return;const at=new Date(Date.now()+4000).toISOString();await SB.from('servers').update({game_state:'countdown',start_at:at}).eq('id',srv.id)}
+function showCD(at){const c=document.getElementById('cd');c.style.display='flex';const t0=new Date(at).getTime();const tick=()=>{const l=Math.ceil((t0-Date.now())/1000);if(l<=0){c.style.display='none';return}c.textContent=l;requestAnimationFrame(tick)};tick();const iv=setInterval(async()=>{if(Date.now()>=t0){clearInterval(iv);if(me.is_host)await SB.from('servers').update({game_state:'playing'}).eq('id',srv.id)}},200)}
+function startPlay(){
+  if(inGame)return;
+  soloPaused=false;document.getElementById('pauseBtn').style.display='none';
+  soloMode=false;inGame=true;statsRecorded=false;
+  S.stats={blue:{kills:0,losses:0,buildings:0},red:{kills:0,losses:0,buildings:0}};
+  document.getElementById('lobbyScreen').classList.remove('on');
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('topbar').style.display='flex';
+  mm.style.display='block';
+  document.getElementById('myName').textContent=me.name;
+  S.oil={blue:200,red:200};
+  S.economy={players:{},contracts:[],nextId:1};economyReady=false;initializeEconomy();
+  startT=Date.now();genObstacles();
+  fogEnabled=srv.fog_enabled!==false;updateFogButton();
+  if(me.is_host){
+    SB.from('players').select('id,name,team').eq('server_id',srv.id).then(({data})=>{
+      const roster=data?.length?data:[me];
+      for(const team of ['blue','red']){
+        const members=roster.filter(p=>p.team===team);
+        members.forEach((p,i)=>{
+          const y=MAPH*(.2+(.6*(i+.5)/Math.max(1,members.length)));
+          const x=team==='blue'?MAPW*.15:MAPW*.85;
+          spawnB('base',x,y,team,p.id);
+          spawnLocalScout(team,p.name||'Commander',x+(team==='blue'?85:-85),y,p.id);
+        });
+      }
+      sendState();
+    });
+  }
+  initFog();attachInput();resize();initAudio();
+  gameCh=SB.channel('g-'+srv.id);
+  gameCh.on('broadcast',{event:'reqBuild'},({payload})=>{if(me.is_host)processBuildRequest(payload)});
+  gameCh.on('broadcast',{event:'reqMove'},({payload})=>{if(me.is_host)processMoveRequest(payload)});
+  gameCh.on('broadcast',{event:'reqUnit'},({payload})=>{if(me.is_host)processUnitRequest(payload)});
+  gameCh.on('broadcast',{event:'reqBombard'},({payload})=>{if(me.is_host)processBombardRequest(payload)});
+  gameCh.on('broadcast',{event:'reqAggr'},({payload})=>{if(me.is_host)processAggrRequest(payload)});
+  gameCh.on('broadcast',{event:'reqEconJobs'},({payload})=>{if(me.is_host)processEconomyJobs(payload)});
+  gameCh.on('broadcast',{event:'reqEconContract'},({payload})=>{if(me.is_host)processEconomyContract(payload)});
+  gameCh.on('broadcast',{event:'reqCancelContract'},({payload})=>{if(me.is_host)processCancelContract(payload)});
+  gameCh.on('broadcast',{event:'reqMarketTrade'},({payload})=>{if(me.is_host)processMarketTrade(payload)});
+  gameCh.on('broadcast',{event:'marketResult'},({payload})=>{if(!me.is_host&&String(payload.playerId)===String(me.id))showToast(payload.ok?'Trade completed.':'Trade declined.')});
+  gameCh.on('broadcast',{event:'state'},({payload})=>{S.units=payload.units;S.bldgs=payload.bldgs;S.oil=payload.oil;if(payload.economy){S.economy=payload.economy;economyReady=true;if(economyOpen)refreshEconomyLive()}S.nid=payload.nid;if(payload.stats)S.stats=payload.stats;if(payload.obstacles)obstacles=payload.obstacles;updateAggrButton()});
+  gameCh.on('broadcast',{event:'reqS'},()=>{if(me.is_host)sendState()});
+  gameCh.on('broadcast',{event:'obs'},({payload})=>{obstacles=payload.obs});
+  gameCh.on('broadcast',{event:'win'},({payload})=>{setWinner(payload.winner)});
+  gameCh.on('broadcast',{event:'chat'},({payload})=>{onGameChat(payload)});
+  gameCh.subscribe(s=>{if(s==='SUBSCRIBED'){if(me.is_host)sendState();else gameCh.send({type:'broadcast',event:'reqS',payload:{}})}});
+  if(stateSyncInterval)clearInterval(stateSyncInterval);
+  if(me.is_host)stateSyncInterval=setInterval(sendState,MOBILE.stateSyncMs);
+  startHeartbeat();
+  if(me.is_host)startDisconnectCheck();
+  loadGameChat();
+  startGameLoop();
+}
+function sendState(){if(!gameCh)return;gameCh.send({type:'broadcast',event:'state',payload:{units:S.units,bldgs:S.bldgs,oil:{...S.oil},economy:S.economy,nid:S.nid,obstacles,stats:S.stats}})}
+function spawnB(t,x,y,team,ownerId=me?.id){const id=S.nid++,d=BUILDS[t];S.bldgs[id]={id,type:t,x,y,team,ownerId:String(ownerId??team),hp:d.hp,maxHp:d.hp,cd:0,buildT:0};if(particles.length<MOBILE.particleCap)for(let i=0;i<8;i++){const a=Math.random()*Math.PI*2,sp=1+Math.random()*2.5;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-.5,life:600,ml:600,c:'rgba(180,170,140,.7)',s:3+Math.random()*3,smk:1})}return id}
+function spawnLocalScout(team,owner,x,y,ownerId=me?.id){const id=S.nid++;S.units[id]={id,x,y,team,type:'inf',owner,ownerId:String(ownerId??team),hp:60,maxHp:60,dmg:8,rng:120,spd:2.8,r:12,moveTo:null,targetId:null,cd:0,angle:0,walkPhase:0,trackPhase:0,aggr:'aggressive'}}
+const FACTION_COLORS=['#4a9cff','#ff5252','#ffd740','#c77dff','#00d6a3','#ff8c42','#ff5fc8','#c6ed45','#55e7ff','#ffb347','#a0a0ff','#ff7272'];
+const FACTION_COLOR_BY_ID=new Map();
+function factionColor(id){id=String(id??'unknown');if(!FACTION_COLOR_BY_ID.has(id)){if(soloMode&&me&&id===String(me.id))FACTION_COLOR_BY_ID.set(id,soloPlayerColor);else{const used=new Set(FACTION_COLOR_BY_ID.values());FACTION_COLOR_BY_ID.set(id,FACTION_COLORS.find(color=>!used.has(color))||FACTION_COLORS[FACTION_COLOR_BY_ID.size%FACTION_COLORS.length])}}return FACTION_COLOR_BY_ID.get(id)}
+function startSkirmish(){
+  if(inGame)return;
+  soloPaused=false;soloPausedAt=0;
+  const pauseBtn=document.getElementById('pauseBtn');pauseBtn.style.display='inline-block';pauseBtn.textContent='Pause';
+  const mapKey=document.getElementById('soloMap').value;
+  aiDifficulty=document.getElementById('aiDifficulty').value;
+  fogEnabled=document.getElementById('fogOfWar').value==='on';
+  activeMap=MAPS[mapKey]?mapKey:'large';
+  const allyCount=Number(document.getElementById('friendlyAI').value)||0;
+  const enemyCount=Math.max(1,Number(document.getElementById('enemyAI').value)||1);
+  soloMode=true;inGame=true;me={id:'solo-player',name:getMyName()||'Commander',team:'blue',is_host:true};
+  soloPlayerColor=document.getElementById('playerColor').value||'#4a9cff';
+  srv={oil_rate:aiDifficulty==='hard'?'fast':'normal',map_size:activeMap,fog_enabled:fogEnabled};
+  MAPW=MAPS[activeMap].w;MAPH=MAPS[activeMap].h;MMX=MMW/MAPW;MMY=MMH/MAPH;cam={x:0,y:0};zm=1;
+  resetMatchState();FACTION_COLOR_BY_ID.clear();S.oil={blue:500,red:500};initializeEconomy();genObstacles();
+  const occupied=[],playerPos=randomBasePosition(occupied);occupied.push(playerPos);
+  cam.x=playerPos.x-vw()/2;cam.y=playerPos.y-vh()/2;clampCam();
+  spawnB('base',playerPos.x,playerPos.y,'blue',me.id);spawnLocalScout('blue',me.name,playerPos.x+85,playerPos.y,me.id);
+  aiCommanders=[];
+  for(let i=0;i<allyCount;i++){const pos=randomBasePosition(occupied);occupied.push(pos);const id='ai-blue-'+i,name=`Allied AI ${i+1}`;const c={id,name,team:'blue',x:pos.x,y:pos.y,difficulty:aiDifficulty,lastBuild:0,lastUnit:0,lastWave:0};aiCommanders.push(c);makeEconomyAccount({id,name,team:'blue'});spawnB('base',c.x,c.y,'blue',id);spawnLocalScout('blue',name,c.x+65,c.y,id)}
+  for(let i=0;i<enemyCount;i++){const pos=randomBasePosition(occupied);occupied.push(pos);const id='ai-red-'+i,name=`Enemy AI ${i+1}`;const c={id,name,team:'red',x:pos.x,y:pos.y,difficulty:aiDifficulty,lastBuild:0,lastUnit:0,lastWave:0};aiCommanders.push(c);makeEconomyAccount({id,name,team:'red'});spawnB('base',c.x,c.y,'red',id);spawnLocalScout('red',name,c.x-65,c.y,id)}
+  document.getElementById('menuScreen').classList.remove('on');document.getElementById('resultScreen').style.display='none';
+  document.getElementById('hud').style.display='flex';document.getElementById('topbar').style.display='flex';document.getElementById('myName').textContent=me.name;
+  mm.style.display='block';
+  startT=Date.now();initFog();attachInput();resize();initAudio();startGameLoop();
+}
+function resetMatchState(){soloPaused=false;soloPausedAt=0;S.units={};S.bldgs={};S.nid=1;S.winner=null;S.stats={blue:{kills:0,losses:0,buildings:0},red:{kills:0,losses:0,buildings:0}};sel.clear();particles=[];projs=[];obstacles=[];bMode=null}
+function setWinner(team){if(S.winner)return;S.winner=team;if(me?.is_host){if(stateSyncInterval)clearInterval(stateSyncInterval);stateSyncInterval=null;if(!soloMode&&!statsRecorded){statsRecorded=true;recordMatchResult(team)}}showMatchResult(team)}
+function showMatchResult(team){
+  const elapsed=Math.max(0,Math.floor((Date.now()-startT)/1000));
+  const own=S.stats[me?.team||'blue']||{kills:0,losses:0,buildings:0};
+  document.getElementById('resultTitle').textContent=(team==='blue'?'BLUE':'RED')+' WINS';
+  document.getElementById('resultTitle').style.color=team==='blue'?'var(--bl)':'var(--rd)';
+  document.getElementById('resultSubtitle').textContent=soloMode?(team===(me?.team||'blue')?'VICTORY':'DEFEAT'):'ENGAGEMENT COMPLETE';
+  document.getElementById('resultStats').innerHTML=`<div>Kills<b>${own.kills}</b></div><div>Losses<b>${own.losses}</b></div><div>Buildings<b>${own.buildings}</b></div><div>Time<b>${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}</b></div>`;
+  document.getElementById('resultScreen').style.display='flex';
+}
+function restartMatch(){if(soloMode){document.getElementById('resultScreen').style.display='none';inGame=false;startSkirmish();return}location.reload()}
+function leaveMatch(){toggleEconomy(false);if(soloMode){soloMode=false;soloPaused=false;inGame=false;me=null;S.winner=null;document.getElementById('pauseBtn').style.display='none';document.getElementById('resultScreen').style.display='none';document.getElementById('hud').style.display='none';document.getElementById('topbar').style.display='none';mm.style.display='none';document.getElementById('menuScreen').classList.add('on');return}location.reload()}
+function initFog(){const size=MOBILE.fogGrid;fogCols=Math.ceil(MAPW/size);fogRows=Math.ceil(MAPH/size);fogSeen=new Uint8Array(fogCols*fogRows);fogVisible=new Uint8Array(fogCols*fogRows);lastFog=0;updateFogButton()}
+function updateFogButton(){const b=document.getElementById('fogToggle');if(b)b.textContent=`FOG: ${fogEnabled?'ON':'OFF'}`}
+function updateFog(){
+  if(!inGame||!me||(!soloMode&&!srv?.id))return;
+  if(!fogEnabled){fogVisible.fill(1);return}
+  if(Date.now()-lastFog<260)return;
+  lastFog=Date.now();const size=MOBILE.fogGrid;fogVisible.fill(0);
+  const reveal=(x,y,r)=>{const minX=Math.max(0,Math.floor((x-r)/size)),maxX=Math.min(fogCols-1,Math.floor((x+r)/size));const minY=Math.max(0,Math.floor((y-r)/size)),maxY=Math.min(fogRows-1,Math.floor((y+r)/size));for(let gy=minY;gy<=maxY;gy++)for(let gx=minX;gx<=maxX;gx++){const px=(gx+.5)*size,py=(gy+.5)*size;if((px-x)**2+(py-y)**2<=r*r){const i=gy*fogCols+gx;fogVisible[i]=1;fogSeen[i]=1}}};
+  let full=false;
+  for(const b of Object.values(S.bldgs))if(b.team===me.team&&b.type==='radar'&&b.hp>0)full=true;
+  if(full){fogVisible.fill(1);fogSeen.fill(1);return}
+  for(const u of Object.values(S.units))if(u.team===me.team&&u.hp>0)reveal(u.x,u.y,150);
+  for(const b of Object.values(S.bldgs))if(b.team===me.team&&b.hp>0)reveal(b.x,b.y,200);
+}
+function entityVisible(team,x,y){if(!fogEnabled||!me||team===me.team||(!soloMode&&!srv?.id))return true;const i=Math.floor(y/MOBILE.fogGrid)*fogCols+Math.floor(x/MOBILE.fogGrid);return !!fogVisible[i]}
+function drawFog(){if(!fogEnabled||!me||(!soloMode&&!srv?.id))return;const size=MOBILE.fogGrid;cx.save();for(let gy=0;gy<fogRows;gy++)for(let gx=0;gx<fogCols;gx++){const i=gy*fogCols+gx;if(fogVisible[i])continue;cx.globalAlpha=fogSeen[i]?0.6:0.96;cx.fillStyle='#000';cx.fillRect(gx*size,gy*size,size,size)}cx.restore()}
+function updateAI(){
+  if(!soloMode||S.winner)return;
+  const now=Date.now();
+  for(const ai of aiCommanders){
+    const {team,x:bx,y:by}=ai,difficulty=ai.difficulty;
+    const has=t=>Object.values(S.bldgs).some(b=>b.team===team&&String(b.ownerId)===String(ai.id)&&b.type===t);
+    const towerCount=Object.values(S.bldgs).filter(b=>b.team===team&&String(b.ownerId)===String(ai.id)&&b.type==='tower').length;
+    const buildDelay=difficulty==='easy'?12000:difficulty==='hard'?5000:8000;
+    if(now-ai.lastBuild>buildDelay){
+      const next=!has('barracks')?'barracks':!has('factory')?'factory':!has('refinery')?'refinery':(towerCount<(difficulty==='hard'?2:1)?'tower':null);
+      if(next){const sign=team==='blue'?1:-1,spots=next==='barracks'?[[bx+sign*95,by],[bx+sign*110,by-70]]:next==='factory'?[[bx+sign*155,by-65],[bx+sign*170,by+25]]:next==='refinery'?[[bx+sign*215,by+20],[bx+sign*210,by-70]]:[[bx-sign*55,by+70],[bx+sign*30,by+110],[bx-sign*95,by-90]];for(const [x,y] of spots)if(canPlaceBuild(team,next,x,y,ai.id)){applyBuild(team,next,x,y,ai.id);break}}
+      ai.lastBuild=now;
+    }
+    const unitDelay=difficulty==='easy'?8500:difficulty==='hard'?4000:6000;
+    if(now-ai.lastUnit>unitDelay){
+      let type='inf';
+      if(has('factory')){
+        const enemies=Object.values(S.units).filter(u=>u.team!==team&&u.hp>0);
+        const enemyTanks=enemies.filter(u=>u.type==='tank'||u.type==='heli').length;
+        const enemyBases=Object.values(S.bldgs).filter(b=>b.team!==team&&b.type==='base');
+        const enemyTowers=Object.values(S.bldgs).filter(b=>b.team!==team&&b.type==='tower').length;
+        const ownArmy=Object.values(S.units).filter(u=>u.team===team&&String(u.ownerId)===String(ai.id));
+        if(enemyTanks>=2)type='rocket';else if(enemyTowers>=2||enemyBases.some(b=>Math.hypot(b.x-bx,b.y-by)<650))type='rocket';else if(difficulty==='hard'&&ownArmy.filter(u=>u.type==='heli').length<2)type='heli';else if(ownArmy.filter(u=>u.type==='tank').length<Math.max(2,Math.ceil(ownArmy.length*.4)))type='tank';else type=difficulty==='easy'?'inf':Math.random()<.55?'tank':'rocket';
+      }else if(has('barracks')){const enemySnipers=Object.values(S.units).filter(u=>u.team!==team&&u.type==='sniper').length;type=enemySnipers>0?'sniper':difficulty==='hard'&&Math.random()<.3?'medic':'inf'}
+      if(!has(UNITS[type].needs))type='inf';
+      if(has(UNITS[type].needs))applyUnit(team,ai.name,type,ai.id);
+      ai.lastUnit=now;
+    }
+    const ownBase=Object.values(S.bldgs).find(b=>b.team===team&&String(b.ownerId)===String(ai.id)&&b.type==='base'&&b.hp>0);
+    if(!ownBase)continue;
+    const invader=Object.values(S.units).find(u=>u.team!==team&&Math.hypot(u.x-ownBase.x,u.y-ownBase.y)<360);
+    if(invader){for(const u of Object.values(S.units))if(u.team===team&&Math.hypot(u.x-ownBase.x,u.y-ownBase.y)<520){u.targetId=String(invader.id);u.moveTo=null}}
+    const interval=difficulty==='easy'?60000:difficulty==='hard'?14000:35000;
+    if(now-ai.lastWave>interval){const targets=Object.values(S.bldgs).filter(b=>b.team!==team&&b.type==='base'&&b.hp>0);const target=targets.sort((a,b)=>Math.hypot(a.x-bx,a.y-by)-Math.hypot(b.x-bx,b.y-by))[0];let army=Object.values(S.units).filter(u=>u.team===team&&String(u.ownerId)===String(ai.id)&&u.hp>0&&u.type!=='medic');const waveSize=difficulty==='hard'?3:difficulty==='normal'?2:1;if(target&&army.length>=waveSize){if(difficulty==='easy')army=army.sort(()=>Math.random()-.5).slice(0,Math.max(1,Math.ceil(army.length*.55)));for(const u of army){u.targetId='b_'+target.id;u.moveTo=null;u.groundTarget=null;u.aggr='aggressive'}}ai.lastWave=now}
+  }
+}
+function updateTowers(dt){for(const b of Object.values(S.bldgs)){if(b.type!=='tower'||b.hp<=0)continue;b.cd=Math.max(0,(b.cd||0)-dt);if(b.cd>0)continue;let target=null,bd=BUILDS.tower.rng;for(const u of Object.values(S.units)){if(u.team===b.team||u.hp<=0)continue;const d=Math.hypot(u.x-b.x,u.y-b.y);if(d<bd){bd=d;target=u}}if(target){const def=UNITS[target.type]||{armor:0};const armor=(def.armor||0)*.5;const dmg=coverDamage(target,BUILDS.tower.dmg*(1-armor));target.hp-=dmg;target.lastHitTeam=b.team;target.suppressedUntil=Date.now()+700;b.cd=BUILDS.tower.cd;muzzle(b.x,b.y,Math.atan2(target.y-b.y,target.x-b.x),b.team);playTone(180,.045,'square',.025)}}}
+function initAudio(){try{const AC=window.AudioContext||window.webkitAudioContext;if(!audioCtx&&AC)audioCtx=new AC();if(audioCtx?.state==='suspended')audioCtx.resume()}catch(e){}}
+function playTone(freq,duration,type='sine',volume=.035){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain(),t=audioCtx.currentTime;o.type=type;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(Math.max(40,freq*.45),t+duration);g.gain.setValueAtTime(volume,t);g.gain.exponentialRampToValueAtTime(.001,t+duration);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+duration)}catch(e){}}
+async function recordMatchResult(winnerTeam){
+  const {data:players}=await SB.from('players').select('*').eq('server_id',srv.id);
+  if(!players)return;
+  for(const p of players){if(!p.name)continue;if(isGuestName(p.name))continue;const won=p.team===winnerTeam;const {data:stats}=await SB.from('player_stats').select('*').eq('name',p.name).maybeSingle();if(!stats){await SB.from('player_stats').insert({name:p.name,ip_hash:'unknown',wins:won?1:0,losses:won?0:1})}else{await SB.from('player_stats').update({wins:won?stats.wins+1:stats.wins,losses:won?stats.losses:stats.losses+1,last_seen:new Date().toISOString()}).eq('name',p.name)}}
+}
+function startHeartbeat(){if(heartbeatInterval)clearInterval(heartbeatInterval);heartbeatInterval=setInterval(async()=>{if(!me)return;await SB.from('players').update({last_seen:new Date().toISOString()}).eq('id',me.id)},4000)}
+function stopHeartbeat(){if(heartbeatInterval)clearInterval(heartbeatInterval);heartbeatInterval=null}
+function startDisconnectCheck(){if(disconnectCheck)clearInterval(disconnectCheck);disconnectCheck=setInterval(async()=>{if(!me||!srv||S.winner)return;const cut=new Date(Date.now()-12000).toISOString();const {data:players}=await SB.from('players').select('*').eq('server_id',srv.id);if(!players)return;for(const p of players){if(p.id===me.id)continue;if(!p.last_seen||p.last_seen<cut){const winner=p.team==='blue'?'red':'blue';gameCh?.send({type:'broadcast',event:'win',payload:{winner}});await SB.from('servers').update({game_state:'finished',winner,finish_reason:'disconnect'}).eq('id',srv.id);setWinner(winner);return}}},6000)}
+function economyAccount(id){return S.economy.players[String(id)]||null}
+function makeEconomyAccount(p,startingOil=0){const id=String(p.id);if(S.economy.players[id])return S.economy.players[id];return S.economy.players[id]={id,name:p.name||'Commander',team:p.team||'blue',iron:soloMode?260:150,oil:startingOil||200,labor:soloMode?80:40,credits:soloMode?700:500,jobs:{iron:3,oil:2,labor:1,credits:4}}}
+function initializeEconomy(){if(!S.economy)S.economy={players:{},contracts:[],nextId:1};S.economy.players={};S.economy.contracts=[];S.economy.nextId=1;makeEconomyAccount(me,0);economyReady=true}
+function oilRateMultiplier(){return (OIL[srv?.oil_rate]||.15)/.15}
+function playerEconomy(id){const a=economyAccount(id);if(!a)return{iron:0,oil:0,labor:0,credits:0,ironRate:0,oilRate:0,laborRate:0,creditsRate:0};const jobs=a.jobs||{},refineries=Object.values(S.bldgs).filter(b=>String(b.ownerId)===String(id)&&b.type==='refinery').length;return{iron:a.iron||0,oil:a.oil||0,labor:a.labor||0,credits:a.credits||0,ironRate:(jobs.iron||0)*ECON_RATE.iron,oilRate:(jobs.oil||0)*ECON_RATE.oil*oilRateMultiplier()*(1+refineries*.5),laborRate:(jobs.labor||0)*ECON_RATE.labor,creditsRate:(jobs.credits||0)*ECON_RATE.credits}}
+function canAffordTeam(ownerId,credits,cost={}){const r=playerEconomy(ownerId);return r.credits>=credits&&r.iron>=(cost.iron||0)&&r.labor>=(cost.labor||0)}
+function spendTeam(ownerId,credits,cost={}){const a=economyAccount(ownerId);if(!a)return;a.credits=Math.max(0,(a.credits||0)-credits);a.iron=Math.max(0,(a.iron||0)-(cost.iron||0));a.labor=Math.max(0,(a.labor||0)-(cost.labor||0))}
+function updateEconomy(dt){
+  if(!economyReady)return;
+  const seconds=dt/1000;
+  for(const a of Object.values(S.economy.players||{})){const j=a.jobs||{},refineries=Object.values(S.bldgs).filter(b=>String(b.ownerId)===String(a.id)&&b.type==='refinery').length;a.iron=Math.min(9999,(a.iron||0)+(j.iron||0)*ECON_RATE.iron*seconds);a.oil=Math.min(9999,(a.oil||0)+(j.oil||0)*ECON_RATE.oil*oilRateMultiplier()*seconds*(1+refineries*.5));a.labor=Math.min(9999,(a.labor||0)+(j.labor||0)*ECON_RATE.labor*seconds);a.credits=Math.min(99999,(a.credits||0)+(j.credits||0)*ECON_RATE.credits*seconds)}
+  const now=Date.now();
+  for(const c of S.economy.contracts||[]){if(!c.active||now<c.nextAt)continue;const from=economyAccount(c.from),to=economyAccount(c.to);c.nextAt=now+c.everyMs;if(!from||!to)continue;if(c.resource==='oil'){if((from.oil||0)<c.amount)continue;from.oil-=c.amount;to.oil=Math.min(9999,(to.oil||0)+c.amount)}else{if((from[c.resource]||0)<c.amount)continue;from[c.resource]-=c.amount;to[c.resource]=Math.min(c.resource==='credits'?99999:9999,(to[c.resource]||0)+c.amount)}}
+  if(economyOpen)refreshEconomyLive();
+}
+function toggleEconomy(force){economyOpen=force===undefined?!economyOpen:!!force;document.getElementById('econPanel').classList.toggle('on',economyOpen);if(economyOpen){renderEconomy();renderMarketAdvice('buy')}}
+function toggleSoloPause(){if(!soloMode||!inGame||S.winner)return;soloPaused=!soloPaused;const btn=document.getElementById('pauseBtn');btn.textContent=soloPaused?'Resume':'Pause';if(soloPaused){soloPausedAt=Date.now();showToast('Paused')}else{const elapsed=Date.now()-soloPausedAt;startT+=elapsed;for(const ai of aiCommanders){ai.lastBuild+=elapsed;ai.lastUnit+=elapsed;ai.lastWave+=elapsed}for(const c of S.economy.contracts||[])c.nextAt+=elapsed;soloPausedAt=0}}
+function renderEconomy(){
+  if(!me||!S.economy)return;
+  const t=playerEconomy(me.id);
+  document.getElementById('econStats').innerHTML=`<div class="econ-stat">IRON +${t.ironRate.toFixed(1)}/s<b>${Math.floor(t.iron)}</b></div><div class="econ-stat">OIL +${t.oilRate.toFixed(1)}/s<b>${Math.floor(t.oil)}</b></div><div class="econ-stat">LABOR +${t.laborRate.toFixed(1)}/s<b>${Math.floor(t.labor)}</b></div><div class="econ-stat">CREDITS +${t.creditsRate.toFixed(1)}/s<b>${Math.floor(t.credits)}</b></div>`;
+  const roster=Object.values(S.economy.players);
+  document.getElementById('econWorkforce').innerHTML=roster.map(a=>{const ownRow=String(a.id)===String(me.id),j=a.jobs||{};return `<div class="econ-row"><span style="color:${a.team==='blue'?'var(--bl)':'var(--rd)'}">${esc(a.name)}${ownRow?' (You)':''}</span><span>${Math.floor(a.iron||0)}${ownRow?` <input id="jobIron" type="number" min="0" max="10" value="${j.iron||0}">`:''}</span><span>${Math.floor(a.oil||0)}${ownRow?` <input id="jobOil" type="number" min="0" max="10" value="${j.oil||0}">`:''}</span><span>${Math.floor(a.labor||0)}${ownRow?` <input id="jobLabor" type="number" min="0" max="10" value="${j.labor||0}">`:''}</span><span>${Math.floor(a.credits||0)}${ownRow?` <input id="jobCredits" type="number" min="0" max="10" value="${j.credits||0}">`:''}</span></div>`}).join('')||'<div style="color:var(--dim)">Syncing…</div>';
+  const select=document.getElementById('contractTarget'),prior=select.value;
+  select.innerHTML=roster.filter(a=>String(a.id)!==String(me.id)).map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+  if([...select.options].some(o=>o.value===prior))select.value=prior;
+  document.getElementById('econContracts').innerHTML=(S.economy.contracts||[]).map(c=>{const from=economyAccount(c.from),to=economyAccount(c.to);return `<div class="econ-contract"><span>${esc(from?.name||'?')} → ${esc(to?.name||'?')}: ${c.amount} ${c.resource} / ${c.everyMs/1000}s</span><button class="btn" style="min-height:auto;padding:4px 8px;font-size:10px" onclick="cancelEconomyContract(${c.id})">X</button></div>`}).join('')||'<div style="color:var(--dim);font-size:10px;padding:6px">No contracts.</div>';
+}
+function refreshEconomyLive(){if(!me||!S.economy||Date.now()-economyUiAt<400)return;economyUiAt=Date.now();const t=playerEconomy(me.id);document.getElementById('econStats').innerHTML=`<div class="econ-stat">IRON +${t.ironRate.toFixed(1)}/s<b>${Math.floor(t.iron)}</b></div><div class="econ-stat">OIL +${t.oilRate.toFixed(1)}/s<b>${Math.floor(t.oil)}</b></div><div class="econ-stat">LABOR +${t.laborRate.toFixed(1)}/s<b>${Math.floor(t.labor)}</b></div><div class="econ-stat">CREDITS +${t.creditsRate.toFixed(1)}/s<b>${Math.floor(t.credits)}</b></div>`}
+const MARKET_PRICES={iron:3,oil:4,labor:2};
+const MARKET_NEEDS={iron:60,oil:90,labor:30};
+function renderMarketAdvice(action='buy'){
+  const box=document.getElementById('marketAdvice');
+  if(!box||!me)return;
+  const resource=document.getElementById('marketResource')?.value||'iron';
+  const amount=Number(document.getElementById('marketAmount')?.value||0);
+  const account=economyAccount(me.id),stock=account?.[resource]||0,price=MARKET_PRICES[resource]||1;
+  const cost=Math.max(0,amount)*price,need=MARKET_NEEDS[resource]||40;
+  let grade='FAIR',reason=`Rate: ${price} Cr/${resource}.`;
+  if(!Number.isInteger(amount)||amount<1||amount>500){grade='CHECK';reason='1–500.'}
+  else if(action==='buy'){if((account?.credits||0)<cost){grade='NOT AFFORDABLE';reason='Not enough Credits.'}else if(stock<need*.5){grade='GOOD';reason='Low reserves.'}else if(stock>need*2){grade='POOR';reason='You have plenty.'}}
+  else{if(stock<amount){grade='CANNOT SELL';reason='Not enough stock.'}else if(stock>need*1.5){grade='GOOD';reason='Surplus, good to sell.'}else if(stock<need){grade='POOR';reason='Low reserves.'}}
+  const color=grade==='GOOD'?'#a8d0a8':(grade==='POOR'||grade==='CANNOT SELL'||grade==='NOT AFFORDABLE')?'#e0a8a8':'#e0d8a8';
+  box.innerHTML=`<b style="color:${color}">ADVISOR: ${grade}</b> — ${reason}`;
+}
+function executeMarketTrade(playerId,side,resource,amount){
+  const account=economyAccount(playerId),price=MARKET_PRICES[resource];
+  if(!account||!price||!['buy','sell'].includes(side)||!Number.isInteger(amount)||amount<1||amount>500)return false;
+  const balance=account[resource]||0,cost=price*amount;
+  if(side==='buy'){if((account.credits||0)<cost||balance+amount>9999)return false;account.credits-=cost;account[resource]=balance+amount}
+  else{if(balance<amount||(account.credits||0)+cost>99999)return false;account[resource]-=amount;account.credits=(account.credits||0)+cost}
+  sendState();if(economyOpen)renderEconomy();return true;
+}
+function tradeMarket(side){const resource=document.getElementById('marketResource').value,amount=Number(document.getElementById('marketAmount').value);renderMarketAdvice(side);if(me.is_host){if(!executeMarketTrade(me.id,side,resource,amount)){showToast('Trade failed.');return}showToast(`${side==='buy'?'Bought':'Sold'} ${amount} ${resource}.`)}else{gameCh?.send({type:'broadcast',event:'reqMarketTrade',payload:{playerId:me.id,side,resource,amount}});showToast('Request sent.')}}
+async function processMarketTrade(payload){const player=await requestPlayer(payload);if(!player||String(player.id)!==String(payload.playerId))return;const ok=executeMarketTrade(player.id,payload.side,payload.resource,payload.amount);gameCh?.send({type:'broadcast',event:'marketResult',payload:{playerId:player.id,ok}})}
+function applyEconomyJobs(playerId,jobs){const a=economyAccount(playerId);if(!a||!jobs)return false;const vals=['iron','oil','labor','credits'].map(k=>Number(jobs[k]));if(vals.some(v=>!Number.isInteger(v)||v<0||v>10)||vals.reduce((x,y)=>x+y,0)>10)return false;a.jobs={iron:vals[0],oil:vals[1],labor:vals[2],credits:vals[3]};sendState();if(economyOpen)renderEconomy();return true}
+function saveEconomyJobs(){const jobs={iron:+document.getElementById('jobIron')?.value,oil:+document.getElementById('jobOil')?.value,labor:+document.getElementById('jobLabor')?.value,credits:+document.getElementById('jobCredits')?.value};if(Object.values(jobs).some(v=>!Number.isFinite(v))||Object.values(jobs).reduce((a,b)=>a+b,0)>10){showToast('Max 10 workers.');return}if(me.is_host){if(!applyEconomyJobs(me.id,jobs))showToast('Invalid.')}else gameCh?.send({type:'broadcast',event:'reqEconJobs',payload:{playerId:me.id,jobs}})}
+function createEconomyContract(){const payload={playerId:me.id,toId:document.getElementById('contractTarget').value,resource:document.getElementById('contractResource').value,amount:+document.getElementById('contractAmount').value,everyMs:(+document.getElementById('contractEvery').value)*1000};if(!payload.toId){showToast('Choose partner.');return}if(!Number.isInteger(payload.amount)||payload.amount<1||payload.amount>500||payload.everyMs<1000||payload.everyMs>3600000){showToast('Check amount/interval.');return}if(me.is_host){if(!createContractFor(payload)){showToast('Failed.');return}}else gameCh?.send({type:'broadcast',event:'reqEconContract',payload});showToast('Contract submitted.')}
+function createContractFor(p){const from=economyAccount(p.playerId),to=economyAccount(p.toId);if(!from||!to||String(from.id)===String(to.id)||!['iron','oil','labor','credits'].includes(p.resource)||!Number.isInteger(p.amount)||p.amount<1||p.amount>500)return false;S.economy.contracts.push({id:S.economy.nextId++,from:String(from.id),to:String(to.id),resource:p.resource,amount:p.amount,everyMs:Math.max(1000,Math.min(3600000,p.everyMs|0)),nextAt:Date.now()+Math.max(1000,p.everyMs|0),active:true});sendState();if(economyOpen)renderEconomy();return true}
+async function processEconomyContract(p){const player=await requestPlayer(p);if(!player||String(player.id)!==String(p.playerId))return;createContractFor(p)}
+function cancelEconomyContract(id){const c=S.economy.contracts.find(x=>x.id===id);if(!c)return;if(me.is_host){if(String(c.from)!==String(me.id))return showToast('Only owner can cancel.');S.economy.contracts=S.economy.contracts.filter(x=>x.id!==id);sendState();renderEconomy()}else gameCh?.send({type:'broadcast',event:'reqCancelContract',payload:{playerId:me.id,contractId:id}})}
+async function processCancelContract(p){const player=await requestPlayer(p);if(!player)return;const c=S.economy.contracts.find(x=>x.id===p.contractId);if(c&&String(c.from)===String(player.id)){S.economy.contracts=S.economy.contracts.filter(x=>x.id!==c.id);sendState();if(economyOpen)renderEconomy()}}
+async function processEconomyJobs(p){const player=await requestPlayer(p);if(player)applyEconomyJobs(player.id,p.jobs)}
+function startBuild(t){if(!me)return;if(!canAffordTeam(me.id,BUILDS[t].c,ECON_COSTS.builds[t]))return hint('Not enough resources.');bMode={type:t};bombardMode=false;document.querySelectorAll('#hudBuild .gb').forEach(b=>b.classList.remove('act'));const map={barracks:'bBarracks',factory:'bFactory',refinery:'bRefinery',tower:'bTower',wall:'bWall',radar:'bRadar'};document.getElementById(map[t])?.classList.add('act');touchHint('Tippe auf die Karte, um zu platzieren')}
+function cancelBuild(){bMode=null;document.querySelectorAll('#hudBuild .gb').forEach(b=>b.classList.remove('act'));touchHint('')}
+function isTerr(team,x,y,ownerId=null){for(const id in S.bldgs){const b=S.bldgs[id];if(b.team!==team||(ownerId!==null&&String(b.ownerId)!==String(ownerId)))continue;const r=BUILDS[b.type].r;if((x-b.x)**2+(y-b.y)**2<=r*r)return true}return false}
+function hitBldg(x,y,w,h){for(const id in S.bldgs){const b=S.bldgs[id],d=BUILDS[b.type];if(Math.abs(x-b.x)<d.w/2+w/2&&Math.abs(y-b.y)<d.h/2+h/2)return true}return false}
+function hitObs(x,y,r){for(const o of obstacles)if(Math.hypot(x-o.x,y-o.y)<o.r+r)return true;return false}
+function inWater(x,y){return waterBodies.some(w=>{const dx=x-w.x,dy=y-w.y,c=Math.cos(w.angle||0),s=Math.sin(w.angle||0),rx=dx*c+dy*s,ry=-dx*s+dy*c;return (rx/w.rx)**2+(ry/w.ry)**2<1})}
+function moveUnitSafe(u,tx,ty){
+  const flying=UNITS[u.type].fly;
+  const slow=inWater(tx,ty)||inWater(u.x,u.y)?0.55:1;
+  let dx=tx-u.x,dy=ty-u.y;const dist=Math.hypot(dx,dy)||1;dx/=dist;dy/=dist;
+  if(!flying){for(const o of obstacles){const odx=u.x-o.x,ody=u.y-o.y,od=Math.hypot(odx,ody);const minD=o.r+u.r+6;if(od<minD&&od>0.1){const push=(minD-od)/minD;dx+=(odx/od)*push*1.6;dy+=(ody/od)*push*1.6}}for(const id in S.bldgs){const b=S.bldgs[id];if(b.hp<=0)continue;const bw=(BUILDS[b.type].w||40)/2+u.r+4,bh=(BUILDS[b.type].h||40)/2+u.r+4;const bdx=u.x-b.x,bdy=u.y-b.y;if(Math.abs(bdx)<bw&&Math.abs(bdy)<bh){const oX=bw-Math.abs(bdx),oY=bh-Math.abs(bdy);if(oX<oY){dx+=Math.sign(bdx||1)*1.8;dy*=.5}else{dy+=Math.sign(bdy||1)*1.8;dx*=.5}}}const m=Math.hypot(dx,dy)||1;dx/=m;dy/=m}
+  const suppression=(u.suppressedUntil>Date.now())?0.78:1;
+  const speed=u.spd*0.55*slow*suppression;
+  u.x+=dx*speed;u.y+=dy*speed;
+  u.x=Math.max(6,Math.min(MAPW-6,u.x));u.y=Math.max(6,Math.min(MAPH-6,u.y));
+}
+function canPlaceBuild(team,type,x,y,ownerId=null){const d=BUILDS[type];return !!d&&canAffordTeam(ownerId,d.c,ECON_COSTS.builds[type])&&isTerr(team,x,y,ownerId)&&!hitBldg(x,y,d.w,d.h)&&!hitObs(x,y,Math.max(d.w,d.h)/2)&&!inWater(x,y)&&x>d.w/2&&x<MAPW-d.w/2&&y>d.h/2&&y<MAPH-d.h/2}
+async function requestPlayer(payload){if(!payload?.playerId||!srv)return null;const {data}=await SB.from('players').select('id,team,name').eq('id',payload.playerId).eq('server_id',srv.id).maybeSingle();return data}
+function applyBuild(team,type,x,y,ownerId=me.id){if(!me.is_host||!canPlaceBuild(team,type,x,y,ownerId))return;spendTeam(ownerId,BUILDS[type].c,ECON_COSTS.builds[type]);spawnB(type,x,y,team,ownerId);playTone(260,.07,'triangle',.04);sendState()}
+async function processBuildRequest(payload){const player=await requestPlayer(payload);if(player)applyBuild(player.team,payload.type,payload.x,payload.y,player.id)}
+function applyUnit(team,owner,type,ownerId=me.id){
+  const d=UNITS[type];
+  if(!me.is_host||!d||!canAffordTeam(ownerId,d.c,ECON_COSTS.units[type]))return;
+  const sp=Object.values(S.bldgs).find(b=>b.team===team&&String(b.ownerId)===String(ownerId)&&b.type===d.needs);
+  if(!sp)return;
+  spendTeam(ownerId,d.c,ECON_COSTS.units[type]);
+  const id=S.nid++,spawnAngle=Math.random()*Math.PI*2,spawnDistance=48+Math.random()*20;
+  S.units[id]={id,x:Math.max(12,Math.min(MAPW-12,sp.x+Math.cos(spawnAngle)*spawnDistance)),y:Math.max(12,Math.min(MAPH-12,sp.y+Math.sin(spawnAngle)*spawnDistance)),team,type,owner,ownerId:String(ownerId),hp:d.hp,maxHp:d.hp,dmg:d.dmg,rng:d.rng,spd:d.spd,r:d.r,moveTo:null,targetId:null,cd:0,angle:0,walkPhase:0,trackPhase:0,aggr:'aggressive'};
+  sendState();
+}
+async function processUnitRequest(payload){const player=await requestPlayer(payload);if(player)applyUnit(player.team,player.name,payload.type,player.id)}
+function applyMove(team,orders,ownerId=me.id){
+  if(!me.is_host||!Array.isArray(orders))return;
+  for(const order of orders.slice(0,100)){
+    const u=S.units[order.id];
+    if(!u||u.team!==team||String(u.ownerId)!==String(ownerId))continue;
+    if(order.targetId){const targetId=String(order.targetId);const target=targetId.startsWith('b_')?S.bldgs[targetId.slice(2)]:S.units[targetId];if(target&&target.team!==team){u.targetId=targetId;u.moveTo=null;u.groundTarget=null}}
+    else if(order.moveTo&&Number.isFinite(order.moveTo.x)&&Number.isFinite(order.moveTo.y)){u.moveTo={x:Math.max(0,Math.min(MAPW,order.moveTo.x)),y:Math.max(0,Math.min(MAPH,order.moveTo.y))};u.targetId=null;u.groundTarget=null}
+  }
+  sendState();
+}
+async function processMoveRequest(payload){const player=await requestPlayer(payload);if(player)applyMove(player.team,payload.units,player.id)}
+function applyBombard(team,ids,x,y,ownerId=me.id){if(!me.is_host||!Array.isArray(ids)||!Number.isFinite(x)||!Number.isFinite(y))return;const tx=Math.max(0,Math.min(MAPW,x)),ty=Math.max(0,Math.min(MAPH,y));for(const id of ids.slice(0,100)){const u=S.units[id];if(!u||u.team!==team||String(u.ownerId)!==String(ownerId)||u.type!=='rocket')continue;u.targetId=null;u.moveTo=null;u.groundTarget={x:tx,y:ty}}sendState()}
+async function processBombardRequest(payload){const player=await requestPlayer(payload);if(player)applyBombard(player.team,payload.ids,payload.x,payload.y,player.id)}
+function issueBombard(x,y){const ids=[...sel].filter(id=>S.units[id]?.type==='rocket'&&String(S.units[id].ownerId)===String(me?.id));if(!ids.length){bombardMode=false;touchHint('');hint('Select artillery first.');return}if(me.is_host)applyBombard(me.team,ids,x,y,me.id);else gameCh?.send({type:'broadcast',event:'reqBombard',payload:{playerId:me.id,ids,x,y}});bombardMode=false;touchHint('');showToast('Artillery target set.')}
+function confirmBuild(){
+  if(!bMode||!bValid)return cancelBuild();
+  const type=bMode.type,x=mouseWorld.x,y=mouseWorld.y;
+  if(me.is_host)applyBuild(me.team,type,x,y);
+  else gameCh?.send({type:'broadcast',event:'reqBuild',payload:{playerId:me.id,type,x,y}});
+  cancelBuild();updHUD();
+}
+function tryBuild(t){
+  if(!me)return;
+  const d=UNITS[t];if(!d)return;
+  if(!canAffordTeam(me.id,d.c,ECON_COSTS.units[t]))return hint('Not enough resources.');
+  const hasBuilding=Object.values(S.bldgs).some(b=>b.team===me.team&&String(b.ownerId)===String(me.id)&&b.type===d.needs);
+  if(!hasBuilding)return hint('Build '+BUILDS[d.needs].n+' first.');
+  if(me.is_host)applyUnit(me.team,me.name,t);
+  else gameCh?.send({type:'broadcast',event:'reqUnit',payload:{playerId:me.id,type:t}});
+  updHUD();
+}
+function cycleAggr(){const ids=[...sel];if(me?.is_host)applyAggr(me.team,ids);else if(me)gameCh?.send({type:'broadcast',event:'reqAggr',payload:{playerId:me.id,ids}});updateAggrButton()}
+function updateAggrButton(){const first=S.units[[...sel][0]];const mode=first?.aggr||'aggressive';const b=document.getElementById('aggrBtn');b.classList.remove('agr','d','h');if(mode==='aggressive'){b.classList.add('agr');b.textContent='Aggr'}else if(mode==='defensive'){b.classList.add('d');b.textContent='Def'}else{b.classList.add('h');b.textContent='Hold'}}
+function applyAggr(team,ids,ownerId=me.id){if(!me.is_host||!Array.isArray(ids))return;const modes=['aggressive','defensive','hold'];for(const id of ids.slice(0,100)){const u=S.units[id];if(!u||u.team!==team||String(u.ownerId)!==String(ownerId))continue;const i=modes.indexOf(u.aggr||'aggressive');u.aggr=modes[(i+1)%3]}sendState()}
+async function processAggrRequest(payload){const player=await requestPlayer(payload);if(player)applyAggr(player.team,payload.ids,player.id)}
+function onGameChat(msg){gameChatHistory.push(msg);if(gameChatHistory.length>40)gameChatHistory.shift()}
+async function loadGameChat(){const {data}=await SB.from('messages').select('*').eq('server_id',srv.id).order('created_at',{ascending:false}).limit(10);if(data){data.reverse().forEach(m=>gameChatHistory.push({player_name:m.player_name,text:m.text,channel:m.channel==='all'?'all':'team',team:m.channel}))}}
+/* ============ TOUCH INPUT ============ */
+const touchState={tapStart:null,moved:false,lastTap:0,lastTapX:0,lastTapY:0,pinchStartDist:0,pinchStartZoom:1,panStart:null};
+const mouseWorld={x:0,y:0};
+function scr2w(sx,sy){return{x:sx/zm+cam.x,y:sy/zm+cam.y}}
+function vw(){return W/zm}
+function vh(){return H/zm}
+function clampCam(){cam.x=Math.max(0,Math.min(MAPW-vw(),cam.x));cam.y=Math.max(0,Math.min(MAPH-vh(),cam.y))}
+function canvasPos(e){const r=cv.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top}}
+function updateMouseWorld(px,py){const w=scr2w(px,py);mouseWorld.x=w.x;mouseWorld.y=w.y}
+function attachInput(){
+  const opts={passive:false};
+  cv.addEventListener('touchstart',onTouchStart,opts);
+  cv.addEventListener('touchmove',onTouchMove,opts);
+  cv.addEventListener('touchend',onTouchEnd,opts);
+  cv.addEventListener('touchcancel',onTouchEnd,opts);
+  cv.addEventListener('mousemove',e=>{const p=canvasPos(e);updateMouseWorld(p.x,p.y)});
+  cv.addEventListener('mousedown',e=>{
+    if(!me)return;
+    const p=canvasPos(e);updateMouseWorld(p.x,p.y);
+    if(e.button===0){
+      if(bMode){confirmBuild();return}
+      if(bombardMode){issueBombard(mouseWorld.x,mouseWorld.y);return}
+      if(sel.size>0){issueMoveOrAttack(mouseWorld.x,mouseWorld.y);return}
+      const cl=findOwnUnitAt(mouseWorld.x,mouseWorld.y);
+      if(cl){sel.clear();sel.add(cl)}else{sel.clear()}
+      updHUD();
+    }
+    if(e.button===2){
+      if(bMode){cancelBuild();return}
+      if(sel.size>0)issueMoveOrAttack(mouseWorld.x,mouseWorld.y);
+    }
+  });
+  cv.addEventListener('contextmenu',e=>e.preventDefault());
+}
+function onTouchStart(e){
+  e.preventDefault();
+  if(!me)return;
+  if(e.touches.length===2){
+    const [a,b]=e.touches;
+    touchState.pinchStartDist=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+    touchState.pinchStartZoom=zm;
+    touchState.tapStart=null;touchState.moved=true;
+    return;
+  }
+  const t=e.touches[0];
+  const r=cv.getBoundingClientRect();
+  const px=t.clientX-r.left,py=t.clientY-r.top;
+  updateMouseWorld(px,py);
+  touchState.tapStart={x:px,y:py,wx:mouseWorld.x,wy:mouseWorld.y,time:Date.now()};
+  touchState.moved=false;
+  touchState.panStart={x:t.clientX,y:t.clientY,camX:cam.x,camY:cam.y};
+}
+function onTouchMove(e){
+  e.preventDefault();
+  if(!me)return;
+  if(e.touches.length===2){
+    const [a,b]=e.touches;
+    const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+    const r=cv.getBoundingClientRect();
+    if(touchState.pinchStartDist>0){
+      const newZoom=Math.max(.4,Math.min(2,touchState.pinchStartZoom*(d/touchState.pinchStartDist)));
+      const midX=(a.clientX+b.clientX)/2-r.left,midY=(a.clientY+b.clientY)/2-r.top;
+      const before=scr2w(midX,midY);
+      zm=newZoom;
+      const after=scr2w(midX,midY);
+      cam.x+=before.x-after.x;cam.y+=before.y-after.y;
+      clampCam();
+    }
+    touchState.moved=true;
+    return;
+  }
+  const t=e.touches[0];
+  const dx=t.clientX-touchState.panStart.x,dy=t.clientY-touchState.panStart.y;
+  if(Math.hypot(dx,dy)>8){
+    touchState.moved=true;
+    cam.x=touchState.panStart.camX-dx/zm;
+    cam.y=touchState.panStart.camY-dy/zm;
+    clampCam();
+  }
+  const r=cv.getBoundingClientRect();
+  updateMouseWorld(t.clientX-r.left,t.clientY-r.top);
+}
+function onTouchEnd(e){
+  e.preventDefault();
+  if(!me)return;
+  if(touchState.pinchStartDist>0){touchState.pinchStartDist=0;return}
+  if(!touchState.tapStart||touchState.moved){touchState.tapStart=null;return}
+  const {wx,wy}=touchState.tapStart;
+  touchState.tapStart=null;
+  const now=Date.now();
+
+  // Doppeltipp = alle Einheiten desselben Typs
+  if(now-touchState.lastTap<300&&Math.hypot(wx-touchState.lastTapX,wy-touchState.lastTapY)<30){
+    const hit=findOwnUnitAt(wx,wy);
+    if(hit){
+      const t=S.units[hit].type;sel.clear();
+      for(const id in S.units){const u=S.units[id];if(String(u.ownerId)===String(me.id)&&u.type===t)sel.add(id)}
+      updHUD();return;
+    }
+  }
+  touchState.lastTap=now;touchState.lastTapX=wx;touchState.lastTapY=wy;
+
+  // Baumodus
+  if(bMode){if(bValid)confirmBuild();else hint('Cannot place here.');return}
+  // Artillerie-Modus
+  if(bombardMode){issueBombard(wx,wy);return}
+
+  // Einheiten ausgewählt? → Befehl
+  if(sel.size>0){
+    const enemy=findEnemyAt(wx,wy);
+    if(enemy){issueMoveOrAttack(wx,wy);return}
+    issueMoveOrAttack(wx,wy);
+    return;
+  }
+
+  // Sonst: Selektion
+  const cl=findOwnUnitAt(wx,wy);
+  if(cl){sel.clear();sel.add(cl);updHUD();return}
+  // Nichts getroffen → Auswahl aufheben
+  sel.clear();
+  updHUD();
+}
+function findOwnUnitAt(wx,wy){
+  let cl=null,bd=40;
+  for(const id in S.units){const u=S.units[id];if(String(u.ownerId)!==String(me.id))continue;const d=Math.hypot(u.x-wx,u.y-wy);if(d<bd){bd=d;cl=id}}
+  return cl;
+}
+function findEnemyAt(wx,wy){
+  let tid=null,bd=40;
+  for(const id in S.units){const u=S.units[id];if(u.team===me.team)continue;const d=Math.hypot(u.x-wx,u.y-wy);if(d<bd){bd=d;tid=id}}
+  if(!tid){for(const id in S.bldgs){const b=S.bldgs[id];if(b.team===me.team)continue;if(Math.hypot(b.x-wx,b.y-wy)<60){tid='b_'+id;break}}}
+  return tid;
+}
+function issueMoveOrAttack(wx,wy){
+  if(!sel.size)return;
+  const tid=findEnemyAt(wx,wy);
+  let i=0,n=sel.size;const orders=[];
+  for(const id of sel){
+    const u=S.units[id];if(!u)continue;
+    if(tid)orders.push({id,targetId:tid});
+    else{const o=(i-(n-1)/2)*40;orders.push({id,moveTo:{x:wx+o,y:wy+o},targetId:null})}
+    i++;
+  }
+  if(me.is_host)applyMove(me.team,orders,me.id);
+  else gameCh?.send({type:'broadcast',event:'reqMove',payload:{playerId:me.id,units:orders}});
+}
+function toggleBombard(){
+  const hasArtillery=[...sel].some(id=>S.units[id]?.type==='rocket'&&String(S.units[id].ownerId)===String(me?.id));
+  if(!hasArtillery)return hint('Select artillery first.');
+  bombardMode=!bombardMode;
+  if(bombardMode)touchHint('Tippe auf das Ziel');
+  else touchHint('');
+}
+function updHUD(){
+  const o=document.getElementById('oil');if(o)o.textContent=me?Math.floor(economyAccount(me.id)?.oil||0):'-';
+  const c=document.getElementById('creditsHud');if(c&&me)c.textContent=Math.floor(economyAccount(me.id)?.credits||0);
+  const s=document.getElementById('selCount');if(s)s.textContent=sel.size;
+  if(!me)return;
+  const chk=(id,c,extra={})=>{const e=document.getElementById(id);if(e)e.classList.toggle('dis',!canAffordTeam(me.id,c,extra))};
+  chk('bBarracks',100,ECON_COSTS.builds.barracks);chk('bFactory',150,ECON_COSTS.builds.factory);chk('bRefinery',200,ECON_COSTS.builds.refinery);chk('bTower',100,ECON_COSTS.builds.tower);chk('bWall',30,ECON_COSTS.builds.wall);chk('bRadar',150,ECON_COSTS.builds.radar);
+  chk('bInf',50,ECON_COSTS.units.inf);chk('bTank',150,ECON_COSTS.units.tank);chk('bRocket',180,ECON_COSTS.units.rocket);chk('bHeli',220,ECON_COSTS.units.heli);chk('bSniper',120,ECON_COSTS.units.sniper);chk('bMedic',80,ECON_COSTS.units.medic);
+}
+setInterval(updHUD,MOBILE.hudInterval);
+function muzzle(x,y,a,team){if(particles.length>MOBILE.particleCap)return;playTone(120,.05,'sawtooth',.02);const c=team==='blue'?'#aab8d8':'#d8a8a8';for(let i=0;i<MOBILE.shotParticleCount;i++){const aa=a+(Math.random()-.5)*.6;particles.push({x,y,vx:Math.cos(aa)*(2+Math.random()*2),vy:Math.sin(aa)*(2+Math.random()*2),life:160,ml:160,c,s:2+Math.random()*2})}}
+function boom(x,y,team){
+  playTone(75,.2,'triangle',.05);
+  if(particles.length<MOBILE.particleCap){particles.push({x,y,r:4,maxR:44,life:300,ml:300,c:team==='blue'?'rgba(100,170,230,.7)':'rgba(230,100,100,.7)',ring:1});const c1=team==='blue'?'#4a8ecf':'#cf4a4a';for(let i=0;i<MOBILE.explosionParticles;i++){const a=Math.random()*Math.PI*2,sp=1+Math.random()*4;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:500,ml:500,c:Math.random()<.5?c1:'#cfaf4a',s:2+Math.random()*4})}for(let i=0;i<MOBILE.smokeParticles;i++){const a=Math.random()*Math.PI*2;particles.push({x,y,vx:Math.cos(a)*.8,vy:Math.sin(a)*.8-.5,life:900,ml:900,c:'rgba(80,80,80,.6)',s:6+Math.random()*6,smk:1})}}
+  if(Math.hypot(x-(cam.x+vw()/2),y-(cam.y+vh()/2))<420){shakePower=Math.min(7,shakePower+3);shakeEnd=performance.now()+200}
+}
+function proj(sx,sy,tx,ty,team,dmg,big){const a=Math.atan2(ty-sy,tx-sx),sp=big?6:8;projs.push({x:sx,y:sy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,tx,ty,life:1500,team,dmg,tr:[],big})}
+function updFx(dt){
+  for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx||0;p.y+=p.vy||0;p.life-=dt;if(p.ring)p.r=Math.min(p.maxR,p.r+dt*.16);if(p.smk){p.vx*=.98;p.vy*=.98;p.s+=.1}else{p.vx*=.94;p.vy*=.94}if(p.life<=0)particles.splice(i,1)}
+  for(let i=projs.length-1;i>=0;i--){const p=projs[i];p.x+=p.vx;p.y+=p.vy;p.tr.push({x:p.x,y:p.y});if(p.tr.length>5)p.tr.shift();p.life-=dt;if(Math.hypot(p.x-p.tx,p.y-p.ty)<10||p.life<=0){boom(p.x,p.y,p.team);if(p.big){for(const id in S.units){const u=S.units[id];if(u.team===p.team)continue;if(Math.hypot(u.x-p.x,u.y-p.y)<60){const def=UNITS[u.type]||{armor:0};const armor=(def.armor||0)*.3;u.hp-=coverDamage(u,p.dmg*.7*(1-armor));u.lastHitTeam=p.team;u.suppressedUntil=Date.now()+900}}for(const id in S.bldgs){const b=S.bldgs[id];if(b.team===p.team)continue;if(Math.hypot(b.x-p.x,b.y-p.y)<70){b.hp-=p.dmg*.7;b.lastHitTeam=p.team}}}projs.splice(i,1)}}
+}
+function coverDamage(target,damage){if(!target||UNITS[target.type]?.fly)return damage;let reduction=0;for(const o of obstacles){const d=Math.hypot(target.x-o.x,target.y-o.y);if(d<o.r+34)reduction=Math.max(reduction,o.type==='rock'?0.42:0.3)}if(reduction&&['inf','sniper','medic'].includes(target.type))reduction=Math.min(.5,reduction+.12);return damage*(1-reduction)}
+function findTarget(u){
+  let best=null,bd=u.rng*1.5;
+  const canHitAir=u.type==='sniper'||u.type==='inf';
+  for(const id in S.units){const t=S.units[id];if(t.team===u.team||t.hp<=0)continue;if(UNITS[t.type].fly&&!canHitAir)continue;const d=Math.hypot(t.x-u.x,t.y-u.y);if(d<bd){bd=d;best=id}}
+  if(best)return best;
+  for(const id in S.bldgs){const b=S.bldgs[id];if(b.team===u.team)continue;const d=Math.hypot(b.x-u.x,b.y-u.y);if(d<u.rng*1.3){if(!best||d<bd){bd=d;best='b_'+id}}}
+  return best;
+}
+function upd(dt){
+  if(!me)return;
+  clampCam();
+  if(me.is_host){
+    if(soloMode)updateAI();
+    updateTowers(dt);
+    updateEconomy(dt);
+    for(const id in S.units){
+      const u=S.units[id];
+      if(u.hp<=0){if(u.lastHitTeam&&S.stats[u.lastHitTeam])S.stats[u.lastHitTeam].kills++;if(S.stats[u.team])S.stats[u.team].losses++;delete S.units[id];sel.delete(id);continue}
+      u.cd=Math.max(0,u.cd-dt);
+      if(u.type==='medic'){if(u.cd<=0){for(const oid in S.units){const o=S.units[oid];if(o.team!==u.team||oid===id||o.hp>=o.maxHp)continue;if(Math.hypot(o.x-u.x,o.y-u.y)<100){o.hp=Math.min(o.maxHp,o.hp+15);u.cd=90;break}}}if(!u.moveTo){for(const oid in S.units){const o=S.units[oid];if(o.team===u.team&&oid!==id&&o.hp<o.maxHp*.7){u.moveTo={x:o.x,y:o.y};break}}}}
+      if(u.type==='rocket'&&u.groundTarget){const target=u.groundTarget,dx=target.x-u.x,dy=target.y-u.y,d=Math.hypot(dx,dy);u.angle=Math.atan2(dy,dx);if(d>u.rng*.85){const step=u.spd*dt*.045;moveUnitSafe(u,u.x+dx/d*step,u.y+dy/d*step);u.walkPhase+=dt*.01;u.trackPhase+=dt*.02}else if(u.cd<=0){const mx=u.x+Math.cos(u.angle)*u.r,my=u.y+Math.sin(u.angle)*u.r;proj(mx,my,target.x,target.y,u.team,u.dmg,true);muzzle(mx,my,u.angle,u.team);u.cd=UNITS[u.type].cd}}
+      if(!u.groundTarget&&!u.targetId&&u.aggr==='aggressive'&&u.type!=='medic'&&u.dmg>0){const t=findTarget(u);if(t)u.targetId=t}
+      if(u.targetId){
+        let t=null,isB=false;
+        if(typeof u.targetId==='string'&&u.targetId.startsWith('b_')){t=S.bldgs[u.targetId.slice(2)];isB=true}else t=S.units[u.targetId];
+        if(!t||t.hp<=0){u.targetId=null;if(u.aggr==='aggressive'&&u.type!=='medic'&&u.dmg>0){const nt=findTarget(u);if(nt)u.targetId=nt}}
+        else{const dx=t.x-u.x,dy=t.y-u.y,d=Math.hypot(dx,dy);u.angle=Math.atan2(dy,dx);const tr=isB?u.rng+30:u.rng;if(d>tr){moveUnitSafe(u,u.x+(dx/d)*u.spd*dt*.045,u.y+(dy/d)*u.spd*dt*.045);u.walkPhase+=dt*.01;u.trackPhase+=dt*.02}else if(u.cd<=0&&u.dmg>0){const def=UNITS[u.type]||{};const tDef=UNITS[t.type]||{armor:0};const pierce=def.pierce||0;const armor=(tDef.armor||0)*(1-pierce);const dmg=coverDamage(t,u.dmg*(1-armor));t.hp-=dmg;t.lastHitTeam=u.team;t.suppressedUntil=Date.now()+700;u.cd=UNITS[u.type].cd;const mx=u.x+Math.cos(u.angle)*u.r,my=u.y+Math.sin(u.angle)*u.r;muzzle(mx,my,u.angle,u.team);const def2=UNITS[u.type];if(def2.proj)proj(mx,my,t.x,t.y,u.team,u.dmg,def2.big||false)}}
+      }
+      if(!u.groundTarget&&!u.targetId&&u.aggr!=='hold'&&u.type!=='medic'&&u.dmg>0){const t=findTarget(u);if(t)u.targetId=t}
+      if(!u.targetId&&u.moveTo){const dx=u.moveTo.x-u.x,dy=u.moveTo.y-u.y,d=Math.hypot(dx,dy);if(d<4)u.moveTo=null;else{moveUnitSafe(u,u.x+(dx/d)*u.spd*dt*.045,u.y+(dy/d)*u.spd*dt*.045);u.angle=Math.atan2(dy,dx);u.walkPhase+=dt*.01;u.trackPhase+=dt*.02}}
+    }
+    for(const id in S.bldgs){
+      const b=S.bldgs[id];
+      if(b.buildT===undefined)b.buildT=0;
+      if(b.buildT<1)b.buildT=Math.min(1,b.buildT+dt*.003);
+      if(b.hp<=0){if(b.lastHitTeam&&S.stats[b.lastHitTeam])S.stats[b.lastHitTeam].buildings++;if(S.stats[b.team])S.stats[b.team].losses++;boom(b.x,b.y,b.team);if(b.type==='base'){const lastBase=!Object.values(S.bldgs).some(other=>other.id!==b.id&&other.team===b.team&&other.type==='base'&&other.hp>0);if(lastBase){const w=b.team==='blue'?'red':'blue';setWinner(w);if(gameCh)gameCh.send({type:'broadcast',event:'win',payload:{winner:w}})}}delete S.bldgs[id];continue}
+    }
+  }
+  updFx(dt);
+  updateFog();
+  updateTop();
+}
+function updateTop(){
+  let b=0,r=0;
+  for(const id in S.units)S.units[id].team==='blue'?b++:r++;
+  for(const id in S.bldgs)S.bldgs[id].team==='blue'?b++:r++;
+  const be=document.getElementById('blueCount'),re=document.getElementById('redCount');
+  if(be)be.textContent=b;if(re)re.textContent=r;
+  const t=Math.floor((Date.now()-startT)/1000);
+  const ge=document.getElementById('gameTime');if(ge)ge.textContent=Math.floor(t/60)+':'+String(t%60).padStart(2,'0');
+}
+let grassPattern=null;
+function drawGrass(){
+  if(!grassPattern){const tile=document.createElement('canvas');tile.width=64;tile.height=64;const g=tile.getContext('2d');g.fillStyle='#44483f';g.fillRect(0,0,64,64);let seed=81731;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};for(let i=0;i<70;i++){const x=rand()*64,y=rand()*64;g.strokeStyle=['rgba(126,132,105,.18)','rgba(25,31,26,.22)','rgba(165,155,119,.1)'][i%3];g.lineWidth=.6+rand();g.beginPath();g.moveTo(x,y);g.lineTo(x+(rand()-.5)*4,y-1-rand()*4);g.stroke()}grassPattern=cx.createPattern(tile,'repeat')}
+  cx.fillStyle=grassPattern;cx.fillRect(0,0,MAPW,MAPH);
+}
+function drawTree(o){const r=o.r;cx.save();cx.translate(o.x,o.y);cx.fillStyle='rgba(0,0,0,.35)';cx.beginPath();cx.ellipse(3,r*.56,r*.85,r*.45,0,0,Math.PI*2);cx.fill();const canopy=cx.createRadialGradient(-r*.28,-r*.34,2,0,0,r);canopy.addColorStop(0,'#65705a');canopy.addColorStop(.46,'#394638');canopy.addColorStop(1,'#202921');cx.fillStyle=canopy;cx.strokeStyle='#171d18';cx.lineWidth=1.5/zm;cx.beginPath();cx.arc(0,0,r,0,Math.PI*2);cx.fill();cx.stroke();cx.restore()}
+function drawWater(){for(const w of waterBodies){cx.save();cx.translate(w.x,w.y);cx.rotate(w.angle||0);cx.fillStyle='#174457';cx.strokeStyle='rgba(124,190,198,.6)';cx.lineWidth=3/zm;cx.beginPath();cx.ellipse(0,0,w.rx,w.ry,0,0,Math.PI*2);cx.fill();cx.stroke();cx.restore()}}
+function hexToRgb(hex){const h=hex.replace('#','');const n=parseInt(h,16);return `${(n>>16)&255},${(n>>8)&255},${n&255}`}
+function draw(){
+  cx.fillStyle='#111513';cx.fillRect(0,0,W,H);
+  cx.save();
+  const shaking=performance.now()<shakeEnd?shakePower*(1-(performance.now()-(shakeEnd-200))/200):0;
+  if(!shaking)shakePower=0;
+  cx.translate((Math.random()-.5)*shaking,(Math.random()-.5)*shaking);
+  cx.scale(zm,zm);cx.translate(-cam.x,-cam.y);
+  drawGrass();drawWater();
+  cx.strokeStyle='#333';cx.lineWidth=2/zm;cx.strokeRect(0,0,MAPW,MAPH);
+  for(const id in S.bldgs){const b=S.bldgs[id],d=BUILDS[b.type];if(!entityVisible(b.team,b.x,b.y))continue;const c=factionColor(b.ownerId),rgb=hexToRgb(c);cx.beginPath();cx.arc(b.x,b.y,d.r,0,Math.PI*2);cx.fillStyle=`rgba(${rgb},.08)`;cx.fill();cx.strokeStyle=`rgba(${rgb},.22)`;cx.lineWidth=1/zm;cx.stroke()}
+  for(const o of obstacles)drawTree(o);
+  for(const id in S.bldgs)if(entityVisible(S.bldgs[id].team,S.bldgs[id].x,S.bldgs[id].y))drawB(S.bldgs[id]);
+  const sorted=Object.values(S.units).sort((a,b)=>(UNITS[a.type].fly?1:0)-(UNITS[b.type].fly?1:0));
+  for(const u of sorted){if(!entityVisible(u.team,u.x,u.y))continue;if(!Number.isFinite(u.renderX)){u.renderX=u.x;u.renderY=u.y}u.renderX+=(u.x-u.renderX)*.32;u.renderY+=(u.y-u.renderY)*.32;drawU({...u,x:u.renderX,y:u.renderY})}
+  for(const p of projs){cx.strokeStyle=p.team==='blue'?'rgba(150,180,220,.6)':'rgba(220,150,150,.6)';cx.lineWidth=(p.big?2.5:1.8)/zm;cx.beginPath();for(let i=0;i<p.tr.length;i++){const t=p.tr[i];i===0?cx.moveTo(t.x,t.y):cx.lineTo(t.x,t.y)}cx.lineTo(p.x,p.y);cx.stroke();cx.fillStyle=p.big?'#cfaf4a':'#fff';cx.beginPath();cx.arc(p.x,p.y,p.big?4:2.5,0,Math.PI*2);cx.fill()}
+  for(const p of particles){cx.globalAlpha=p.life/p.ml;cx.fillStyle=p.c;if(p.ring){cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.lineWidth=2.5/zm;cx.strokeStyle=p.c;cx.stroke()}else if(p.smk){cx.beginPath();cx.arc(p.x,p.y,p.s,0,Math.PI*2);cx.fill()}else cx.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s)}
+  cx.globalAlpha=1;
+  if(bMode){const d=BUILDS[bMode.type],x=mouseWorld.x,y=mouseWorld.y;const valid=canPlaceBuild(me.team,bMode.type,x,y,me.id);cx.globalAlpha=.55;cx.fillStyle=valid?(me.team==='blue'?'#4a8ecf':'#cf4a4a'):'#cf2222';cx.fillRect(x-d.w/2,y-d.h/2,d.w,d.h);cx.globalAlpha=1;cx.strokeStyle=valid?'#9ab87a':'#cf5555';cx.lineWidth=2/zm;cx.strokeRect(x-d.w/2,y-d.h/2,d.w,d.h);bValid=valid}
+  if(bombardMode){cx.save();cx.strokeStyle='rgba(230,190,95,.9)';cx.fillStyle='rgba(220,160,60,.12)';cx.lineWidth=2/zm;cx.beginPath();cx.arc(mouseWorld.x,mouseWorld.y,60,0,Math.PI*2);cx.fill();cx.stroke();cx.restore()}
+  drawFog();
+  cx.restore();
+}
+function drawU(u){
+  const s=sel.has(u.id);
+  const c=factionColor(u.ownerId),dk=u.team==='blue'?'#1a4a7a':'#7a1a1a';
+  cx.save();cx.translate(u.x,u.y);
+  cx.fillStyle='rgba(0,0,0,.4)';cx.beginPath();cx.ellipse(0,4,u.r+2,u.r*.7,0,0,Math.PI*2);cx.fill();
+  cx.rotate(u.angle+Math.PI/2);
+  if(u.type==='inf'){cx.rotate(-Math.PI/2);cx.fillStyle='#2d6818';cx.strokeStyle='#000';cx.lineWidth=1.8;cx.beginPath();cx.ellipse(0,0,11.8,11.8,0,0,Math.PI*2);cx.fill();cx.stroke();cx.fillStyle='#000';cx.fillRect(6.7,-4.1,22.8,3.6);cx.strokeRect(6.7,-4.1,22.8,3.6)}
+  else if(u.type==='sniper'||u.type==='medic'){const skin='#e8c090';cx.fillStyle=dk;cx.fillRect(-5,4,3,7);cx.fillRect(2,4,3,7);cx.fillStyle=u.type==='medic'?'#e8e8e8':c;cx.beginPath();cx.roundRect(-7,-4,14,12,2);cx.fill();if(u.type==='medic'){cx.fillStyle='#b02020';cx.fillRect(-2,-2,4,8);cx.fillRect(-5,1,10,3)}else{cx.fillStyle=dk;cx.fillRect(-5,-2,10,6)}cx.fillStyle=skin;cx.beginPath();cx.arc(0,-6,4.5,0,Math.PI*2);cx.fill();cx.fillStyle=c;cx.beginPath();cx.arc(0,-7,5,Math.PI,0);cx.fill();cx.fillRect(-5,-7,10,2);if(u.type==='sniper'){cx.fillStyle='#222';cx.fillRect(4,-2,14,2);cx.fillRect(16,-1.5,4,1.5)}}
+  else if(u.type==='tank'){cx.rotate(-Math.PI/2);cx.scale(.20,.20);cx.translate(-510,-331);cx.fillStyle='#2d6818';cx.strokeStyle='#000';cx.lineWidth=2;cx.fillRect(379,274,205,115);cx.strokeRect(379,274,205,115);cx.beginPath();cx.ellipse(468,329,75,45,0,0,Math.PI*2);cx.fill();cx.stroke();cx.fillStyle='#000';cx.fillRect(538,319,104,16);cx.strokeRect(538,319,104,16);cx.fillStyle='#2d6818';cx.beginPath();cx.ellipse(449,330,16,16,0,0,Math.PI*2);cx.fill();cx.stroke();cx.fillRect(546,284,19,24);cx.strokeRect(546,284,19,24)}
+  else if(u.type==='artillery'||u.type==='rocket'){cx.rotate(-Math.PI/2);cx.scale(.21,.21);cx.translate(-490,-281);cx.fillStyle='#12732a';cx.strokeStyle='#000';cx.lineWidth=2;cx.fillRect(408,219,164,119);cx.strokeRect(408,219,164,119);cx.fillRect(572,211,83,140);cx.strokeRect(572,211,83,140);cx.fillStyle='#738091';cx.fillRect(409,210,160,13);cx.strokeRect(409,210,160,13);cx.fillRect(413,338,159,7);cx.strokeRect(413,338,159,7);cx.fillStyle='#4f5154';cx.strokeStyle='#fff';cx.lineWidth=2;cx.fillRect(570,237,22,24);cx.strokeRect(570,237,22,24);cx.fillRect(572,272,25,27);cx.strokeRect(572,272,25,27);cx.fillRect(570,306,22,19);cx.strokeRect(570,306,22,19)}
+  else if(u.type==='heli'){const t=performance.now()*.001;cx.rotate(-Math.PI/2);cx.scale(.19,.19);cx.translate(-430,-330);cx.save();cx.translate(484.31,329.23);cx.rotate(t*2.5);cx.fillStyle='rgba(120,120,120,.55)';cx.strokeStyle='#000';cx.lineWidth=5;cx.beginPath();cx.ellipse(0,0,90.31,79.23,0,0,Math.PI*2);cx.fill();cx.stroke();cx.restore();cx.fillStyle='#6e6e6e';cx.strokeStyle='#000';cx.lineWidth=5;cx.beginPath();cx.ellipse(284.73,353.88,40.13,7.99,0,0,Math.PI*2);cx.fill();cx.stroke();cx.fillStyle=c;cx.strokeStyle=c;cx.lineWidth=4;cx.fillRect(302.42,326,107.21,14.16);cx.strokeRect(302.42,326,107.21,14.16);cx.fillStyle=c;cx.strokeStyle='#000';cx.lineWidth=5;cx.fillRect(265.07,315,39.33,36.45);cx.strokeRect(265.07,315,39.33,36.45);cx.beginPath();cx.ellipse(502.77,336.61,93.77,53.61,0,0,Math.PI*2);cx.fill();cx.stroke()}
+  cx.restore();
+  if(s){cx.strokeStyle='#9ab87a';cx.lineWidth=2;cx.beginPath();const pulse=Math.sin(performance.now()*.006)*1.5;cx.ellipse(u.x,u.y+4,u.r+6+pulse,u.r+2+pulse*.6,0,0,Math.PI*2);cx.stroke()}
+  if(u.hp<u.maxHp){const bw=(u.type==='inf'||u.type==='sniper'||u.type==='medic')?24:30;const by=(u.type==='heli')?-32:((u.type==='inf'||u.type==='sniper'||u.type==='medic')?-22:-30);const p=u.hp/u.maxHp;cx.fillStyle='rgba(0,0,0,.8)';cx.fillRect(u.x-bw/2,u.y+by,bw,3);cx.fillStyle=p>.5?'#5f5':p>.25?'#cfaf4a':'#cf4a4a';cx.fillRect(u.x-bw/2,u.y+by,bw*p,3)}
+}
+function drawB(b){
+  const d=BUILDS[b.type],c=factionColor(b.ownerId);
+  const dk='#292e2b',w=d.w,h=d.h;
+  cx.save();cx.translate(b.x,b.y);
+  const bt=b.buildT===undefined?1:b.buildT;
+  if(bt<1){cx.globalAlpha=bt;const s=.4+bt*.6;cx.scale(s,s)}
+  cx.fillStyle='rgba(0,0,0,.5)';cx.fillRect(-w/2+4,-h/2+4,w,h);
+  if(b.type==='base'){cx.fillStyle='#5a5f5a';cx.fillRect(-w/2,-h/2,w,h);cx.strokeStyle=dk;cx.lineWidth=2.5;cx.strokeRect(-w/2,-h/2,w,h);cx.fillStyle='#383d39';cx.fillRect(-w/2+12,-h/2+12,w-24,h-24);cx.fillStyle='#8a8b7e';cx.beginPath();cx.arc(0,0,20,0,Math.PI*2);cx.fill();cx.stroke();cx.strokeStyle='#888';cx.lineWidth=2.5;cx.beginPath();cx.moveTo(0,-20);cx.lineTo(0,-50);cx.stroke();cx.fillStyle=c;cx.beginPath();cx.moveTo(0,-50);cx.lineTo(22,-44);cx.lineTo(0,-38);cx.closePath();cx.fill()}
+  else if(b.type==='barracks'){cx.fillStyle='#5a5f5a';cx.fillRect(-w/2,-h/2+8,w,h-8);cx.strokeStyle=dk;cx.lineWidth=2;cx.strokeRect(-w/2,-h/2+8,w,h-8);cx.fillStyle='#4a4f4a';cx.beginPath();cx.moveTo(-w/2-4,-h/2+8);cx.lineTo(0,-h/2-8);cx.lineTo(w/2+4,-h/2+8);cx.closePath();cx.fill();cx.stroke();cx.fillStyle=dk;cx.fillRect(-8,h/2-22,16,22)}
+  else if(b.type==='factory'){cx.fillStyle='#5a5f5a';cx.fillRect(-w/2,-h/2,w,h);cx.strokeStyle=dk;cx.lineWidth=2;cx.strokeRect(-w/2,-h/2,w,h);cx.fillStyle='#cfaf4a';for(let i=0;i<3;i++)cx.fillRect(-w/2+8+i*20,-6,10,8)}
+  else if(b.type==='refinery'){cx.fillStyle='#5a5f5a';cx.fillRect(-w/2,-h/2+10,w,h-10);cx.strokeStyle=dk;cx.lineWidth=2;cx.strokeRect(-w/2,-h/2+10,w,h-10);cx.fillStyle='#cfaf4a';cx.fillRect(-w/2,h/2-6,w,4)}
+  else if(b.type==='tower'){cx.fillStyle='#5a5f5a';cx.fillRect(-w/2,-h/2,w,h);cx.strokeStyle=dk;cx.lineWidth=2;cx.strokeRect(-w/2,-h/2,w,h);cx.fillStyle='#777b70';cx.beginPath();cx.arc(0,-4,12,0,Math.PI*2);cx.fill();cx.fillStyle='#333';cx.fillRect(-3,-22,6,24)}
+  else if(b.type==='wall'){cx.fillStyle='#777';cx.fillRect(-w/2,-h/2,w,h);cx.fillStyle='#999';cx.fillRect(-w/2,-h/2,w,5);cx.strokeStyle='#444';cx.lineWidth=2;cx.strokeRect(-w/2,-h/2,w,h)}
+  else if(b.type==='radar'){cx.fillStyle='#666c68';cx.fillRect(-w/2,-h/2,w,h);cx.strokeStyle='#252a27';cx.lineWidth=2.5;cx.strokeRect(-w/2,-h/2,w,h);cx.strokeStyle='#9ab87a';cx.lineWidth=2;cx.beginPath();cx.arc(0,0,17,Math.PI,Math.PI*1.8);cx.stroke()}
+  if(b.type!=='base'&&b.type!=='wall'){const fx=-w/2+10,fy=-h/2+5;cx.strokeStyle='#252825';cx.lineWidth=2;cx.beginPath();cx.moveTo(fx,fy);cx.lineTo(fx,fy-25);cx.stroke();cx.fillStyle=c;cx.beginPath();cx.moveTo(fx+1,fy-24);cx.lineTo(fx+19,fy-20);cx.lineTo(fx+1,fy-14);cx.closePath();cx.fill()}
+  if(b.type==='base'){const name=economyAccount(b.ownerId)?.name||'Commander';cx.font='bold 11px Consolas,monospace';cx.textAlign='center';cx.textBaseline='middle';const label=name.slice(0,18),tw=cx.measureText(label).width+18,ly=-h/2-24;cx.fillStyle='rgba(5,8,5,.94)';cx.fillRect(-tw/2,ly-10,tw,20);cx.strokeStyle=c;cx.lineWidth=2;cx.strokeRect(-tw/2,ly-10,tw,20);cx.fillStyle='#fff';cx.fillText(label,0,ly)}
+  const p=b.hp/b.maxHp;
+  if(p<1){cx.fillStyle='rgba(0,0,0,.8)';cx.fillRect(-w/2,-h/2-16,w,6);cx.fillStyle=p>.5?'#5f5':p>.25?'#cfaf4a':'#cf4a4a';cx.fillRect(-w/2,-h/2-16,w*p,6)}
+  if(bt<1)cx.globalAlpha=1;
+  cx.restore();
+}
+let lastMM=0;
+function drawMM(){
+  const now=performance.now();if(now-lastMM<MOBILE.minimapInterval)return;lastMM=now;
+  mc.fillStyle='#0a0f0a';mc.fillRect(0,0,MMW,MMH);
+  for(const id in S.bldgs){const b=S.bldgs[id];if(!entityVisible(b.team,b.x,b.y))continue;mc.fillStyle=b.team==='blue'?'#4a8ecf':'#cf4a4a';mc.fillRect(b.x*MMX-2,b.y*MMY-2,5,5)}
+  for(const id in S.units){const u=S.units[id];if(!entityVisible(u.team,u.x,u.y))continue;mc.fillStyle=u.team==='blue'?'#4a8ecf':'#cf4a4a';mc.fillRect(u.x*MMX-1,u.y*MMY-1,3,3)}
+  mc.strokeStyle='#fff';mc.lineWidth=1;mc.strokeRect(cam.x*MMX,cam.y*MMY,vw()*MMX,vh()*MMY);
+}
+function genObstacles(){
+  const margin=Math.max(38,Math.min(MAPW,MAPH)*.035),spacing=40;
+  obstacles=[];waterBodies=[];resourceNodes=[];
+  for(let x=18;x<MAPW-18;x+=spacing){for(const y of [margin,MAPH-margin])obstacles.push({x:x+(Math.random()-.5)*10,y:y+(Math.random()-.5)*8,r:15+Math.random()*7,type:'tree'})}
+  for(let y=margin+spacing;y<MAPH-margin;y+=spacing){for(const x of [margin,MAPW-margin])obstacles.push({x:x+(Math.random()-.5)*8,y:y+(Math.random()-.5)*10,r:15+Math.random()*7,type:'tree'})}
+  if(gameCh)gameCh.send({type:'broadcast',event:'obs',payload:{obs:obstacles}});
+}
+function randomBasePosition(occupied=[]){
+  const margin=150,minGap=Math.max(230,Math.min(MAPW,MAPH)*.22);
+  for(let attempt=0;attempt<400;attempt++){const x=margin+Math.random()*Math.max(1,MAPW-margin*2),y=margin+Math.random()*Math.max(1,MAPH-margin*2);if(hitObs(x,y,70)||inWater(x,y))continue;if(occupied.some(p=>Math.hypot(x-p.x,y-p.y)<minGap))continue;return{x,y}}
+  return{x:margin+Math.random()*Math.max(1,MAPW-margin*2),y:margin+Math.random()*Math.max(1,MAPH-margin*2)};
+}
+function startGameLoop(){if(loopRunning)return;loopRunning=true;lastT=performance.now();requestAnimationFrame(loop)}
+function loop(t){const dt=Math.min(50,t-lastT);lastT=t;if(!soloPaused)upd(dt);draw();drawMM();requestAnimationFrame(loop)}
+if(!CanvasRenderingContext2D.prototype.roundRect){CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){if(w<2*r)r=w/2;if(h<2*r)r=h/2;this.beginPath();this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);this.closePath();return this}}
+window.addEventListener('beforeunload',()=>{try{gameCh?.unsubscribe();lobbyCh?.unsubscribe()}catch(e){}});
+</script>
+</body>
+</html>
