@@ -1,0 +1,2419 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<title>PixelForge 2D</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  background:#0b0e12;
+  color:#f1f4f8;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  padding-bottom:30px;
+}
+
+header{
+  background:#151a21;
+  border-bottom:1px solid #303844;
+  padding:15px;
+}
+
+header h1{
+  margin:0;
+  font-size:21px;
+}
+
+header span{
+  color:#54a9ff;
+}
+
+main{
+  width:min(1100px,100%);
+  margin:auto;
+  padding:12px;
+}
+
+.panel{
+  background:#151a21;
+  border:1px solid #303844;
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:12px;
+}
+
+.toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+
+button{
+  border:1px solid #3b4654;
+  background:#242c36;
+  color:#fff;
+  border-radius:9px;
+  padding:11px 14px;
+  font-size:14px;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+
+button:active{
+  transform:scale(.96);
+}
+
+button.active{
+  background:#1768aa;
+  border-color:#62b7ff;
+}
+
+button.success{
+  background:#1f7a3a;
+  border-color:#4ade80;
+}
+
+button.warn{
+  background:#7a4a1f;
+  border-color:#eab308;
+}
+
+.workspace{
+  display:grid;
+  gap:12px;
+}
+
+@media(min-width:800px){
+  .workspace{
+    grid-template-columns:1.45fr .8fr;
+  }
+}
+
+canvas{
+  display:block;
+  width:100%;
+  height:auto;
+  background:#10141a;
+  border-radius:8px;
+  touch-action:none;
+}
+
+h2,h3{
+  margin-top:0;
+}
+
+.hint{
+  color:#8995a4;
+  font-size:12px;
+  line-height:1.5;
+  margin-top:8px;
+}
+
+.properties{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+
+label{
+  display:block;
+  color:#98a3b2;
+  font-size:12px;
+  margin-bottom:4px;
+}
+
+input,textarea{
+  width:100%;
+  padding:10px;
+  border-radius:7px;
+  border:1px solid #3a4552;
+  background:#090c10;
+  color:white;
+  font-size:14px;
+  font-family:inherit;
+}
+
+input[type="color"]{
+  height:42px;
+  padding:3px;
+}
+
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:10px;
+}
+
+#resizeControls{
+  margin-top:18px;
+  text-align:center;
+}
+
+.arrowGrid{
+  display:grid;
+  grid-template-columns:64px 64px 64px;
+  grid-template-rows:58px 58px 58px;
+  gap:6px;
+  justify-content:center;
+  margin-top:10px;
+}
+
+.arrow{
+  padding:0;
+  font-size:25px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#263545;
+  border-color:#4c6a88;
+}
+
+.arrow:hover{
+  background:#315473;
+}
+
+.center{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#0e1319;
+  border-radius:8px;
+  color:#718092;
+  font-size:11px;
+}
+
+#codeOutput{
+  width:100%;
+  min-height:260px;
+  resize:vertical;
+  background:#080b0f;
+  color:#b9efc2;
+  border:1px solid #303944;
+  border-radius:8px;
+  padding:12px;
+  font-family:monospace;
+  font-size:12px;
+  line-height:1.45;
+}
+
+#codeOutput.editing{
+  color:#ffe066;
+  border-color:#eab308;
+}
+
+#noObject{
+  padding:10px 0;
+}
+
+.rotateRow{
+  display:flex;
+  gap:7px;
+  margin-top:9px;
+  align-items:flex-end;
+}
+
+.rotateRow .rotateBtn{
+  flex:0 0 auto;
+  width:56px;
+  font-size:20px;
+  padding:8px 0;
+  background:#263545;
+  border-color:#4c6a88;
+}
+
+.rotateRow .rotateBtn:hover{
+  background:#315473;
+}
+
+.selectionInfo{
+  margin-top:8px;
+  padding:8px 10px;
+  background:#0e1319;
+  border:1px solid #303844;
+  border-radius:7px;
+  font-size:12px;
+  color:#98a3b2;
+  display:none;
+}
+
+.selectionInfo.visible{
+  display:block;
+}
+
+.selectionInfo b{
+  color:#54a9ff;
+}
+
+.codeTabs{
+  display:flex;
+  gap:5px;
+  margin-bottom:8px;
+  flex-wrap:wrap;
+}
+
+.codeTabs button{
+  padding:7px 12px;
+  font-size:12px;
+  border-radius:7px 7px 0 0;
+}
+
+.codeTabs button.active{
+  background:#1768aa;
+  border-color:#62b7ff;
+}
+
+.codeHint{
+  margin-top:6px;
+  padding:7px 10px;
+  background:#0e1319;
+  border-left:3px solid #54a9ff;
+  border-radius:4px;
+  font-size:11px;
+  color:#98a3b2;
+  line-height:1.5;
+}
+
+.codeHint b{ color:#54a9ff; }
+
+.dropZone{
+  margin-top:10px;
+  padding:20px;
+  border:2px dashed #3a4552;
+  border-radius:9px;
+  text-align:center;
+  color:#8995a4;
+  font-size:13px;
+  transition:all .2s;
+  cursor:pointer;
+}
+
+.dropZone:hover, .dropZone.dragover{
+  border-color:#54a9ff;
+  background:#0e1a26;
+  color:#54a9ff;
+}
+
+.dropZone b{ color:#54a9ff; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>◈ Pixel<span>Forge</span> 2D</h1>
+</header>
+
+<main>
+
+<!-- =====================================================
+     WERKZEUGE
+===================================================== -->
+
+<section class="panel">
+
+  <div class="toolbar">
+
+    <button class="tool active" data-tool="select">
+      ↖ Auswählen
+    </button>
+
+    <button class="tool" data-tool="rect">
+      ▰ Rechteck
+    </button>
+
+    <button class="tool" data-tool="roundrect">
+      ▢ Abgerundet
+    </button>
+
+    <button class="tool" data-tool="circle">
+      ◯ Kreis
+    </button>
+
+    <button class="tool" data-tool="ellipse">
+      ⬭ Ellipse
+    </button>
+
+    <button class="tool" data-tool="line">
+      ／ Linie
+    </button>
+
+    <button class="tool" data-tool="triangle">
+      △ Dreieck
+    </button>
+
+    <button class="tool" data-tool="diamond">
+      ◇ Raute
+    </button>
+
+    <button class="tool" data-tool="pentagon">
+      ⬠ Fünfeck
+    </button>
+
+    <button class="tool" data-tool="hexagon">
+      ⬡ Sechseck
+    </button>
+
+    <button class="tool" data-tool="star">
+      ★ Stern
+    </button>
+
+    <button class="tool" data-tool="heart">
+      ♥ Herz
+    </button>
+
+    <button class="tool" data-tool="arrow">
+      ➜ Pfeil
+    </button>
+
+    <button class="tool" data-tool="zigzag">
+      ⚡ Zickzack
+    </button>
+
+    <button class="tool" data-tool="cross">
+      ✚ Kreuz
+    </button>
+
+  </div>
+
+  <div class="hint">
+    Zeichne ein Objekt mit dem Finger oder der Maus.<br>
+    <b>Auswählen:</b> Klick auf Objekt · <b>Mehrfach:</b> Shift+Klick oder Rahmen aufziehen<br>
+    <b>Verschieben:</b> Objekt einfach mit der Maus ziehen.<br>
+    <b>Alles auswählen:</b> Strg/Cmd + A
+  </div>
+
+</section>
+
+
+<div class="workspace">
+
+<!-- =====================================================
+     CANVAS
+===================================================== -->
+
+<section class="panel">
+
+  <h3>2D-Modell</h3>
+
+  <canvas
+    id="canvas"
+    width="900"
+    height="600">
+  </canvas>
+
+  <div class="actions">
+
+    <button id="deleteButton">
+      🗑 Löschen
+    </button>
+
+    <button id="duplicateButton">
+      📋 Duplizieren
+    </button>
+
+    <button id="undoButton">
+      ↶ Rückgängig
+    </button>
+
+    <button id="clearButton">
+      ✕ Alles löschen
+    </button>
+
+    <button id="selectAllButton">
+      ⬚ Alles auswählen
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     RECHTE SEITE
+===================================================== -->
+
+<section>
+
+<!-- OBJEKT-EIGENSCHAFTEN -->
+
+<div class="panel">
+
+  <h3>Objekt-Eigenschaften</h3>
+
+  <div id="noObject">
+    <div class="hint">
+      Noch kein Objekt ausgewählt.
+    </div>
+  </div>
+
+  <div id="properties" hidden>
+
+    <div id="selectionInfo" class="selectionInfo">
+      <b id="selectionCount">1</b> Objekt(e) ausgewählt
+    </div>
+
+    <div class="properties">
+
+      <div>
+        <label for="xInput">X</label>
+        <input id="xInput" type="number">
+      </div>
+
+      <div>
+        <label for="yInput">Y</label>
+        <input id="yInput" type="number">
+      </div>
+
+      <div>
+        <label for="wInput">Breite</label>
+        <input id="wInput" type="number" min="2">
+      </div>
+
+      <div>
+        <label for="hInput">Höhe</label>
+        <input id="hInput" type="number" min="2">
+      </div>
+
+      <div>
+        <label for="fillInput">Füllfarbe</label>
+        <input id="fillInput" type="color">
+      </div>
+
+      <div>
+        <label for="strokeInput">Kontur</label>
+        <input id="strokeInput" type="color">
+      </div>
+
+    </div>
+
+    <div class="rotateRow">
+      <button class="rotateBtn" id="rotateLeft" title="Gegen Uhrzeigersinn">↺</button>
+      <div style="flex:1">
+        <label for="rotInput">Rotation (°)</label>
+        <input id="rotInput" type="number" step="1">
+      </div>
+      <button class="rotateBtn" id="rotateRight" title="Im Uhrzeigersinn">↻</button>
+    </div>
+
+    <div id="resizeControls">
+
+      <h3>Größe ändern</h3>
+
+      <div class="arrowGrid">
+
+        <button class="arrow" data-resize="tl">↖</button>
+        <button class="arrow" data-resize="up">↑</button>
+        <button class="arrow" data-resize="tr">↗</button>
+        <button class="arrow" data-resize="left">←</button>
+
+        <div class="center">GRÖSSE</div>
+
+        <button class="arrow" data-resize="right">→</button>
+        <button class="arrow" data-resize="bl">↙</button>
+        <button class="arrow" data-resize="down">↓</button>
+        <button class="arrow" data-resize="br">↘</button>
+
+      </div>
+
+      <div class="hint">
+        ↑ / ↓ = Höhe<br>
+        ← / → = Breite<br>
+        Ecken = Breite + Höhe
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     CODE-PANEL MIT TABS
+===================================================== -->
+
+<div class="panel">
+
+  <h3>Code</h3>
+
+  <div class="codeTabs">
+    <button id="tabView" class="active">👁 Anzeigen</button>
+    <button id="tabEdit">✎ Bearbeiten &amp; Anwenden</button>
+    <button id="tabImport">📥 Code importieren</button>
+  </div>
+
+  <!-- ANSICHT -->
+  <div id="viewPane">
+    <textarea id="codeOutput" readonly></textarea>
+
+    <div class="actions">
+      <button id="copyButton">📋 Code kopieren</button>
+      <button id="exportButton">💾 HTML exportieren</button>
+    </div>
+
+    <div class="codeHint">
+      Der Code wird automatisch aktualisiert, wenn du Objekte zeichnest oder bearbeitest.
+    </div>
+  </div>
+
+  <!-- BEARBEITEN -->
+  <div id="editPane" hidden>
+
+    <textarea id="codeEditor" spellcheck="false"
+      placeholder="// JavaScript-Code hier bearbeiten...
+// z.B.:
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = '#ff0000';
+ctx.fillRect(100, 100, 200, 150);"></textarea>
+
+    <div class="actions">
+      <button id="applyCodeButton" class="success">▶ Auf Canvas anwenden</button>
+      <button id="parseCodeButton" class="warn">⬇ Als Objekte übernehmen</button>
+      <button id="resetEditorButton">↺ Editor leeren</button>
+    </div>
+
+    <div class="codeHint">
+      <b>Auf Canvas anwenden:</b> führt den Code direkt auf der Canvas aus (keine Objekte).<br>
+      <b>Als Objekte übernehmen:</b> parst <code>fillRect</code>, <code>arc</code>,
+      <code>ellipse</code>, <code>roundRect</code>, <code>moveTo/lineTo</code>,
+      <code>ctx.rotate</code> usw. und erzeugt editierbare Objekte.<br>
+      Du kannst auch den <b>generierten Code</b> aus „Anzeigen" hier einfügen und weiterverarbeiten.
+    </div>
+
+  </div>
+
+  <!-- IMPORT -->
+  <div id="importPane" hidden>
+
+    <div class="dropZone" id="dropZone">
+      <b>📥 Code hier ablegen</b><br>
+      oder klicken zum Auswählen<br>
+      <span style="font-size:11px;opacity:.7">
+        (unterstützt .js, .txt, .html – oder generierten PixelForge-Code)
+      </span>
+      <input type="file" id="fileInput" accept=".js,.txt,.html,.htm" hidden>
+    </div>
+
+    <label style="margin-top:12px">Oder Code einfügen:</label>
+    <textarea id="importTextarea" spellcheck="false"
+      placeholder="// Generierten PixelForge-Code oder eigenen Canvas-Code hier einfügen...
+// Beispiel:
+ctx.fillRect(100, 100, 200, 150);
+ctx.fillStyle = '#ff0000';"></textarea>
+
+    <div class="actions">
+      <button id="importParseButton" class="warn">⬇ Als Objekte übernehmen</button>
+      <button id="importRunButton" class="success">▶ Nur ausführen (ohne Objekte)</button>
+      <button id="importAppendButton">➕ An bestehende Objekte anhängen</button>
+      <button id="importClearButton">🗑 Import-Feld leeren</button>
+    </div>
+
+    <div class="codeHint">
+      <b>Als Objekte übernehmen:</b> ersetzt alle Objekte durch die geparsten.<br>
+      <b>Anhängen:</b> fügt die geparsten Objekte zu den bestehenden hinzu.<br>
+      <b>Nur ausführen:</b> führt den Code direkt auf der Canvas aus, ohne Objekte zu erzeugen.
+    </div>
+
+  </div>
+
+</div>
+
+</section>
+
+</div>
+
+</main>
+
+
+<script>
+
+/* =====================================================
+   ELEMENTE
+===================================================== */
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const noObject = document.getElementById("noObject");
+const properties = document.getElementById("properties");
+const selectionInfo = document.getElementById("selectionInfo");
+const selectionCount = document.getElementById("selectionCount");
+
+const xInput = document.getElementById("xInput");
+const yInput = document.getElementById("yInput");
+const wInput = document.getElementById("wInput");
+const hInput = document.getElementById("hInput");
+const fillInput = document.getElementById("fillInput");
+const strokeInput = document.getElementById("strokeInput");
+const rotInput = document.getElementById("rotInput");
+
+const rotateLeft = document.getElementById("rotateLeft");
+const rotateRight = document.getElementById("rotateRight");
+
+const codeOutput = document.getElementById("codeOutput");
+const codeEditor = document.getElementById("codeEditor");
+
+const tabView = document.getElementById("tabView");
+const tabEdit = document.getElementById("tabEdit");
+const tabImport = document.getElementById("tabImport");
+const viewPane = document.getElementById("viewPane");
+const editPane = document.getElementById("editPane");
+const importPane = document.getElementById("importPane");
+
+const deleteButton = document.getElementById("deleteButton");
+const duplicateButton = document.getElementById("duplicateButton");
+const undoButton = document.getElementById("undoButton");
+const clearButton = document.getElementById("clearButton");
+const selectAllButton = document.getElementById("selectAllButton");
+const copyButton = document.getElementById("copyButton");
+const exportButton = document.getElementById("exportButton");
+
+const applyCodeButton = document.getElementById("applyCodeButton");
+const parseCodeButton = document.getElementById("parseCodeButton");
+const resetEditorButton = document.getElementById("resetEditorButton");
+
+const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+const importTextarea = document.getElementById("importTextarea");
+const importParseButton = document.getElementById("importParseButton");
+const importRunButton = document.getElementById("importRunButton");
+const importAppendButton = document.getElementById("importAppendButton");
+const importClearButton = document.getElementById("importClearButton");
+
+
+/* =====================================================
+   VARIABLEN
+===================================================== */
+
+const WIDTH = 900;
+const HEIGHT = 600;
+
+let objects = [];
+let selectedObjects = [];
+let currentTool = "select";
+let drawingObject = null;
+let drawStart = null;
+let history = [];
+
+let dragging = false;
+let dragStart = null;
+let dragOrigins = [];
+
+let marquee = null;
+let marqueeActive = false;
+let marqueeAdditive = false;
+
+
+/* =====================================================
+   OBJEKT ERSTELLEN
+===================================================== */
+
+function createObject(type,x,y){
+  return {
+    type:type,
+    x:x, y:y,
+    w:10, h:10,
+    rotation:0,
+    fill:"#4d91e8",
+    stroke:"#ffffff",
+    lineWidth:2
+  };
+}
+
+
+/* =====================================================
+   HISTORY
+===================================================== */
+
+function saveHistory(){
+  history.push(JSON.parse(JSON.stringify(objects)));
+  if(history.length > 30){
+    history.shift();
+  }
+}
+
+
+/* =====================================================
+   CANVAS POSITION
+===================================================== */
+
+function getCanvasPoint(event){
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (event.clientX - rect.left) / rect.width * WIDTH,
+    y: (event.clientY - rect.top) / rect.height * HEIGHT
+  };
+}
+
+
+/* =====================================================
+   ZEICHEN-HILFSFUNKTIONEN
+===================================================== */
+
+function withRotation(object, drawFn){
+  const cx = object.x + object.w / 2;
+  const cy = object.y + object.h / 2;
+  ctx.save();
+  ctx.translate(cx, cy);
+  if(object.rotation){
+    ctx.rotate(object.rotation * Math.PI / 180);
+  }
+  ctx.translate(-cx, -cy);
+  drawFn();
+  ctx.restore();
+}
+
+
+function drawObject(object){
+  ctx.save();
+  ctx.fillStyle = object.fill;
+  ctx.strokeStyle = object.stroke;
+  ctx.lineWidth = object.lineWidth;
+  ctx.lineJoin = "round";
+  ctx.lineCap  = "round";
+
+  withRotation(object, function(){
+    const x = object.x, y = object.y, w = object.w, h = object.h;
+
+    if(object.type === "rect"){
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeRect(x, y, w, h);
+    }
+    if(object.type === "roundrect"){
+      const r = Math.min(20, Math.abs(w)/4, Math.abs(h)/4);
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(x, y, w, h, r);
+      else ctx.rect(x, y, w, h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    if(object.type === "circle"){
+      const r = Math.min(Math.abs(w), Math.abs(h)) / 2;
+      ctx.beginPath();
+      ctx.arc(x + w/2, y + h/2, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    if(object.type === "ellipse"){
+      ctx.beginPath();
+      ctx.ellipse(x + w/2, y + h/2, Math.abs(w/2), Math.abs(h/2), 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    if(object.type === "line"){
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + w, y + h);
+      ctx.stroke();
+    }
+    if(object.type === "triangle"){
+      ctx.beginPath();
+      ctx.moveTo(x + w/2, y);
+      ctx.lineTo(x + w, y + h);
+      ctx.lineTo(x, y + h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    if(object.type === "diamond"){
+      ctx.beginPath();
+      ctx.moveTo(x + w/2, y);
+      ctx.lineTo(x + w, y + h/2);
+      ctx.lineTo(x + w/2, y + h);
+      ctx.lineTo(x, y + h/2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    if(object.type === "pentagon"){
+      polygonPath(x, y, w, h, 5);
+      ctx.fill();
+      ctx.stroke();
+    }
+    if(object.type === "hexagon"){
+      polygonPath(x, y, w, h, 6);
+      ctx.fill();
+      ctx.stroke();
+    }
+    if(object.type === "star"){
+      starPath(x, y, w, h, 5, 0.5);
+      ctx.fill();
+      ctx.stroke();
+    }
+    if(object.type === "heart"){
+      heartPath(x, y, w, h);
+      ctx.fill();
+      ctx.stroke();
+    }
+    if(object.type === "arrow"){
+      arrowPath(x, y, w, h);
+      ctx.fill();
+      ctx.stroke();
+    }
+    if(object.type === "zigzag"){
+      zigzagPath(x, y, w, h);
+      ctx.stroke();
+    }
+    if(object.type === "cross"){
+      crossPath(x, y, w, h);
+      ctx.fill();
+      ctx.stroke();
+    }
+  });
+
+  ctx.restore();
+}
+
+
+/* =====================================================
+   PFAD-HILFSFUNKTIONEN
+===================================================== */
+
+function polygonPath(x, y, w, h, sides){
+  const cx = x + w/2, cy = y + h/2;
+  const rx = Math.abs(w/2), ry = Math.abs(h/2);
+  ctx.beginPath();
+  for(let i = 0; i < sides; i++){
+    const angle = -Math.PI/2 + i * (Math.PI * 2 / sides);
+    const px = cx + Math.cos(angle) * rx;
+    const py = cy + Math.sin(angle) * ry;
+    if(i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+}
+
+function starPath(x, y, w, h, points, innerRatio){
+  const cx = x + w/2, cy = y + h/2;
+  const rx = Math.abs(w/2), ry = Math.abs(h/2);
+  ctx.beginPath();
+  for(let i = 0; i < points * 2; i++){
+    const ratio = (i % 2 === 0) ? 1 : innerRatio;
+    const angle = -Math.PI/2 + i * Math.PI / points;
+    const px = cx + Math.cos(angle) * rx * ratio;
+    const py = cy + Math.sin(angle) * ry * ratio;
+    if(i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+}
+
+function heartPath(x, y, w, h){
+  const cx = x + w/2;
+  const topY = y + h * 0.3;
+  ctx.beginPath();
+  ctx.moveTo(cx, y + h);
+  ctx.bezierCurveTo(x - w*0.1, y + h*0.55, x + w*0.15, y, cx, topY);
+  ctx.bezierCurveTo(x + w*0.85, y, x + w*1.1, y + h*0.55, cx, y + h);
+  ctx.closePath();
+}
+
+function arrowPath(x, y, w, h){
+  const sr = 0.4;
+  ctx.beginPath();
+  ctx.moveTo(x, y + h * (0.5 - sr/2));
+  ctx.lineTo(x + w * 0.6, y + h * (0.5 - sr/2));
+  ctx.lineTo(x + w * 0.6, y);
+  ctx.lineTo(x + w, y + h * 0.5);
+  ctx.lineTo(x + w * 0.6, y + h);
+  ctx.lineTo(x + w * 0.6, y + h * (0.5 + sr/2));
+  ctx.lineTo(x, y + h * (0.5 + sr/2));
+  ctx.closePath();
+}
+
+function zigzagPath(x, y, w, h){
+  const steps = 6;
+  const stepW = w / steps;
+  ctx.beginPath();
+  ctx.moveTo(x, y + h);
+  for(let i = 1; i <= steps; i++){
+    const px = x + stepW * i;
+    const py = (i % 2 === 0) ? y + h : y;
+    ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+}
+
+function crossPath(x, y, w, h){
+  const t = 0.33;
+  ctx.beginPath();
+  ctx.moveTo(x + w * t, y);
+  ctx.lineTo(x + w * (1 - t), y);
+  ctx.lineTo(x + w * (1 - t), y + h * t);
+  ctx.lineTo(x + w, y + h * t);
+  ctx.lineTo(x + w, y + h * (1 - t));
+  ctx.lineTo(x + w * (1 - t), y + h * (1 - t));
+  ctx.lineTo(x + w * (1 - t), y + h);
+  ctx.lineTo(x + w * t, y + h);
+  ctx.lineTo(x + w * t, y + h * (1 - t));
+  ctx.lineTo(x, y + h * (1 - t));
+  ctx.lineTo(x, y + h * t);
+  ctx.lineTo(x + w * t, y + h * t);
+  ctx.closePath();
+}
+
+
+/* =====================================================
+   GITTER
+===================================================== */
+
+function drawGrid(){
+  ctx.save();
+  ctx.strokeStyle = "#ffffff";
+  ctx.globalAlpha = 0.035;
+  for(let x=0;x<=WIDTH;x+=30){
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,HEIGHT); ctx.stroke();
+  }
+  for(let y=0;y<=HEIGHT;y+=30){
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(WIDTH,y); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+
+/* =====================================================
+   AUSWAHL
+===================================================== */
+
+function drawSelection(object, isPrimary){
+  const cx = object.x + object.w / 2;
+  const cy = object.y + object.h / 2;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  if(object.rotation) ctx.rotate(object.rotation * Math.PI / 180);
+  ctx.translate(-cx, -cy);
+
+  ctx.strokeStyle = isPrimary ? "#55adff" : "#ffaa44";
+  ctx.lineWidth = 3;
+  ctx.setLineDash([8,5]);
+  ctx.strokeRect(object.x, object.y, object.w, object.h);
+  ctx.setLineDash([]);
+
+  if(isPrimary){
+    const handles = [
+      [object.x,object.y],
+      [object.x+object.w,object.y],
+      [object.x,object.y+object.h],
+      [object.x+object.w,object.y+object.h]
+    ];
+    for(const point of handles){
+      ctx.fillStyle="#ffffff";
+      ctx.fillRect(point[0]-7, point[1]-7, 14, 14);
+      ctx.strokeStyle="#167bd0";
+      ctx.strokeRect(point[0]-7, point[1]-7, 14, 14);
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawMarquee(){
+  if(!marqueeActive || !marquee) return;
+  const x = Math.min(marquee.x1, marquee.x2);
+  const y = Math.min(marquee.y1, marquee.y2);
+  const w = Math.abs(marquee.x2 - marquee.x1);
+  const h = Math.abs(marquee.y2 - marquee.y1);
+
+  ctx.save();
+  ctx.fillStyle = "rgba(85,173,255,0.12)";
+  ctx.strokeStyle = "#55adff";
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6,4]);
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeRect(x, y, w, h);
+  ctx.restore();
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function render(){
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  ctx.fillStyle = "#10141a";
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  drawGrid();
+
+  for(const object of objects) drawObject(object);
+  if(drawingObject) drawObject(drawingObject);
+
+  for(let i = 0; i < selectedObjects.length; i++){
+    drawSelection(selectedObjects[i], i === selectedObjects.length - 1);
+  }
+
+  drawMarquee();
+  updateProperties();
+  updateCode();
+}
+
+
+/* =====================================================
+   HIT TEST
+===================================================== */
+
+function objectContains(point, object){
+  const cx = object.x + object.w / 2;
+  const cy = object.y + object.h / 2;
+  const angle = -(object.rotation || 0) * Math.PI / 180;
+  const dx = point.x - cx;
+  const dy = point.y - cy;
+  const localX = dx * Math.cos(angle) - dy * Math.sin(angle) + cx;
+  const localY = dx * Math.sin(angle) + dy * Math.cos(angle) + cy;
+  return (
+    localX >= object.x && localX <= object.x + object.w &&
+    localY >= object.y && localY <= object.y + object.h
+  );
+}
+
+function getObjectBounds(object){
+  const cx = object.x + object.w / 2;
+  const cy = object.y + object.h / 2;
+  const corners = [
+    { x: object.x, y: object.y },
+    { x: object.x + object.w, y: object.y },
+    { x: object.x + object.w, y: object.y + object.h },
+    { x: object.x, y: object.y + object.h }
+  ];
+  const a = (object.rotation || 0) * Math.PI / 180;
+  const cos = Math.cos(a), sin = Math.sin(a);
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for(const c of corners){
+    const dx = c.x - cx, dy = c.y - cy;
+    const rx = cx + dx * cos - dy * sin;
+    const ry = cy + dx * sin + dy * cos;
+    if(rx < minX) minX = rx;
+    if(ry < minY) minY = ry;
+    if(rx > maxX) maxX = rx;
+    if(ry > maxY) maxY = ry;
+  }
+  return { minX, minY, maxX, maxY };
+}
+
+function aabbOverlap(a, b){
+  return !(a.maxX < b.minX || a.minX > b.maxX || a.maxY < b.minY || a.minY > b.maxY);
+}
+
+
+/* =====================================================
+   AUSWAHL-HILFSFUNKTIONEN
+===================================================== */
+
+function clearSelection(){ selectedObjects = []; }
+
+function addToSelection(obj){
+  if(!selectedObjects.includes(obj)) selectedObjects.push(obj);
+}
+
+function toggleSelection(obj){
+  const idx = selectedObjects.indexOf(obj);
+  if(idx >= 0) selectedObjects.splice(idx, 1);
+  else selectedObjects.push(obj);
+}
+
+function selectAllObjects(){ selectedObjects = objects.slice(); }
+
+function getPrimary(){
+  return selectedObjects.length > 0
+    ? selectedObjects[selectedObjects.length - 1]
+    : null;
+}
+
+
+/* =====================================================
+   POINTER DOWN
+===================================================== */
+
+canvas.addEventListener("pointerdown", function(event){
+  event.preventDefault();
+  canvas.setPointerCapture(event.pointerId);
+
+  const point = getCanvasPoint(event);
+
+  if(currentTool === "select"){
+    let hitObject = null;
+    for(let i = objects.length - 1; i >= 0; i--){
+      if(objectContains(point, objects[i])){
+        hitObject = objects[i];
+        break;
+      }
+    }
+
+    const shift = event.shiftKey || event.ctrlKey || event.metaKey;
+
+    if(hitObject){
+      if(shift){
+        toggleSelection(hitObject);
+      }else{
+        if(!selectedObjects.includes(hitObject)){
+          clearSelection();
+          addToSelection(hitObject);
+        }
+      }
+
+      dragging = true;
+      dragStart = point;
+      dragOrigins = selectedObjects.map(o => ({ obj: o, x: o.x, y: o.y }));
+
+      render();
+      return;
+    }else{
+      if(!shift) clearSelection();
+      marqueeActive = true;
+      marqueeAdditive = shift;
+      marquee = { x1: point.x, y1: point.y, x2: point.x, y2: point.y };
+      render();
+      return;
+    }
+  }
+
+  saveHistory();
+  drawingObject = createObject(currentTool, point.x, point.y);
+  drawStart = point;
+});
+
+
+canvas.addEventListener("pointermove", function(event){
+  const point = getCanvasPoint(event);
+
+  if(dragging && dragStart){
+    const dx = point.x - dragStart.x;
+    const dy = point.y - dragStart.y;
+    for(const entry of dragOrigins){
+      entry.obj.x = entry.x + dx;
+      entry.obj.y = entry.y + dy;
+    }
+    render();
+    return;
+  }
+
+  if(marqueeActive && marquee){
+    marquee.x2 = point.x;
+    marquee.y2 = point.y;
+    render();
+    return;
+  }
+
+  if(drawingObject){
+    drawingObject.w = point.x - drawStart.x;
+    drawingObject.h = point.y - drawStart.y;
+    render();
+  }
+});
+
+
+canvas.addEventListener("pointerup", function(event){
+
+  if(dragging){
+    dragging = false;
+    dragStart = null;
+    dragOrigins = [];
+    saveHistory();
+    render();
+    return;
+  }
+
+  if(marqueeActive && marquee){
+    const x1 = Math.min(marquee.x1, marquee.x2);
+    const y1 = Math.min(marquee.y1, marquee.y2);
+    const x2 = Math.max(marquee.x1, marquee.x2);
+    const y2 = Math.max(marquee.y1, marquee.y2);
+    const box = { minX: x1, minY: y1, maxX: x2, maxY: y2 };
+
+    if(Math.abs(x2 - x1) > 2 || Math.abs(y2 - y1) > 2){
+      if(!marqueeAdditive) clearSelection();
+      for(const obj of objects){
+        const b = getObjectBounds(obj);
+        if(aabbOverlap(b, box)) addToSelection(obj);
+      }
+    }
+
+    marqueeActive = false;
+    marquee = null;
+    render();
+    return;
+  }
+
+  if(!drawingObject) return;
+
+  if(Math.abs(drawingObject.w) < 3 || Math.abs(drawingObject.h) < 3){
+    drawingObject = null;
+    render();
+    return;
+  }
+
+  if(drawingObject.w < 0){
+    drawingObject.x += drawingObject.w;
+    drawingObject.w = Math.abs(drawingObject.w);
+  }
+  if(drawingObject.h < 0){
+    drawingObject.y += drawingObject.h;
+    drawingObject.h = Math.abs(drawingObject.h);
+  }
+
+  objects.push(drawingObject);
+  clearSelection();
+  addToSelection(drawingObject);
+  drawingObject = null;
+  render();
+});
+
+
+/* =====================================================
+   TOOL BUTTONS
+===================================================== */
+
+document.querySelectorAll(".tool").forEach(function(button){
+  button.addEventListener("click", function(){
+    document.querySelectorAll(".tool").forEach(b => b.classList.remove("active"));
+    button.classList.add("active");
+    currentTool = button.dataset.tool;
+    if(currentTool !== "select"){
+      clearSelection();
+      render();
+    }
+  });
+});
+
+
+/* =====================================================
+   EIGENSCHAFTEN
+===================================================== */
+
+function updateProperties(){
+  if(selectedObjects.length === 0){
+    noObject.hidden = false;
+    properties.hidden = true;
+    return;
+  }
+
+  noObject.hidden = true;
+  properties.hidden = false;
+  selectionInfo.classList.add("visible");
+  selectionCount.textContent = selectedObjects.length;
+
+  const primary = getPrimary();
+  xInput.value = Math.round(primary.x);
+  yInput.value = Math.round(primary.y);
+  wInput.value = Math.round(primary.w);
+  hInput.value = Math.round(primary.h);
+  fillInput.value = primary.fill;
+  strokeInput.value = primary.stroke;
+  rotInput.value = Math.round(primary.rotation || 0);
+}
+
+
+function setupNumberInput(input, key){
+  input.addEventListener("change", function(){
+    if(selectedObjects.length === 0) return;
+    saveHistory();
+
+    if(key === "x" || key === "y"){
+      const primary = getPrimary();
+      const oldVal = primary[key];
+      const newVal = Number(input.value);
+      const delta = newVal - oldVal;
+      for(const obj of selectedObjects) obj[key] += delta;
+    }else{
+      const newVal = Math.max(2, Number(input.value));
+      for(const obj of selectedObjects) obj[key] = newVal;
+    }
+    render();
+  });
+}
+
+setupNumberInput(xInput, "x");
+setupNumberInput(yInput, "y");
+setupNumberInput(wInput, "w");
+setupNumberInput(hInput, "h");
+
+
+rotInput.addEventListener("change", function(){
+  if(selectedObjects.length === 0) return;
+  saveHistory();
+  const val = Number(rotInput.value) || 0;
+  for(const obj of selectedObjects) obj.rotation = val;
+  render();
+});
+
+rotateLeft.addEventListener("click", function(){
+  if(selectedObjects.length === 0) return;
+  saveHistory();
+  for(const obj of selectedObjects) obj.rotation = (obj.rotation || 0) - 15;
+  render();
+});
+
+rotateRight.addEventListener("click", function(){
+  if(selectedObjects.length === 0) return;
+  saveHistory();
+  for(const obj of selectedObjects) obj.rotation = (obj.rotation || 0) + 15;
+  render();
+});
+
+
+fillInput.addEventListener("input", function(){
+  if(selectedObjects.length === 0) return;
+  for(const obj of selectedObjects) obj.fill = fillInput.value;
+  render();
+});
+
+strokeInput.addEventListener("input", function(){
+  if(selectedObjects.length === 0) return;
+  for(const obj of selectedObjects) obj.stroke = strokeInput.value;
+  render();
+});
+
+
+document.querySelectorAll("[data-resize]").forEach(function(button){
+  button.addEventListener("click", function(){
+    if(selectedObjects.length === 0) return;
+    saveHistory();
+    const action = button.dataset.resize;
+    const step = 5;
+
+    for(const obj of selectedObjects){
+      if(action === "right") obj.w += step;
+      if(action === "left")  obj.w = Math.max(2, obj.w - step);
+      if(action === "down")  obj.h += step;
+      if(action === "up")    obj.h = Math.max(2, obj.h - step);
+      if(action === "br"){ obj.w += step; obj.h += step; }
+      if(action === "tr"){ obj.w += step; obj.h += step; obj.y -= step; }
+      if(action === "bl"){ obj.w += step; obj.h += step; obj.x -= step; }
+      if(action === "tl"){ obj.w += step; obj.h += step; obj.x -= step; obj.y -= step; }
+
+      obj.w = Math.max(2, Math.min(WIDTH, obj.w));
+      obj.h = Math.max(2, Math.min(HEIGHT, obj.h));
+      obj.x = Math.max(0, Math.min(WIDTH - obj.w, obj.x));
+      obj.y = Math.max(0, Math.min(HEIGHT - obj.h, obj.y));
+    }
+    render();
+  });
+});
+
+
+/* =====================================================
+   LÖSCHEN / DUPLIZIEREN / UNDO / CLEAR / SELECT ALL
+===================================================== */
+
+deleteButton.addEventListener("click", function(){
+  if(selectedObjects.length === 0) return;
+  saveHistory();
+  objects = objects.filter(obj => !selectedObjects.includes(obj));
+  clearSelection();
+  render();
+});
+
+duplicateButton.addEventListener("click", function(){
+  if(selectedObjects.length === 0) return;
+  saveHistory();
+  const copies = [];
+  for(const obj of selectedObjects){
+    const copy = JSON.parse(JSON.stringify(obj));
+    copy.x += 25; copy.y += 25;
+    copy.x = Math.min(copy.x, WIDTH - copy.w);
+    copy.y = Math.min(copy.y, HEIGHT - copy.h);
+    objects.push(copy);
+    copies.push(copy);
+  }
+  selectedObjects = copies;
+  render();
+});
+
+undoButton.addEventListener("click", function(){
+  if(history.length === 0) return;
+  objects = history.pop();
+  clearSelection();
+  render();
+});
+
+clearButton.addEventListener("click", function(){
+  if(objects.length === 0) return;
+  saveHistory();
+  objects = [];
+  clearSelection();
+  render();
+});
+
+selectAllButton.addEventListener("click", function(){
+  selectAllObjects();
+  render();
+});
+
+
+/* =====================================================
+   TASTATUR
+===================================================== */
+
+window.addEventListener("keydown", function(event){
+  const tag = (event.target.tagName || "").toLowerCase();
+  if(tag === "input" || tag === "textarea") return;
+
+  if((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a"){
+    event.preventDefault();
+    selectAllObjects();
+    render();
+    return;
+  }
+
+  if(event.key === "Escape"){
+    clearSelection();
+    render();
+    return;
+  }
+
+  if(event.key === "Delete" || event.key === "Backspace"){
+    if(selectedObjects.length > 0){
+      event.preventDefault();
+      saveHistory();
+      objects = objects.filter(obj => !selectedObjects.includes(obj));
+      clearSelection();
+      render();
+    }
+    return;
+  }
+
+  if((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d"){
+    event.preventDefault();
+    duplicateButton.click();
+    return;
+  }
+
+  const step = event.shiftKey ? 10 : 1;
+  let dx = 0, dy = 0;
+  if(event.key === "ArrowLeft")  dx = -step;
+  if(event.key === "ArrowRight") dx =  step;
+  if(event.key === "ArrowUp")    dy = -step;
+  if(event.key === "ArrowDown")  dy =  step;
+
+  if((dx || dy) && selectedObjects.length > 0){
+    event.preventDefault();
+    for(const obj of selectedObjects){
+      obj.x += dx;
+      obj.y += dy;
+    }
+    render();
+  }
+});
+
+
+/* =====================================================
+   CODE GENERIEREN
+===================================================== */
+
+function cleanNumber(number){
+  return Math.round(number*100)/100;
+}
+
+
+function generateCode(){
+
+  let code =
+`// =====================================
+// PixelForge 2D
+// Generierter JavaScript-Code
+// =====================================
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+`;
+
+  objects.forEach(function(object,index){
+
+    const hasRotation = object.rotation && Math.abs(object.rotation) > 0.001;
+
+    code +=
+`// Objekt ${index+1}: ${object.type}
+ctx.fillStyle = "${object.fill}";
+ctx.strokeStyle = "${object.stroke}";
+ctx.lineWidth = ${cleanNumber(object.lineWidth)};
+ctx.lineJoin = "round";
+ctx.lineCap  = "round";
+`;
+
+    if(hasRotation){
+      const cx = object.x + object.w / 2;
+      const cy = object.y + object.h / 2;
+      code +=
+`ctx.save();
+ctx.translate(${cleanNumber(cx)}, ${cleanNumber(cy)});
+ctx.rotate(${cleanNumber(object.rotation)} * Math.PI / 180);
+ctx.translate(${cleanNumber(-cx)}, ${cleanNumber(-cy)});
+`;
+    }
+
+    const x = cleanNumber(object.x);
+    const y = cleanNumber(object.y);
+    const w = cleanNumber(object.w);
+    const h = cleanNumber(object.h);
+
+    if(object.type==="rect"){
+      code +=
+`ctx.fillRect(${x}, ${y}, ${w}, ${h});
+ctx.strokeRect(${x}, ${y}, ${w}, ${h});
+
+`;
+    }
+
+    if(object.type==="roundrect"){
+      const r = cleanNumber(Math.min(20, Math.abs(object.w)/4, Math.abs(object.h)/4));
+      code +=
+`ctx.beginPath();
+ctx.roundRect(${x}, ${y}, ${w}, ${h}, ${r});
+ctx.fill();
+ctx.stroke();
+
+`;
+    }
+
+    if(object.type==="circle"){
+      const r = cleanNumber(Math.min(Math.abs(object.w), Math.abs(object.h)) / 2);
+      code +=
+`ctx.beginPath();
+ctx.arc(${cleanNumber(object.x + object.w/2)}, ${cleanNumber(object.y + object.h/2)}, ${r}, 0, Math.PI * 2);
+ctx.fill();
+ctx.stroke();
+
+`;
+    }
+
+    if(object.type==="ellipse"){
+      code +=
+`ctx.beginPath();
+ctx.ellipse(${cleanNumber(object.x + object.w/2)}, ${cleanNumber(object.y + object.h/2)}, ${cleanNumber(Math.abs(object.w/2))}, ${cleanNumber(Math.abs(object.h/2))}, 0, 0, Math.PI * 2);
+ctx.fill();
+ctx.stroke();
+
+`;
+    }
+
+    if(object.type==="line"){
+      code +=
+`ctx.beginPath();
+ctx.moveTo(${x}, ${y});
+ctx.lineTo(${cleanNumber(object.x+object.w)}, ${cleanNumber(object.y+object.h)});
+ctx.stroke();
+
+`;
+    }
+
+    if(object.type==="triangle"){
+      code +=
+`ctx.beginPath();
+ctx.moveTo(${cleanNumber(object.x + object.w/2)}, ${y});
+ctx.lineTo(${cleanNumber(object.x + object.w)}, ${cleanNumber(object.y + object.h)});
+ctx.lineTo(${x}, ${cleanNumber(object.y + object.h)});
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+
+`;
+    }
+
+    if(object.type==="diamond"){
+      code +=
+`ctx.beginPath();
+ctx.moveTo(${cleanNumber(object.x + object.w/2)}, ${y});
+ctx.lineTo(${cleanNumber(object.x + object.w)}, ${cleanNumber(object.y + object.h/2)});
+ctx.lineTo(${cleanNumber(object.x + object.w/2)}, ${cleanNumber(object.y + object.h)});
+ctx.lineTo(${x}, ${cleanNumber(object.y + object.h/2)});
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+
+`;
+    }
+
+    if(object.type==="pentagon" || object.type==="hexagon"){
+      const sides = object.type==="pentagon" ? 5 : 6;
+      code +=
+`// ${object.type}
+(function(){
+  const cx = ${cleanNumber(object.x + object.w/2)};
+  const cy = ${cleanNumber(object.y + object.h/2)};
+  const rx = ${cleanNumber(Math.abs(object.w/2))};
+  const ry = ${cleanNumber(Math.abs(object.h/2))};
+  ctx.beginPath();
+  for(let i = 0; i < ${sides}; i++){
+    const a = -Math.PI/2 + i * (Math.PI * 2 / ${sides});
+    const px = cx + Math.cos(a) * rx;
+    const py = cy + Math.sin(a) * ry;
+    if(i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+})();
+
+`;
+    }
+
+    if(object.type==="star"){
+      code +=
+`// Stern
+(function(){
+  const cx = ${cleanNumber(object.x + object.w/2)};
+  const cy = ${cleanNumber(object.y + object.h/2)};
+  const rx = ${cleanNumber(Math.abs(object.w/2))};
+  const ry = ${cleanNumber(Math.abs(object.h/2))};
+  ctx.beginPath();
+  for(let i = 0; i < 10; i++){
+    const ratio = (i % 2 === 0) ? 1 : 0.5;
+    const a = -Math.PI/2 + i * Math.PI / 5;
+    const px = cx + Math.cos(a) * rx * ratio;
+    const py = cy + Math.sin(a) * ry * ratio;
+    if(i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+})();
+
+`;
+    }
+
+    if(object.type==="heart"){
+      code +=
+`// Herz
+(function(){
+  const cx = ${cleanNumber(object.x + object.w/2)};
+  const topY = ${cleanNumber(object.y + object.h * 0.3)};
+  ctx.beginPath();
+  ctx.moveTo(cx, ${cleanNumber(object.y + object.h)});
+  ctx.bezierCurveTo(${cleanNumber(object.x - object.w*0.1)}, ${cleanNumber(object.y + object.h*0.55)}, ${cleanNumber(object.x + object.w*0.15)}, ${y}, cx, topY);
+  ctx.bezierCurveTo(${cleanNumber(object.x + object.w*0.85)}, ${y}, ${cleanNumber(object.x + object.w*1.1)}, ${cleanNumber(object.y + object.h*0.55)}, cx, ${cleanNumber(object.y + object.h)});
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+})();
+
+`;
+    }
+
+    if(object.type==="arrow"){
+      code +=
+`// Pfeil
+(function(){
+  const x = ${x}, y = ${y}, w = ${w}, h = ${h};
+  const sr = 0.4;
+  ctx.beginPath();
+  ctx.moveTo(x, y + h * (0.5 - sr/2));
+  ctx.lineTo(x + w * 0.6, y + h * (0.5 - sr/2));
+  ctx.lineTo(x + w * 0.6, y);
+  ctx.lineTo(x + w, y + h * 0.5);
+  ctx.lineTo(x + w * 0.6, y + h);
+  ctx.lineTo(x + w * 0.6, y + h * (0.5 + sr/2));
+  ctx.lineTo(x, y + h * (0.5 + sr/2));
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+})();
+
+`;
+    }
+
+    if(object.type==="zigzag"){
+      code +=
+`// Zickzack
+(function(){
+  const x = ${x}, y = ${y}, w = ${w}, h = ${h};
+  const steps = 6;
+  const stepW = w / steps;
+  ctx.beginPath();
+  ctx.moveTo(x, y + h);
+  for(let i = 1; i <= steps; i++){
+    const px = x + stepW * i;
+    const py = (i % 2 === 0) ? y + h : y;
+    ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+})();
+
+`;
+    }
+
+    if(object.type==="cross"){
+      code +=
+`// Kreuz
+(function(){
+  const x = ${x}, y = ${y}, w = ${w}, h = ${h};
+  const t = 0.33;
+  ctx.beginPath();
+  ctx.moveTo(x + w * t, y);
+  ctx.lineTo(x + w * (1 - t), y);
+  ctx.lineTo(x + w * (1 - t), y + h * t);
+  ctx.lineTo(x + w, y + h * t);
+  ctx.lineTo(x + w, y + h * (1 - t));
+  ctx.lineTo(x + w * (1 - t), y + h * (1 - t));
+  ctx.lineTo(x + w * (1 - t), y + h);
+  ctx.lineTo(x + w * t, y + h);
+  ctx.lineTo(x + w * t, y + h * (1 - t));
+  ctx.lineTo(x, y + h * (1 - t));
+  ctx.lineTo(x, y + h * t);
+  ctx.lineTo(x + w * t, y + h * t);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+})();
+
+`;
+    }
+
+    if(hasRotation){
+      code +=
+`ctx.restore();
+
+`;
+    }
+
+  });
+
+  return code;
+}
+
+
+function updateCode(){
+  codeOutput.value = generateCode();
+}
+
+
+/* =====================================================
+   CODE-PARSER
+   Extrahiert Objekte aus generiertem oder ähnlichem Code.
+===================================================== */
+
+function parseCodeToObjects(source){
+
+  const found = [];
+
+  // Kommentare entfernen (aber // Objekt N: behalten, um Typ zu erkennen)
+  // Wir arbeiten Zeile für Zeile und bauen einen Kontext auf.
+
+  const lines = source.split("\n");
+
+  let currentFill = null;
+  let currentStroke = null;
+  let currentRotation = 0;
+  let inSave = false;
+  let pendingRotate = null;   // { angleDeg }
+  let pendingTranslate = null; // {cx, cy}
+
+  // Für Polygon-Erkennung
+  let polygonBuffer = null;
+
+  // Warte auf nächste fillRect / arc etc.
+  let lastMoveTo = null;
+  let lastLineTo = null;
+
+  function pushObject(obj){
+    found.push(obj);
+  }
+
+  function extractColor(str){
+    // "#rrggbb" oder "rgb(...)"
+    const m = str.match(/#([0-9a-fA-F]{3,8})/);
+    if(m) return "#" + m[1];
+    const rgb = str.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+    if(rgb){
+      const toHex = n => n.toString(16).padStart(2, "0");
+      return "#" + toHex(+rgb[1]) + toHex(+rgb[2]) + toHex(+rgb[3]);
+    }
+    return null;
+  }
+
+  function extractNumbers(str){
+    const nums = [];
+    const re = /-?\d+(?:\.\d+)?/g;
+    let m;
+    while((m = re.exec(str)) !== null) nums.push(parseFloat(m[0]));
+    return nums;
+  }
+
+  for(let i = 0; i < lines.length; i++){
+    const raw = lines[i];
+    const line = raw.trim();
+    if(!line) continue;
+    if(line.startsWith("//")) continue;
+
+    /* ---- Farben & Linienstil ---- */
+    if(line.includes("fillStyle")){
+      const c = extractColor(line);
+      if(c){ currentFill = c; continue; }
+    }
+    if(line.includes("strokeStyle")){
+      const c = extractColor(line);
+      if(c){ currentStroke = c; continue; }
+    }
+    if(line.includes("ctx.save")){
+      inSave = true;
+      continue;
+    }
+    if(line.includes("ctx.restore")){
+      inSave = false;
+      pendingRotate = null;
+      pendingTranslate = null;
+      currentRotation = 0;
+      continue;
+    }
+
+    /* ---- Rotation/Translate ---- */
+    if(line.includes("ctx.rotate")){
+      const nums = extractNumbers(line);
+      if(nums.length){
+        // Winkel kann in Grad mit "Math.PI / 180" stehen
+        if(line.includes("Math.PI") && line.includes("180")){
+          currentRotation = (currentRotation || 0) + nums[0];
+        }else{
+          // rad → grad
+          currentRotation = (currentRotation || 0) + (nums[0] * 180 / Math.PI);
+        }
+      }
+      continue;
+    }
+    if(line.includes("ctx.translate")){
+      // Überspringen – für Rekonstruktion nicht nötig, da Rotation um Mitte
+      continue;
+    }
+
+    /* ---- Rechtecke ---- */
+    if(line.includes("fillRect") && !line.includes("strokeRect")){
+      const nums = extractNumbers(line);
+      if(nums.length >= 4){
+        pushObject({
+          type:"rect",
+          x:nums[0], y:nums[1], w:nums[2], h:nums[3],
+          rotation: currentRotation || 0,
+          fill: currentFill || "#4d91e8",
+          stroke: currentStroke || currentFill || "#ffffff",
+          lineWidth:2
+        });
+      }
+      continue;
+    }
+
+    /* ---- roundRect ---- */
+    if(line.includes("roundRect")){
+      const nums = extractNumbers(line);
+      if(nums.length >= 4){
+        pushObject({
+          type:"roundrect",
+          x:nums[0], y:nums[1], w:nums[2], h:nums[3],
+          rotation: currentRotation || 0,
+          fill: currentFill || "#4d91e8",
+          stroke: currentStroke || currentFill || "#ffffff",
+          lineWidth:2
+        });
+      }
+      continue;
+    }
+
+    /* ---- arc (Kreis) ---- */
+    if(line.includes("ctx.arc")){
+      const nums = extractNumbers(line);
+      // arc(cx, cy, r, 0, Math.PI*2)
+      if(nums.length >= 3){
+        const cx = nums[0], cy = nums[1], r = nums[2];
+        pushObject({
+          type:"circle",
+          x: cx - r, y: cy - r, w: r*2, h: r*2,
+          rotation: currentRotation || 0,
+          fill: currentFill || "#4d91e8",
+          stroke: currentStroke || currentFill || "#ffffff",
+          lineWidth:2
+        });
+      }
+      continue;
+    }
+
+    /* ---- ellipse ---- */
+    if(line.includes("ctx.ellipse")){
+      const nums = extractNumbers(line);
+      if(nums.length >= 4){
+        const cx = nums[0], cy = nums[1], rx = nums[2], ry = nums[3];
+        pushObject({
+          type:"ellipse",
+          x: cx - rx, y: cy - ry, w: rx*2, h: ry*2,
+          rotation: currentRotation || 0,
+          fill: currentFill || "#4d91e8",
+          stroke: currentStroke || currentFill || "#ffffff",
+          lineWidth:2
+        });
+      }
+      continue;
+    }
+
+    /* ---- moveTo / lineTo (Linie oder Polygon) ---- */
+    if(line.includes("ctx.moveTo")){
+      const nums = extractNumbers(line);
+      if(nums.length >= 2){
+        // Suche nach dem zugehörigen lineTo (nächste Zeilen)
+        lastMoveTo = { x: nums[0], y: nums[1] };
+
+        // Suche innerhalb der nächsten paar Zeilen
+        let foundLine = null;
+        let lineCount = 0;
+        for(let j = i+1; j < Math.min(i+8, lines.length); j++){
+          const l = lines[j].trim();
+          if(l.includes("ctx.lineTo")){
+            const n2 = extractNumbers(l);
+            if(n2.length >= 2){
+              foundLine = { x: n2[0], y: n2[1] };
+              lineCount++;
+              // wenn es mehr als 1 lineTo gibt → Polygon, überspringen
+            }
+          }
+          if(l.includes("ctx.closePath")) break;
+          if(l.includes("ctx.fill") || l.includes("ctx.stroke")) break;
+        }
+
+        if(foundLine && lineCount === 1){
+          pushObject({
+            type:"line",
+            x: lastMoveTo.x,
+            y: lastMoveTo.y,
+            w: foundLine.x - lastMoveTo.x,
+            h: foundLine.y - lastMoveTo.y,
+            rotation: currentRotation || 0,
+            fill: currentFill || "#4d91e8",
+            stroke: currentStroke || currentFill || "#ffffff",
+            lineWidth:2
+          });
+        }else if(foundLine && lineCount > 1){
+          // Polygon mit mehreren lineTo → versuche Bounding Box als Stern/Fünfeck/Sechseck
+          let minX = lastMoveTo.x, minY = lastMoveTo.y, maxX = lastMoveTo.x, maxY = lastMoveTo.y;
+          let count = 0;
+          for(let j = i+1; j < Math.min(i+20, lines.length); j++){
+            const l = lines[j].trim();
+            if(l.includes("ctx.lineTo")){
+              const n2 = extractNumbers(l);
+              if(n2.length >= 2){
+                const px = n2[0], py = n2[1];
+                minX = Math.min(minX, px); minY = Math.min(minY, py);
+                maxX = Math.max(maxX, px); maxY = Math.max(maxY, py);
+                count++;
+              }
+            }
+            if(l.includes("ctx.closePath")) break;
+          }
+          // Heuristik: wenn count 4 → Raute, 5 → Fünfeck, 6 → Sechseck, 9/10 → Stern
+          let shapeType = null;
+          if(count === 4) shapeType = "diamond";
+          else if(count === 5) shapeType = "pentagon";
+          else if(count === 6) shapeType = "hexagon";
+          else if(count >= 9 && count <= 11) shapeType = "star";
+
+          if(shapeType){
+            pushObject({
+              type: shapeType,
+              x: minX, y: minY,
+              w: maxX - minX, h: maxY - minY,
+              rotation: currentRotation || 0,
+              fill: currentFill || "#4d91e8",
+              stroke: currentStroke || currentFill || "#ffffff",
+              lineWidth:2
+            });
+          }
+        }
+        continue;
+      }
+    }
+
+    /* ---- bezierCurveTo → Herz ---- */
+    if(line.includes("ctx.bezierCurveTo")){
+      // Wir sind im Herz-IIFE → versuchen Herz
+      // Erkennen anhand der umgebenden Zeilen
+      let isHeart = false;
+      for(let j = Math.max(0, i-8); j < i; j++){
+        if(lines[j].includes("moveTo") && lines[j+1] && lines[j+1].includes("bezierCurveTo")){
+          isHeart = true;
+        }
+      }
+
+      // Einfache Heuristik: wenn wir 2 bezierCurveTo finden, ist es ein Herz
+      let bezierCount = 0;
+      for(let j = i; j < Math.min(i+20, lines.length); j++){
+        if(lines[j].includes("bezierCurveTo")) bezierCount++;
+        if(lines[j].includes("ctx.fill")) break;
+      }
+
+      if(bezierCount >= 2){
+        // Nimm Bounding Box aus umliegenden Zahlen
+        // Wir suchen die größten/kleinsten Werte in diesem Block
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for(let j = Math.max(0, i-4); j < Math.min(i+12, lines.length); j++){
+          const nums = extractNumbers(lines[j]);
+          for(let k = 0; k < nums.length-1; k += 2){
+            const px = nums[k], py = nums[k+1];
+            if(isFinite(px) && isFinite(py)){
+              minX = Math.min(minX, px); minY = Math.min(minY, py);
+              maxX = Math.max(maxX, px); maxY = Math.max(maxY, py);
+            }
+          }
+        }
+        if(isFinite(minX) && isFinite(minY)){
+          pushObject({
+            type:"heart",
+            x: minX, y: minY,
+            w: Math.max(20, maxX - minX),
+            h: Math.max(20, maxY - minY),
+            rotation: currentRotation || 0,
+            fill: currentFill || "#4d91e8",
+            stroke: currentStroke || currentFill || "#ffffff",
+            lineWidth:2
+          });
+        }
+      }
+      continue;
+    }
+  }
+
+  return found;
+}
+
+
+/* =====================================================
+   CODE AUSFÜHREN (Sandbox)
+===================================================== */
+
+function executeCodeOnCanvas(source, replaceObjects){
+
+  // Wir führen den Code in einer Funktion mit ctx = echter Context aus.
+  // Achtung: Der Code kann ctx.clearRect etc. aufrufen – wir behandeln ihn
+  // wie in einer Sandbox, aber mit dem echten ctx, damit er zeichnet.
+
+  try{
+    const fn = new Function("canvas", "ctx", "objects", "WIDTH", "HEIGHT", source);
+    fn(canvas, ctx, objects, WIDTH, HEIGHT);
+  }catch(err){
+    alert("Fehler beim Ausführen des Codes:\n\n" + err.message);
+    return false;
+  }
+  return true;
+}
+
+
+/* =====================================================
+   TAB-SWITCH
+===================================================== */
+
+function setActiveTab(tab){
+  [tabView, tabEdit, tabImport].forEach(t => t.classList.remove("active"));
+  tab.classList.add("active");
+
+  viewPane.hidden = true;
+  editPane.hidden = true;
+  importPane.hidden = true;
+
+  if(tab === tabView){ viewPane.hidden = false; codeOutput.classList.remove("editing"); }
+  if(tab === tabEdit){ editPane.hidden = false; }
+  if(tab === tabImport){ importPane.hidden = false; }
+}
+
+tabView.addEventListener("click", () => setActiveTab(tabView));
+tabEdit.addEventListener("click", () => setActiveTab(tabEdit));
+tabImport.addEventListener("click", () => setActiveTab(tabImport));
+
+
+/* =====================================================
+   CODE KOPIEREN
+===================================================== */
+
+copyButton.addEventListener("click", async function(){
+  try{
+    await navigator.clipboard.writeText(codeOutput.value);
+    copyButton.textContent = "✓ Kopiert!";
+    setTimeout(() => { copyButton.textContent = "📋 Code kopieren"; }, 1500);
+  }catch(error){
+    codeOutput.select();
+    alert("Der Code wurde markiert. Du kannst ihn jetzt kopieren.");
+  }
+});
+
+
+/* =====================================================
+   HTML EXPORT
+===================================================== */
+
+exportButton.addEventListener("click", function(){
+  const generated = generateCode();
+
+  const html =
+`<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mein 2D Modell</title>
+<style>
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#111;
+}
+canvas{
+  width:min(900px,100vw);
+  height:auto;
+}
+</style>
+</head>
+<body>
+<canvas id="canvas" width="900" height="600"></canvas>
+<script>
+${generated}
+<\/script>
+</body>
+</html>`;
+
+  const blob = new Blob([html], {type:"text/html"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "mein-2D-modell.html";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+
+/* =====================================================
+   EDITOR: CODE ANWENDEN
+===================================================== */
+
+applyCodeButton.addEventListener("click", function(){
+  const src = codeEditor.value.trim();
+  if(!src){ alert("Editor ist leer."); return; }
+
+  saveHistory();
+  // Erst leeren
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  ctx.fillStyle = "#10141a";
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  // Code ausführen
+  const ok = executeCodeOnCanvas(src, false);
+  if(ok){
+    // Objekte leeren, damit der Code nicht von render() überschrieben wird
+    objects = [];
+    clearSelection();
+    // Canvas so lassen wie der Code ihn gemalt hat
+    // render() würde überschreiben, also zeichnen wir nichts
+    // -> wir markieren die Anzeige als "frei"
+    applyCodeButton.textContent = "✓ Angewendet!";
+    setTimeout(() => {
+      applyCodeButton.textContent = "▶ Auf Canvas anwenden";
+    }, 1500);
+  }
+});
+
+
+/* =====================================================
+   EDITOR: CODE ALS OBJEKTE ÜBERNEHMEN
+===================================================== */
+
+parseCodeButton.addEventListener("click", function(){
+  const src = codeEditor.value.trim();
+  if(!src){ alert("Editor ist leer."); return; }
+
+  const parsed = parseCodeToObjects(src);
+
+  if(parsed.length === 0){
+    if(!confirm("Es konnten keine Objekte aus dem Code extrahiert werden.\n\nTrotzdem alle Objekte löschen?")){
+      return;
+    }
+  }else{
+    if(!confirm(parsed.length + " Objekt(e) erkannt.\n\nAlle aktuellen Objekte ersetzen?")){
+      return;
+    }
+  }
+
+  saveHistory();
+  objects = parsed;
+  clearSelection();
+  render();
+});
+
+
+resetEditorButton.addEventListener("click", function(){
+  if(!codeEditor.value) return;
+  if(confirm("Editor leeren?")){
+    codeEditor.value = "";
+  }
+});
+
+
+/* =====================================================
+   IMPORT: PARSE / RUN / APPEND
+===================================================== */
+
+importParseButton.addEventListener("click", function(){
+  const src = importTextarea.value.trim();
+  if(!src){ alert("Import-Feld ist leer."); return; }
+
+  const parsed = parseCodeToObjects(src);
+
+  if(parsed.length === 0){
+    alert("Es konnten keine Objekte aus dem Code extrahiert werden.");
+    return;
+  }
+
+  saveHistory();
+  objects = parsed;
+  clearSelection();
+  render();
+  setActiveTab(tabView);
+
+  alert(parsed.length + " Objekt(e) importiert.");
+});
+
+importAppendButton.addEventListener("click", function(){
+  const src = importTextarea.value.trim();
+  if(!src){ alert("Import-Feld ist leer."); return; }
+
+  const parsed = parseCodeToObjects(src);
+
+  if(parsed.length === 0){
+    alert("Es konnten keine Objekte aus dem Code extrahiert werden.");
+    return;
+  }
+
+  saveHistory();
+  for(const obj of parsed) objects.push(obj);
+  clearSelection();
+  render();
+  setActiveTab(tabView);
+
+  alert(parsed.length + " Objekt(e) hinzugefügt.");
+});
+
+importRunButton.addEventListener("click", function(){
+  const src = importTextarea.value.trim();
+  if(!src){ alert("Import-Feld ist leer."); return; }
+
+  saveHistory();
+  // Objekte leeren, damit der Code sichtbar ist
+  objects = [];
+  clearSelection();
+
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  ctx.fillStyle = "#10141a";
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  const ok = executeCodeOnCanvas(src, false);
+  if(ok){
+    importRunButton.textContent = "✓ Ausgeführt!";
+    setTimeout(() => {
+      importRunButton.textContent = "▶ Nur ausführen (ohne Objekte)";
+    }, 1500);
+  }
+});
+
+importClearButton.addEventListener("click", function(){
+  importTextarea.value = "";
+});
+
+
+/* =====================================================
+   IMPORT: DRAG & DROP + FILE
+===================================================== */
+
+dropZone.addEventListener("click", () => fileInput.click());
+
+dropZone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  dropZone.classList.add("dragover");
+});
+
+dropZone.addEventListener("dragleave", () => {
+  dropZone.classList.remove("dragover");
+});
+
+dropZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+
+  const file = e.dataTransfer.files[0];
+  if(file){
+    readFile(file);
+  }
+});
+
+fileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if(file) readFile(file);
+});
+
+function readFile(file){
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    importTextarea.value = e.target.result;
+    dropZone.innerHTML = "<b>✓ " + file.name + "</b><br>geladen (" + Math.round(file.size/1024) + " KB)";
+    setTimeout(() => {
+      dropZone.innerHTML = '<b>📥 Code hier ablegen</b><br>oder klicken zum Auswählen<br><span style="font-size:11px;opacity:.7">(unterstützt .js, .txt, .html – oder generierten PixelForge-Code)</span>';
+    }, 2500);
+  };
+  reader.readAsText(file);
+}
+
+
+/* =====================================================
+   RENDER (mit Flag für manuellen Code)
+===================================================== */
+
+// Wir müssen render() erweitern, um zu erkennen, ob der Benutzer
+// gerade manuell Code ausgeführt hat. In dem Fall überspringen wir
+// das Neuzeichnen, bis er wieder etwas tut.
+let manualCodeActive = false;
+
+const originalRender = render;
+
+render = function(){
+  manualCodeActive = false;
+  originalRender();
+};
+
+// Beim manuellen Ausführen setzen wir das Flag
+applyCodeButton.addEventListener("click", () => { manualCodeActive = true; }, true);
+importRunButton.addEventListener("click", () => { manualCodeActive = true; }, true);
+
+// Klick auf Canvas setzt das Flag zurück
+canvas.addEventListener("pointerdown", () => {
+  if(manualCodeActive){
+    manualCodeActive = false;
+    // Standard render() aufrufen
+    originalRender();
+  }
+}, true);
+
+
+/* =====================================================
+   START
+===================================================== */
+
+render();
+
+</script>
+
+</body>
+</html>
