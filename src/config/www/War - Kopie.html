@@ -1,0 +1,2483 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nations at War – Realistic Warfare</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0d1117;font-family:Arial,sans-serif;color:white}
+canvas{display:block}
+
+#topbar{position:fixed;top:0;left:0;right:0;height:34px;background:rgba(5,8,12,.92);z-index:5;display:flex;align-items:center;padding:0 12px;gap:16px;font-size:11px;pointer-events:none;border-bottom:1px solid #1a1f28}
+#topbar .nation{display:flex;align-items:center;gap:5px;font-weight:bold}
+#topbar .nation .dot{width:8px;height:8px;border-radius:50%}
+#topbar .nation.aurelia .dot{background:#59aaff;box-shadow:0 0 6px #59aaff}
+#topbar .nation.karmath .dot{background:#ff6868;box-shadow:0 0 6px #ff6868}
+#topbar .nation .count{font-size:14px}
+#topbar .center{flex:1;display:flex;justify-content:center;gap:16px;align-items:center}
+#topbar .front-mini{display:flex;gap:3px}
+#topbar .front-mini .fm{width:18px;height:16px;border-radius:3px;background:#333;font-size:8px;display:flex;align-items:center;justify-content:center;font-weight:bold}
+#topbar .front-mini .fm.blue{background:#59aaff;color:#0d1117}
+#topbar .front-mini .fm.red{background:#ff6868;color:#0d1117}
+#topbar .front-mini .fm.contested{background:#ffb52e;color:#0d1117;animation:pulse 1.5s infinite}
+@keyframes pulse{50%{opacity:.5}}
+#topbar .info{display:flex;gap:12px;color:#888}
+#topbar .info span{color:#ddd}
+
+#sideinfo{position:fixed;top:46px;left:12px;z-index:5;background:rgba(5,8,12,.88);border-radius:6px;padding:10px 12px;font-size:11px;pointer-events:none;min-width:220px;border-left:3px solid #ffb52e}
+#sideinfo .row{display:flex;justify-content:space-between;margin:3px 0}
+#sideinfo .row .k{color:#888}
+#sideinfo .row .v{color:#fff;font-weight:bold}
+#sideinfo .shift{color:#88ff88;font-weight:bold;margin-bottom:4px;font-size:12px}
+#sideinfo .next-shift{color:#ffb52e;font-size:9px;margin-bottom:6px}
+#sideinfo .officer{color:#88ccff;font-size:10px;margin-top:6px;padding-top:6px;border-top:1px solid #222;line-height:1.5}
+#sideinfo .officer .name{color:#fff;font-weight:bold}
+#sideinfo .res{display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-top:6px;padding-top:6px;border-top:1px solid #222}
+
+#orderPanel{position:fixed;top:46px;right:12px;z-index:5;background:rgba(5,8,12,.88);border-radius:6px;padding:10px 12px;font-size:11px;pointer-events:none;min-width:210px;border-left:3px solid #88ccff}
+#orderPanel .title{color:#88ccff;font-weight:bold;font-size:11px;margin-bottom:6px;letter-spacing:1px}
+#orderPanel .order{padding:4px 8px;margin:3px 0;background:#1a1f28;border-radius:3px;font-size:10px}
+#orderPanel .order .nation{color:#888}
+#orderPanel .order .cmd{color:#ffb52e;font-weight:bold}
+
+#logs{position:fixed;bottom:8px;left:12px;right:12px;z-index:5;display:flex;gap:8px;pointer-events:none;font-size:10px}
+#logs > div{background:rgba(5,8,12,.88);border-radius:5px;padding:6px 9px;line-height:1.4;overflow:hidden;max-height:85px}
+#log1{flex:1.2;border-left:2px solid #ffb52e;color:#ccc}
+#log2{flex:1;border-left:2px solid #44ff88;color:#88ff88}
+#logs div div{margin:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+#hint{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:6;background:rgba(5,8,12,.88);border-radius:5px;padding:5px 12px;font-size:10px;color:#888;pointer-events:none;white-space:nowrap}
+#hint b{color:#ffb52e}
+
+#story{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:15;padding:14px 28px;font-size:18px;font-weight:bold;letter-spacing:1px;display:none;border-radius:8px;text-align:center;pointer-events:none;background:rgba(8,11,16,.95);border:2px solid #ffb52e;color:#ffdd88;box-shadow:0 0 40px rgba(255,181,46,.4)}
+#story.show{display:block;animation:pop .3s ease-out}
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(.8);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+#story.blue{border-color:#59aaff;color:#88ccff;box-shadow:0 0 40px rgba(89,170,255,.4)}
+#story.red{border-color:#ff6868;color:#ff8888;box-shadow:0 0 40px rgba(255,104,104,.4)}
+#story.green{border-color:#44ff88;color:#88ff88;box-shadow:0 0 40px rgba(68,255,136,.4)}
+#story.orange{border-color:#ff8800;color:#ffb066;box-shadow:0 0 40px rgba(255,136,0,.4)}
+
+#convoyAlert{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:14;padding:8px 16px;background:rgba(80,20,0,.95);border:2px solid #ff8800;border-radius:6px;text-align:center;display:none;pointer-events:none;font-size:12px;font-weight:bold;color:#ff8800;letter-spacing:1px}
+#convoyAlert.show{display:block;animation:blinkAlert 0.6s infinite}
+@keyframes blinkAlert{50%{opacity:.5}}
+
+#bodycam{position:fixed;top:46px;left:12px;width:260px;height:195px;z-index:8;pointer-events:none;display:none;border-radius:5px;overflow:hidden;border:2px solid #222;background:#000}
+#bodycam.visible{display:block}
+#bodycam.fullscreen{top:0;left:0;width:100vw;height:100vh;border-radius:0;border:0}
+#bodycamCanvasHolder{position:absolute;inset:0}
+#bodycamCanvasHolder canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important}
+#bodycam .vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.5) 100%);pointer-events:none;z-index:2}
+#bodycam .scanlines{position:absolute;inset:0;background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,0,0,.15) 3px,rgba(0,0,0,.15) 6px);pointer-events:none;z-index:3}
+#bodycam .hud{position:absolute;inset:0;z-index:5;font-family:'Courier New',monospace;font-size:10px;color:#e0e0e0;text-shadow:1px 1px 0 #000}
+#bodycam .top{position:absolute;top:6px;left:8px;right:8px;display:flex;justify-content:space-between}
+#bodycam .rec{color:#ff4444;font-weight:bold}
+#bodycam .rec .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff2222;margin-right:4px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:.15}}
+#bodycam .id{color:#88ff88;font-weight:bold}
+#bodycam .time{color:#ffdd88}
+#bodycam .bottom{position:absolute;bottom:6px;left:8px;right:8px;display:flex;justify-content:space-between;align-items:flex-end}
+#bodycam .health{flex:1;margin-right:10px}
+#bodycam .bar{height:4px;background:#111;border:1px solid #333;border-radius:2px;overflow:hidden;margin-top:2px}
+#bodycam .barfill{height:100%;background:#44ff44;width:100%}
+#bodycam .ammo{font-size:13px;color:#ffdd88;font-weight:bold;text-align:right}
+#bodycam .state{color:#88ccff;font-size:9px}
+#bodycam .lbl{font-size:8px;color:#aaa}
+#bodycam .cross{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,80,80,.8);font-size:16px;font-weight:bold}
+#bodycam .notice{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.85);color:#ff4444;font-size:16px;font-weight:bold;letter-spacing:3px;z-index:6;font-family:'Courier New',monospace}
+#bodycam .notice.show{display:flex}
+#bodycam .dmg{position:absolute;inset:0;background:radial-gradient(circle,transparent 30%,rgba(255,0,0,.5) 100%);opacity:0;transition:opacity .15s;pointer-events:none;z-index:5}
+#bodycam .dmg.flash{opacity:1}
+
+.panelbox{display:none;position:fixed;z-index:19;top:50%;left:50%;transform:translate(-50%,-50%);width:min(720px,92vw);max-height:78vh;padding:16px;background:rgba(8,11,16,.98);border:1px solid #ffb52e;border-radius:8px;overflow:auto}
+.panelbox.show{display:block}
+.panelbox h2{margin:0 0 10px;color:#ffb52e;font-size:15px}
+.panelbox .sub{color:#888;font-size:10px;margin-bottom:12px}
+.panelbox .closebtn{padding:5px 12px;border:0;border-radius:4px;background:#303742;color:white;cursor:pointer;font-weight:bold;font-size:11px;margin-top:12px}
+.diary-team{margin:10px 0 14px}
+.diary-team h3{margin:0 0 5px;font-size:12px}
+.diary-team.aurelia h3{color:#59aaff}
+.diary-team.karmath h3{color:#ff6868}
+.diary-entry{padding:6px 9px;margin:4px 0;background:#171d25;border-left:2px solid #555;color:#ddd;font-size:10px;line-height:1.4}
+.diary-entry .rank-badge{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:bold;margin-right:4px}
+.diary-entry .rank-general{background:#ff4444;color:white}
+.diary-entry .rank-officer{background:#ffb52e;color:#111}
+.diary-entry .rank-nco{background:#88ccff;color:#111}
+.diary-entry .rank-enlisted{background:#444;color:#ccc}
+
+.news-item{padding:8px 10px;margin:6px 0;background:#171d25;border-left:3px solid #59aaff;border-radius:3px}
+.news-item.breaking{border-left-color:#ff4444}
+.news-item.politics{border-left-color:#ffb52e}
+.news-item.military{border-left-color:#59aaff}
+.news-item.convoy{border-left-color:#ff8800}
+.news-item .hl{font-weight:bold;font-size:11px;color:#fff;margin-bottom:3px}
+.news-item .body{font-size:10px;color:#ccc;line-height:1.4}
+.news-item .tm{font-size:9px;color:#666;margin-top:3px}
+
+#promo{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;padding:14px 26px;background:rgba(8,11,16,.98);border:2px solid #ffb52e;border-radius:10px;text-align:center;display:none;pointer-events:none;box-shadow:0 0 40px rgba(255,181,46,.4)}
+#promo.show{display:block;animation:pop .3s ease-out}
+#promo .r{font-size:20px;font-weight:bold;color:#ffb52e;letter-spacing:2px}
+#promo .t{font-size:11px;color:#ccc;margin-top:5px}
+#promo .s{font-size:10px;color:#888;margin-top:3px}
+
+#tvHint{position:fixed;z-index:6;background:rgba(5,8,12,.9);border:1px solid #ffb52e;border-radius:4px;padding:2px 6px;font-size:9px;color:#ffdd88;pointer-events:none;display:none}
+#tvHint.show{display:block}
+
+#campLabel_aurelia,#campLabel_karmath,#baseLabel{position:fixed;z-index:5;font-size:9px;text-shadow:0 0 5px #000;pointer-events:none;display:none;padding:2px 6px;background:rgba(5,8,12,.82);border-radius:4px}
+
+.speech{position:fixed;z-index:12;transform:translate(-50%,-100%);max-width:180px;white-space:normal;background:#fff;color:#151515;padding:4px 7px;border-radius:6px;font-size:10px;font-weight:bold;box-shadow:0 2px 8px #0009;pointer-events:none}
+.speech:after{content:"";position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid white}
+.speech.order{background:#111;color:#ffb52e;border:1px solid #ffb52e}
+.speech.order:after{border-top-color:#111}
+.speech.pain{background:#ff8800;color:#111}
+.speech.pain:after{border-top-color:#ff8800}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="nation aurelia">
+    <span class="dot"></span>
+    <span>AURELIA</span>
+    <span class="count" id="aurCount">24</span>
+  </div>
+  <div class="center">
+    <div class="front-mini" id="frontMini"></div>
+    <div class="info">
+      <span>Tag <b id="dayNum">1</b>/14</span>
+      <span id="timeStr">06:00</span>
+      <span id="shiftShort">🌅 FRÜH</span>
+    </div>
+  </div>
+  <div class="nation karmath">
+    <span class="count" id="karCount">24</span>
+    <span>KARMATH</span>
+    <span class="dot"></span>
+  </div>
+</div>
+
+<div id="sideinfo">
+  <div class="shift" id="shiftName">🌅 FRÜHSCHICHT (06-14)</div>
+  <div class="next-shift" id="nextShift">Nächste: SPÄTSCHICHT in 04:32</div>
+  <div class="row"><span class="k">Aktive Squads</span><span class="v" id="activeSquads">3 / 3</span></div>
+  <div class="row"><span class="k">Fronten</span><span class="v" id="frontScore">0 / 5</span></div>
+  <div class="row"><span class="k">Konvois</span><span class="v" id="convoyCount">0</span></div>
+  <div class="officer" id="officerInfo">
+    <div>🔵 <span class="name">General Weber</span></div>
+    <div style="color:#888">Befehl: <span style="color:#ffb52e" id="aurOrder">Vorbereitung</span></div>
+  </div>
+  <div class="res">
+    <span>💰 <b id="rMoney">500</b></span>
+    <span>🔫 <b id="rAmmo">800</b></span>
+    <span>⛽ <b id="rFuel">400</b></span>
+  </div>
+</div>
+
+<div id="orderPanel">
+  <div class="title">⚔️ AKTUELLE BEFEHLE</div>
+  <div id="ordersList">
+    <div class="order"><span class="nation">AUR:</span> <span class="cmd" id="aurCmd">Vorbereitung</span></div>
+    <div class="order"><span class="nation">KAR:</span> <span class="cmd" id="karCmd">Vorbereitung</span></div>
+  </div>
+</div>
+
+<div id="story"></div>
+<div id="convoyAlert">🚨 KONVOI ÜBERFALLEN</div>
+
+<div id="promo">
+  <div class="r" id="promoR">BEFÖRDERT</div>
+  <div class="t" id="promoT">Neuer Rang</div>
+  <div class="s" id="promoS"></div>
+</div>
+
+<div id="bodycam">
+  <div id="bodycamCanvasHolder"></div>
+  <div class="vignette"></div>
+  <div class="scanlines"></div>
+  <div class="hud">
+    <div class="top">
+      <div class="rec"><span class="dot"></span>REC</div>
+      <div class="id" id="camId">AUR #1</div>
+      <div class="time" id="camTime">06:00</div>
+    </div>
+    <div class="cross">+</div>
+    <div class="bottom">
+      <div class="health">
+        <div class="lbl">VITALS</div>
+        <div class="bar"><div class="barfill" id="camHp"></div></div>
+      </div>
+      <div>
+        <div class="lbl">AMMO</div>
+        <div class="ammo" id="camAmmo">30</div>
+        <div class="state" id="camState">IDLE</div>
+      </div>
+    </div>
+  </div>
+  <div class="dmg" id="camDmg"></div>
+  <div class="notice" id="camNotice">SIGNAL LOST</div>
+</div>
+
+<div id="logs">
+  <div id="log1"></div>
+  <div id="log2"></div>
+</div>
+
+<div id="hint"><b>WASD</b> Kamera · <b>V</b> Bodycam · <b>G</b> Ränge · <b>N</b> Zeit · <b>Space</b> Pause · <b>📺 TV</b></div>
+<div id="tvHint">📺 Klicken für Nachrichten</div>
+
+<div id="diaryPanel" class="panelbox">
+  <h2>📔 Offiziere & Soldaten</h2>
+  <div class="sub">Hierarchie · Ränge · Einsätze · Drücke G zum Schließen</div>
+  <div id="diaryContent"></div>
+  <button class="closebtn" id="closeDiaries">Schließen</button>
+</div>
+
+<div id="newsPanel" class="panelbox">
+  <h2>📺 Kriegsnachrichten</h2>
+  <div class="sub" id="newsSub">Frontbericht</div>
+  <div id="newsContent"></div>
+  <button class="closebtn" id="closeNews">Schließen</button>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.128.0/build/three.module.js"}}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+
+/* ============================================================
+   ZEIT: 1 Spielminute = 5 Sekunden
+   ============================================================ */
+const TOTAL_DAYS = 14;
+const SECONDS_PER_HOUR = 300;
+const DAY_LENGTH = 24 * SECONDS_PER_HOUR;
+
+const SOLDIERS_PER_SQUAD = 8;
+const SQUADS_PER_NATION = 3;
+const RESERVE_PER_NATION = 8;
+
+const NATIONS = {
+  aurelia: { name: "AURELIA", color: 0x59aaff, general: "General Weber" },
+  karmath: { name: "KARMATH", color: 0xff6868, general: "General Volkov" }
+};
+
+// Offiziers-Hierarchie
+const RANKS = [
+  { name: "REKRUT", xp: 0, tier: 0 },
+  { name: "SOLDAT", xp: 60, tier: 1 },
+  { name: "GEFREITER", xp: 150, tier: 1 },
+  { name: "KORPORAL", xp: 300, tier: 2 },         // NCO
+  { name: "SERGEANT", xp: 500, tier: 2 },
+  { name: "FELDWEBEL", xp: 800, tier: 2 },
+  { name: "LEUTNANT", xp: 1200, tier: 3 },        // Offizier
+  { name: "HAUPTMANN", xp: 1700, tier: 3 },
+  { name: "MAJOR", xp: 2400, tier: 3 },
+  { name: "OBERST", xp: 3200, tier: 4 },          // Stabsoffizier
+  { name: "GENERAL", xp: 4500, tier: 5 }
+];
+
+// 5 Fronten
+const FRONTS = [
+  { id: "nord", name: "Nord", x: 0, z: -110, owner: "karmath", progress: -60 },
+  { id: "sued", name: "Süd", x: 0, z: 110, owner: "karmath", progress: -60 },
+  { id: "west", name: "West", x: -110, z: 0, owner: "aurelia", progress: 60 },
+  { id: "ost", name: "Ost", x: 110, z: 0, owner: "karmath", progress: -60 },
+  { id: "zentrum", name: "Zentrum", x: 0, z: 0, owner: "karmath", progress: -30 }
+];
+
+const AUR_BASE = new THREE.Vector3(-180, 0, -20);
+const KAR_BASE = new THREE.Vector3(180, 0, -20);
+const HQ_POS = new THREE.Vector3(0, 0, -190);
+
+const CONVOY_ROUTES = [
+  { from: AUR_BASE, to: FRONTS.find(f => f.id === "west"), resource: "ammo" },
+  { from: AUR_BASE, to: FRONTS.find(f => f.id === "zentrum"), resource: "med" },
+  { from: KAR_BASE, to: FRONTS.find(f => f.id === "ost"), resource: "ammo" },
+  { from: KAR_BASE, to: FRONTS.find(f => f.id === "nord"), resource: "fuel" }
+];
+
+const resources = {
+  aurelia: { money: 500, ammo: 800, fuel: 400 },
+  karmath: { money: 500, ammo: 800, fuel: 400 }
+};
+
+let elapsed = 0;
+let timeOfDay = 0.25;
+let paused = false;
+let timeSpeed = 1;
+let currentShift = 0;
+
+/* ============================================================
+   SCENE
+   ============================================================ */
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x8a9bb5, 180, 500);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.5, 800);
+camera.position.set(0, 140, 240);
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance", stencil: false });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 0.85));
+document.body.appendChild(renderer.domElement);
+
+const hemiLight = new THREE.HemisphereLight(0xaabddd, 0x333329, 1.5);
+scene.add(hemiLight);
+const ambientLight = new THREE.AmbientLight(0x404060, 0.4);
+scene.add(ambientLight);
+const sunLight = new THREE.DirectionalLight(0xffe6c2, 1.0);
+sunLight.position.set(30, 55, 25);
+scene.add(sunLight);
+const moonLight = new THREE.DirectionalLight(0x8899cc, 0.0);
+moonLight.position.set(-30, 55, -25);
+scene.add(moonLight);
+
+const _matCache = new Map();
+function mat(color) {
+  if (!_matCache.has(color)) _matCache.set(color, new THREE.MeshLambertMaterial({color}));
+  return _matCache.get(color);
+}
+
+const GEO = {
+  box: new THREE.BoxGeometry(1,1,1),
+  sphere: new THREE.SphereGeometry(1, 6, 5),
+  cylinder: new THREE.CylinderGeometry(1,1,1,6),
+  plane: new THREE.PlaneGeometry(1,1),
+  cone: new THREE.ConeGeometry(1,1,5)
+};
+
+function boxGeo(w,h,d,material,x,y,z,parent=scene) {
+  const m = new THREE.Mesh(GEO.box, material);
+  m.scale.set(w,h,d);
+  m.position.set(x,y,z);
+  parent.add(m);
+  return m;
+}
+
+const covers = [];
+const soldiers = [];
+const bullets = [];
+const convoys = [];
+const tvObjects = [];
+const newsItems = [];
+const streetlights = [];
+const officers = [];
+
+/* ============================================================
+   NAV GRID
+   ============================================================ */
+const NAV_CELL = 5;
+const NAV_MIN = -220;
+const NAV_DIM = Math.ceil(440 / NAV_CELL);
+const navGrid = new Uint8Array(NAV_DIM * NAV_DIM);
+
+function navBlocked(x, z) {
+  const gx = Math.floor((x - NAV_MIN) / NAV_CELL);
+  const gz = Math.floor((z - NAV_MIN) / NAV_CELL);
+  if (gx < 0 || gz < 0 || gx >= NAV_DIM || gz >= NAV_DIM) return true;
+  return navGrid[gz * NAV_DIM + gx] === 1;
+}
+
+function markNavRect(cx, cz, w, d) {
+  const hw = w/2, hd = d/2;
+  const gx0 = Math.max(0, Math.floor((cx-hw-NAV_MIN)/NAV_CELL));
+  const gx1 = Math.min(NAV_DIM-1, Math.floor((cx+hw-NAV_MIN)/NAV_CELL));
+  const gz0 = Math.max(0, Math.floor((cz-hd-NAV_MIN)/NAV_CELL));
+  const gz1 = Math.min(NAV_DIM-1, Math.floor((cz+hd-NAV_MIN)/NAV_CELL));
+  for (let gz = gz0; gz <= gz1; gz++)
+    for (let gx = gx0; gx <= gx1; gx++)
+      navGrid[gz*NAV_DIM+gx] = 1;
+}
+
+function markNavCircle(cx, cz, r) {
+  const r2 = r*r;
+  const gx0 = Math.max(0, Math.floor((cx-r-NAV_MIN)/NAV_CELL));
+  const gx1 = Math.min(NAV_DIM-1, Math.floor((cx+r-NAV_MIN)/NAV_CELL));
+  const gz0 = Math.max(0, Math.floor((cz-r-NAV_MIN)/NAV_CELL));
+  const gz1 = Math.min(NAV_DIM-1, Math.floor((cz+r-NAV_MIN)/NAV_CELL));
+  for (let gz = gz0; gz <= gz1; gz++)
+    for (let gx = gx0; gx <= gx1; gx++) {
+      const wx = NAV_MIN + gx*NAV_CELL + NAV_CELL/2;
+      const wz = NAV_MIN + gz*NAV_CELL + NAV_CELL/2;
+      const dx = wx-cx, dz = wz-cz;
+      if (dx*dx+dz*dz <= r2) navGrid[gz*NAV_DIM+gx] = 1;
+    }
+}
+
+/* ============================================================
+   BUILD WORLD
+   ============================================================ */
+function buildWorld() {
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(800, 800), mat(0x3a4a32));
+  ground.rotation.x = -Math.PI/2;
+  scene.add(ground);
+
+  const sidewalkMat = mat(0x7a7a7a);
+  const asphaltMat = mat(0x2a2d30);
+  const crosswalkMat = mat(0xd0d0d0);
+
+  function road(w,d,x,z,mat=asphaltMat) {
+    const r = new THREE.Mesh(GEO.plane, mat);
+    r.scale.set(w,d,1);
+    r.rotation.x = -Math.PI/2;
+    r.position.set(x,0.02,z);
+    scene.add(r);
+  }
+  road(20, 440, 0, 0);
+  road(440, 20, 0, 0);
+  road(14, 440, -80, 0);
+  road(14, 440, 80, 0);
+  road(440, 14, 0, -80);
+  road(440, 14, 0, 80);
+  road(12, 440, -160, 0);
+  road(12, 440, 160, 0);
+  road(440, 12, 0, -160);
+  road(440, 12, 0, 160);
+
+  function sidewalk(w,d,x,z) {
+    const s = new THREE.Mesh(GEO.plane, sidewalkMat);
+    s.scale.set(w,d,1);
+    s.rotation.x = -Math.PI/2;
+    s.position.set(x,0.03,z);
+    scene.add(s);
+  }
+  sidewalk(440, 4, 0, -12);
+  sidewalk(440, 4, 0, 12);
+  sidewalk(4, 440, -12, 0);
+  sidewalk(4, 440, 12, 0);
+
+  for (let i = -3; i <= 3; i++) {
+    road(1.5, 3, i * 2.5, -10, crosswalkMat);
+    road(1.5, 3, i * 2.5, 10, crosswalkMat);
+    road(3, 1.5, -10, i * 2.5, crosswalkMat);
+    road(3, 1.5, 10, i * 2.5, crosswalkMat);
+  }
+
+  function streetlight(x, z) {
+    const g = new THREE.Group();
+    g.position.set(x, 0, z);
+    const pole = new THREE.Mesh(GEO.cylinder, mat(0x333333));
+    pole.scale.set(0.1, 6, 0.1);
+    pole.position.y = 3;
+    g.add(pole);
+    const arm = new THREE.Mesh(GEO.box, mat(0x333333));
+    arm.scale.set(0.8, 0.1, 0.1);
+    arm.position.set(0.4, 6, 0);
+    g.add(arm);
+    const lampMat = new THREE.MeshBasicMaterial({color: 0xffd78a});
+    const lamp = new THREE.Mesh(GEO.box, lampMat);
+    lamp.scale.set(0.4, 0.2, 0.4);
+    lamp.position.set(0.8, 5.9, 0);
+    g.add(lamp);
+    scene.add(g);
+    streetlights.push({mesh: g, lamp, x, z});
+  }
+  for (let i = -200; i <= 200; i += 40) {
+    if (Math.abs(i) < 15) continue;
+    streetlight(i, -16);
+    streetlight(i, 16);
+    streetlight(-16, i);
+    streetlight(16, i);
+  }
+
+  const buildings = [
+    { x: -40, z: -40, w: 18, d: 14, h: 14, mat: 0x8a7a6a, type: "office" },
+    { x: -62, z: -40, w: 14, d: 14, h: 10, mat: 0x6a5d52, type: "shop" },
+    { x: -40, z: -62, w: 18, d: 12, h: 11, mat: 0x7a6a5a, type: "shop" },
+    { x: -62, z: -62, w: 14, d: 12, h: 8, mat: 0x5a6368, type: "house" },
+    { x: 40, z: -40, w: 18, d: 14, h: 14, mat: 0x8a7a6a, type: "office" },
+    { x: 62, z: -40, w: 14, d: 14, h: 10, mat: 0x6a5d52, type: "shop" },
+    { x: 40, z: -62, w: 18, d: 12, h: 11, mat: 0x7a6a5a, type: "shop" },
+    { x: 62, z: -62, w: 14, d: 12, h: 8, mat: 0x5a6368, type: "house" },
+    { x: -40, z: 40, w: 18, d: 14, h: 14, mat: 0x8a7a6a, type: "office" },
+    { x: -62, z: 40, w: 14, d: 14, h: 10, mat: 0x6a5d52, type: "shop" },
+    { x: -40, z: 62, w: 18, d: 12, h: 11, mat: 0x7a6a5a, type: "shop" },
+    { x: -62, z: 62, w: 14, d: 12, h: 8, mat: 0x5a6368, type: "house" },
+    { x: 40, z: 40, w: 18, d: 14, h: 14, mat: 0x8a7a6a, type: "office" },
+    { x: 62, z: 40, w: 14, d: 14, h: 10, mat: 0x6a5d52, type: "shop" },
+    { x: 40, z: 62, w: 18, d: 12, h: 11, mat: 0x7a6a5a, type: "shop" },
+    { x: 62, z: 62, w: 14, d: 12, h: 8, mat: 0x5a6368, type: "house" },
+    { x: -40, z: -100, w: 16, d: 12, h: 9, mat: 0x6a6258, type: "house" },
+    { x: 40, z: -100, w: 16, d: 12, h: 9, mat: 0x5a6368, type: "house" },
+    { x: -40, z: 100, w: 16, d: 12, h: 9, mat: 0x6a6258, type: "house" },
+    { x: 40, z: 100, w: 16, d: 12, h: 9, mat: 0x5a6368, type: "house" },
+    { x: -100, z: -100, w: 20, d: 18, h: 22, mat: 0x5a6a7a, type: "tower" },
+    { x: 100, z: -100, w: 20, d: 18, h: 20, mat: 0x6a5a6a, type: "tower" },
+    { x: -100, z: 100, w: 20, d: 18, h: 18, mat: 0x5a6a6a, type: "tower" },
+    { x: 100, z: 100, w: 20, d: 18, h: 22, mat: 0x6a6a5a, type: "tower" }
+  ];
+
+  for (const b of buildings) addRealisticBuilding(b);
+
+  // Rathaus
+  const rathaus = new THREE.Group();
+  rathaus.position.set(0, 0, 0);
+  boxGeo(26, 2, 20, mat(0x9a8a6a), 0, 1, 0, rathaus);
+  boxGeo(24, 12, 18, mat(0xa89a7a), 0, 8, 0, rathaus);
+  boxGeo(26, 1.5, 20, mat(0x5a4a3a), 0, 14.5, 0, rathaus);
+  boxGeo(8, 22, 8, mat(0x9a8a6a), 0, 20, 0, rathaus);
+  boxGeo(9, 1.5, 9, mat(0x4a3a2a), 0, 31.5, 0, rathaus);
+  for (let i = -8; i <= 8; i += 4) {
+    boxGeo(1.5, 10, 1.5, mat(0xc0b090), i, 7, 9.5, rathaus);
+  }
+  scene.add(rathaus);
+  markNavRect(0, 0, 28, 22);
+
+  // Bahnhof
+  const bahnhof = new THREE.Group();
+  bahnhof.position.set(0, 0, 100);
+  boxGeo(45, 14, 16, mat(0x7a5a4a), 0, 7, 0, bahnhof);
+  boxGeo(47, 1.5, 18, mat(0x4a3a2a), 0, 14.5, 0, bahnhof);
+  boxGeo(8, 22, 8, mat(0x6a4a3a), 0, 12, 0, bahnhof);
+  boxGeo(9, 1.5, 9, mat(0x3a2a1a), 0, 23.5, 0, bahnhof);
+  boxGeo(55, 0.4, 10, mat(0x8a8a8a), 0, 0.2, -12, bahnhof);
+  boxGeo(55, 0.4, 10, mat(0x8a8a8a), 0, 0.2, 12, bahnhof);
+  for (let i = -1; i <= 1; i += 2) {
+    boxGeo(60, 0.1, 0.3, mat(0x444444), 0, 0.1, i*15, bahnhof);
+    boxGeo(60, 0.1, 0.3, mat(0x444444), 0, 0.1, i*17, bahnhof);
+  }
+  scene.add(bahnhof);
+  markNavRect(0, 100, 46, 18);
+
+  // Brücke
+  const bridge = new THREE.Group();
+  bridge.position.set(0, 0, -100);
+  boxGeo(120, 0.1, 28, mat(0x2a4a6a), 0, 0.1, 0, bridge);
+  boxGeo(60, 2, 24, mat(0x6a6a6a), 0, 1, 0, bridge);
+  boxGeo(60, 1.5, 1, mat(0x555555), 0, 2.5, -11.5, bridge);
+  boxGeo(60, 1.5, 1, mat(0x555555), 0, 2.5, 11.5, bridge);
+  for (let i = -25; i <= 25; i += 12) {
+    boxGeo(3, 3, 3, mat(0x4a4a4a), i, 0, 0, bridge);
+  }
+  scene.add(bridge);
+  markNavRect(0, -100, 60, 24);
+
+  // Bäume
+  const trunkMat = mat(0x3a2818);
+  const leafMats = [mat(0x2a5522), mat(0x1f4a1a), mat(0x356b2a)];
+  for (let i = 0; i < 70; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = 170 + Math.random() * 80;
+    const x = Math.cos(a) * r;
+    const z = Math.sin(a) * r;
+    if (Math.hypot(x - AUR_BASE.x, z - AUR_BASE.z) < 50) continue;
+    if (Math.hypot(x - KAR_BASE.x, z - KAR_BASE.z) < 50) continue;
+
+    const g = new THREE.Group();
+    g.position.set(x, 0, z);
+    const scale = 0.8 + Math.random() * 0.8;
+    const trunk = new THREE.Mesh(GEO.cylinder, trunkMat);
+    trunk.scale.set(0.5*scale, 5*scale, 0.5*scale);
+    trunk.position.y = 2.5*scale;
+    g.add(trunk);
+    const c1 = new THREE.Mesh(GEO.cone, leafMats[Math.floor(Math.random()*3)]);
+    c1.scale.set(3*scale, 5*scale, 3*scale);
+    c1.position.y = 6.5*scale;
+    g.add(c1);
+    g.rotation.y = Math.random() * Math.PI * 2;
+    scene.add(g);
+    markNavCircle(x, z, 1.4*scale);
+  }
+
+  const coverMat = mat(0x6a5a4a);
+  const coords = [
+    [-30,-15],[30,15],[-30,15],[30,-15],
+    [-60,-40],[60,40],[-60,40],[60,-40],
+    [-90,0],[90,0],[0,-70],[0,70],
+    [-50,-80],[50,80],[-50,80],[50,-80]
+  ];
+  coords.forEach(([x,z],i) => {
+    const mesh = new THREE.Mesh(GEO.box, coverMat);
+    mesh.scale.set(3.5, 1.2, 0.9);
+    mesh.position.set(x, 0.6, z);
+    mesh.rotation.y = (i % 2 ? .2 : -.2);
+    scene.add(mesh);
+    covers.push({x, z});
+    markNavCircle(x, z, 1.8);
+  });
+}
+
+function addRealisticBuilding(b) {
+  const g = new THREE.Group();
+  g.position.set(b.x, 0, b.z);
+
+  const building = new THREE.Mesh(GEO.box, mat(b.mat));
+  building.scale.set(b.w, b.h, b.d);
+  building.position.y = b.h / 2;
+  g.add(building);
+
+  const roofMat = mat(b.type === "tower" ? 0x3a3a3a : 0x4a3a2a);
+  const roof = new THREE.Mesh(GEO.box, roofMat);
+  roof.scale.set(b.w + 0.5, 0.8, b.d + 0.5);
+  roof.position.y = b.h + 0.4;
+  g.add(roof);
+
+  if (b.type !== "house") {
+    const windowMat = new THREE.MeshBasicMaterial({ color: 0x2a3a5a });
+    const rows = Math.floor(b.h / 3);
+    const cols = Math.floor(b.w / 3);
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const wx = -b.w/2 + 1.5 + col * (b.w / cols);
+        const wy = 2 + row * 3;
+        if (wy > b.h - 1) continue;
+        const win1 = new THREE.Mesh(GEO.box, windowMat);
+        win1.scale.set(0.9, 1.4, 0.1);
+        win1.position.set(wx, wy, b.d/2 + 0.05);
+        g.add(win1);
+        const win2 = new THREE.Mesh(GEO.box, windowMat);
+        win2.scale.set(0.9, 1.4, 0.1);
+        win2.position.set(wx, wy, -b.d/2 - 0.05);
+        g.add(win2);
+      }
+    }
+  } else {
+    const windowMat = new THREE.MeshBasicMaterial({ color: 0x3a4a5a });
+    const win1 = new THREE.Mesh(GEO.box, windowMat);
+    win1.scale.set(1.2, 1.5, 0.1);
+    win1.position.set(-b.w/4, 2.5, b.d/2 + 0.05);
+    g.add(win1);
+    const win2 = new THREE.Mesh(GEO.box, windowMat);
+    win2.scale.set(1.2, 1.5, 0.1);
+    win2.position.set(b.w/4, 2.5, b.d/2 + 0.05);
+    g.add(win2);
+    const door = new THREE.Mesh(GEO.box, mat(0x3a2a1a));
+    door.scale.set(1.4, 2.4, 0.15);
+    door.position.set(0, 1.2, b.d/2 + 0.05);
+    g.add(door);
+  }
+
+  if (b.type === "tower") {
+    const antenna = new THREE.Mesh(GEO.cylinder, mat(0x888888));
+    antenna.scale.set(0.15, 4, 0.15);
+    antenna.position.y = b.h + 2.5;
+    g.add(antenna);
+  }
+
+  scene.add(g);
+  markNavRect(b.x, b.z, b.w + 2, b.d + 2);
+}
+
+/* ============================================================
+   BASES
+   ============================================================ */
+function buildBase(nation, pos) {
+  const isAur = nation === "aurelia";
+  const baseColor = isAur ? 0x2a4a7a : 0x7a2a2a;
+  const accentColor = isAur ? 0x59aaff : 0xff6868;
+  const groundColor = isAur ? 0x2a3a4a : 0x4a2a2a;
+
+  const g = new THREE.Group();
+  g.position.copy(pos);
+
+  const ground = new THREE.Mesh(GEO.plane, mat(groundColor));
+  ground.scale.set(70, 60, 1);
+  ground.rotation.x = -Math.PI/2;
+  ground.position.y = 0.05;
+  g.add(ground);
+
+  for (let i = -3; i <= 3; i++) {
+    for (let j = -2; j <= 2; j++) {
+      const plate = new THREE.Mesh(GEO.plane, mat(0x4a4a4a));
+      plate.scale.set(8, 8, 1);
+      plate.rotation.x = -Math.PI/2;
+      plate.position.set(i * 10, 0.1, j * 10);
+      g.add(plate);
+    }
+  }
+
+  // Kommandogebäude
+  boxGeo(18, 6, 12, mat(baseColor), 0, 3, 15, g);
+  boxGeo(19, 1, 13, mat(0x222222), 0, 6.4, 15, g);
+  for (let i = -6; i <= 6; i += 3) {
+    boxGeo(1.5, 1.5, 0.1, new THREE.MeshBasicMaterial({color:0x88ccff}), i, 3, 21.1, g);
+  }
+  markNavRect(pos.x, pos.z + 15, 19, 13);
+
+  // 3 Baracken (für Schichten)
+  for (let i = 0; i < 3; i++) {
+    const bx = -22 + i * 22;
+    boxGeo(12, 4, 7, mat(baseColor), bx, 2, -15, g);
+    boxGeo(13, 0.7, 8, mat(0x222222), bx, 4.3, -15, g);
+    boxGeo(1, 1, 0.1, new THREE.MeshBasicMaterial({color:0x88ccff}), bx-3, 2, -11.4, g);
+    boxGeo(1, 1, 0.1, new THREE.MeshBasicMaterial({color:0x88ccff}), bx+3, 2, -11.4, g);
+    markNavRect(pos.x + bx, pos.z - 15, 13, 8);
+  }
+
+  for (let i = 0; i < 12; i++) {
+    const bag = new THREE.Mesh(GEO.box, mat(0x6b6b4b));
+    bag.scale.set(2, 0.6, 0.8);
+    const bx = -15 + (i % 6) * 6;
+    const bz = -25 + Math.floor(i / 6) * 2;
+    bag.position.set(bx, 0.3, bz);
+    g.add(bag);
+  }
+
+  boxGeo(0.2, 12, 0.2, mat(0xcccccc), 30, 6, 25, g);
+  boxGeo(3, 1.8, 0.05, mat(accentColor), 31.5, 10.5, 25, g);
+
+  for (let i = 0; i < 3; i++) {
+    const v = new THREE.Group();
+    v.position.set(-20 + i * 8, 0, -30);
+    boxGeo(3, 1.5, 6, mat(0x3a4a3a), 0, 1.2, 0, v);
+    boxGeo(2, 0.8, 2.5, mat(0x2a3a2a), 0, 2.3, 0.5, v);
+    for (let wx = -1; wx <= 1; wx += 2) {
+      for (let wz = -1.5; wz <= 1.5; wz += 3) {
+        const wheel = new THREE.Mesh(GEO.cylinder, mat(0x111111));
+        wheel.scale.set(0.5, 0.3, 0.5);
+        wheel.rotation.z = Math.PI/2;
+        wheel.position.set(wx * 1.4, 0.5, wz);
+        v.add(wheel);
+      }
+    }
+    g.add(v);
+  }
+
+  for (let i = 0; i < 4; i++) {
+    const light = new THREE.PointLight(0xffdd88, 0.8, 30);
+    light.position.set(-20 + i * 13, 6, 0);
+    g.add(light);
+  }
+
+  scene.add(g);
+
+  const label = document.createElement("div");
+  label.id = "campLabel_" + nation;
+  label.textContent = isAur ? "🏰 AURELIA HQ" : "🏰 KARMATH HQ";
+  label.style.color = isAur ? "#59aaff" : "#ff6868";
+  document.body.appendChild(label);
+}
+
+function buildHQ() {
+  const g = new THREE.Group();
+  g.position.copy(HQ_POS);
+
+  const ground = new THREE.Mesh(GEO.plane, mat(0x2a2a2a));
+  ground.scale.set(60, 50, 1);
+  ground.rotation.x = -Math.PI/2;
+  ground.position.y = 0.07;
+  g.add(ground);
+
+  boxGeo(24, 8, 14, mat(0x4a4a4a), 0, 4, 8, g);
+  boxGeo(25, 1, 15, mat(0x2a2a2a), 0, 8.5, 8, g);
+  markNavRect(HQ_POS.x, HQ_POS.z + 8, 25, 15);
+
+  for (let i = -9; i <= 9; i += 3) {
+    boxGeo(2, 2, 0.1, new THREE.MeshBasicMaterial({color:0xffdd88}), i, 4, 15.1, g);
+  }
+
+  boxGeo(0.3, 15, 0.3, mat(0x666666), 15, 7.5, 8, g);
+  const radarDish = new THREE.Mesh(GEO.sphere, mat(0xaaaaaa));
+  radarDish.scale.set(1.5, 0.5, 1.5);
+  radarDish.position.set(15, 14, 8);
+  g.add(radarDish);
+
+  const tvBody = new THREE.Mesh(GEO.box, mat(0x111111));
+  tvBody.scale.set(4, 2.5, 0.3);
+  tvBody.position.set(0, 3.5, 15.2);
+  g.add(tvBody);
+  const tvScreen = new THREE.Mesh(GEO.box, new THREE.MeshBasicMaterial({color: 0x2255aa}));
+  tvScreen.scale.set(3.6, 2.1, 0.05);
+  tvScreen.position.set(0, 3.5, 15.4);
+  g.add(tvScreen);
+  const tvLight = new THREE.PointLight(0x4488ff, 1.0, 12);
+  tvLight.position.set(0, 3.5, 16.5);
+  g.add(tvLight);
+
+  scene.add(g);
+  tvObjects.push({
+    mesh: tvBody,
+    screen: tvScreen,
+    light: tvLight,
+    worldPos: new THREE.Vector3(HQ_POS.x, 3.5, HQ_POS.z + 15.2)
+  });
+
+  const label = document.createElement("div");
+  label.id = "baseLabel";
+  label.textContent = "🏛️ UN HQ";
+  label.style.color = "#88ccff";
+  document.body.appendChild(label);
+}
+
+function buildFronts() {
+  for (const front of FRONTS) {
+    const g = new THREE.Group();
+    g.position.set(front.x, 0, front.z);
+
+    const sandMat = mat(0x6b6b4b);
+    for (let i = 0; i < 16; i++) {
+      const a = i / 16 * Math.PI * 2;
+      const bag = new THREE.Mesh(GEO.box, sandMat);
+      bag.scale.set(2.2, 0.6, 0.8);
+      bag.position.set(Math.cos(a) * 6, 0.3, Math.sin(a) * 6);
+      bag.rotation.y = a + Math.PI/2;
+      g.add(bag);
+    }
+
+    boxGeo(0.2, 8, 0.2, mat(0xcccccc), 0, 4, 0, g);
+    const flagMat = new THREE.MeshLambertMaterial({color: 0x888888});
+    const flag = new THREE.Mesh(GEO.box, flagMat);
+    flag.scale.set(2.5, 1.5, 0.05);
+    flag.position.set(1.25, 7, 0);
+    g.add(flag);
+
+    scene.add(g);
+    front.mesh = g;
+    front.flagMat = flagMat;
+    markNavCircle(front.x, front.z, 1.5);
+  }
+}
+
+/* ============================================================
+   WEAPONS
+   ============================================================ */
+function createWeapon(nation) {
+  const g = new THREE.Group();
+  const isAur = nation === "aurelia";
+  const gunMetal = mat(0x222222);
+  const darkMetal = mat(0x111111);
+  const woodMat = mat(0x5a3a1a);
+
+  boxGeo(0.15, 0.12, 0.6, gunMetal, 0, 0, 0, g);
+  const barrel = new THREE.Mesh(GEO.cylinder, darkMetal);
+  barrel.scale.set(0.04, 0.7, 0.04);
+  barrel.rotation.x = Math.PI/2;
+  barrel.position.set(0, 0.03, 0.65);
+  g.add(barrel);
+  boxGeo(0.12, 0.1, 0.35, isAur ? darkMetal : woodMat, 0, 0, 0.35, g);
+  boxGeo(0.03, 0.1, 0.03, gunMetal, 0, 0.1, 0.55, g);
+  const magGroup = new THREE.Group();
+  magGroup.position.set(0, -0.12, 0.05);
+  boxGeo(0.12, 0.25, 0.15, darkMetal, 0, -0.1, 0, magGroup);
+  magGroup.rotation.x = 0.15;
+  g.add(magGroup);
+  boxGeo(0.1, 0.22, 0.12, darkMetal, 0, -0.15, -0.15, g);
+  boxGeo(0.1, 0.15, 0.35, isAur ? gunMetal : woodMat, 0, -0.02, -0.5, g);
+  const muzzle = new THREE.PointLight(0xffaa00, 0, 6);
+  muzzle.position.set(0, 0.03, 1.1);
+  g.add(muzzle);
+  return g;
+}
+
+/* ============================================================
+   SOLDIERS
+   ============================================================ */
+const bulletGeo = new THREE.SphereGeometry(.1, 4, 3);
+const aurBody = mat(0x315e91);
+const karBody = mat(0x963b3b);
+const skinMat = mat(0xb88b68);
+const bulletMat = new THREE.MeshBasicMaterial({color:0xffdf83});
+
+function makeSoldier(nation, index, squadId, role = "soldier", trained = false, frontIndex = 0) {
+  const isAur = nation === "aurelia";
+  const color = isAur ? aurBody : karBody;
+  const group = new THREE.Group();
+
+  let spawnPos;
+  if (role === "soldier" && trained) {
+    const front = FRONTS[frontIndex % FRONTS.length];
+    const side = isAur ? -1 : 1;
+    spawnPos = new THREE.Vector3(
+      front.x + side * 10 + (Math.random()-0.5) * 8,
+      0,
+      front.z + (Math.random()-0.5) * 8
+    );
+  } else {
+    const basePos = isAur ? AUR_BASE : KAR_BASE;
+    spawnPos = new THREE.Vector3(
+      basePos.x + (Math.random()-0.5) * 30,
+      0,
+      basePos.z + (Math.random()-0.5) * 30
+    );
+  }
+  group.position.copy(spawnPos);
+
+  const body = new THREE.Mesh(GEO.box, color);
+  body.scale.set(.56, .8, .35);
+  body.position.y = 1.05;
+  group.add(body);
+
+  const head = new THREE.Mesh(GEO.sphere, skinMat);
+  head.scale.setScalar(0.21);
+  head.position.y = 1.62;
+  group.add(head);
+
+  // Rang-basierte Kopfbedeckung
+  if (role === "general") {
+    // Stern auf Kappe
+    boxGeo(.5, .18, .5, mat(0x1a1a1a), 0, 1.78, 0, group);
+    boxGeo(.15, .06, .15, mat(0xffdd44), 0, 1.88, 0, group);
+  } else if (role === "officer") {
+    boxGeo(.5, .15, .5, mat(isAur ? 0x1a3a5a : 0x5a1a1a), 0, 1.78, 0, group);
+    boxGeo(.15, .05, .15, mat(0xc0c0c0), 0, 1.86, 0, group);
+  } else if (role === "nco") {
+    boxGeo(.5, .15, .5, mat(isAur ? 0x2a4a6a : 0x6a2a2a), 0, 1.78, 0, group);
+  } else {
+    const helmet = new THREE.Mesh(GEO.sphere, mat(isAur ? 0x4c87c1 : 0xc65353));
+    helmet.scale.set(0.26, 0.18, 0.26);
+    helmet.position.y = 1.72;
+    group.add(helmet);
+  }
+
+  const weaponGroup = new THREE.Group();
+  weaponGroup.position.set(isAur ? 0.32 : -0.32, 1.15, 0.35);
+  group.add(weaponGroup);
+
+  const armL = new THREE.Mesh(GEO.box, color);
+  armL.scale.set(.15,.5,.15);
+  armL.position.set(-.38,1.15,.1);
+  group.add(armL);
+  const armR = new THREE.Mesh(GEO.box, color);
+  armR.scale.set(.15,.5,.15);
+  armR.position.set(.38,1.15,.1);
+  group.add(armR);
+  const legL = new THREE.Mesh(GEO.box, mat(0x222222));
+  legL.scale.set(.17,.6,.17);
+  legL.position.set(-.15,.3,0);
+  group.add(legL);
+  const legR = new THREE.Mesh(GEO.box, mat(0x222222));
+  legR.scale.set(.17,.6,.17);
+  legR.position.set(.15,.3,0);
+  group.add(legR);
+
+  const healthBack = new THREE.Mesh(GEO.box, mat(0x252525));
+  healthBack.scale.set(.9,.09,.06);
+  healthBack.position.set(0,2.08,0);
+  group.add(healthBack);
+  const healthFill = new THREE.Mesh(GEO.box, isAur?mat(0x46a7ff):mat(0xff5555));
+  healthFill.scale.set(.86,.055,.065);
+  healthFill.position.set(0,2.08,.01);
+  group.add(healthFill);
+
+  scene.add(group);
+
+  const s = {
+    group, nation, index, squadId, role, squadIndex: frontIndex,
+    health:100, ammo:0, maxAmmo:30, mags:0,
+    speed: 2.2 + Math.random()*.5,
+    state: "armed",
+    destination:null,
+    path: [], pathIndex: 0, pathRecomputeTimer: 0,
+    cooldown:Math.random()*2,
+    moveTimer:2+Math.random()*4,
+    retreatTimer:0,
+    armL, armR, weaponGroup, legL, legR, healthFill,
+    alive:true, phaseOffset:Math.random()*10,
+    isWounded:false, isDowned:false,
+    morale: 100,
+    lastPos: group.position.clone(),
+    velocity: new THREE.Vector3(),
+    camShake: 0,
+    hasWeapon: false,
+    isReloading: false, reloadTimer: 0,
+    aimLockTimer: 0, fireBurstTimer: 0, burstCooldown: 0,
+    xp: trained ? 150 : 0,
+    kills: 0,
+    accuracy: 0.65 + Math.random() * 0.3,
+    onDuty: trained,
+    muzzleVisual: null,
+    // Squad-Befehle
+    squadOrder: null,
+    squadTarget: null,
+    orderTimer: 0
+  };
+  soldiers.push(s);
+
+  if (trained) giveWeapon(s);
+  return s;
+}
+
+function giveWeapon(s) {
+  if (s.hasWeapon) return;
+  const weapon = createWeapon(s.nation);
+  weapon.rotation.set(0, 0, 0);
+  weapon.position.set(0, -0.05, 0.15);
+  s.weaponGroup.add(weapon);
+  s.weaponMesh = weapon;
+  s.hasWeapon = true;
+  s.ammo = s.maxAmmo;
+  s.mags = 4;
+  for (const child of weapon.children) {
+    if (child.isPointLight) s.muzzleFlash = child;
+  }
+}
+
+function spawnArmies() {
+  // Offiziere pro Nation
+  const aurGen = makeSoldier("aurelia", -1, "A-CMD", "general");
+  const karGen = makeSoldier("karmath", -1, "K-CMD", "general");
+  aurGen.xp = 5000;
+  karGen.xp = 5000;
+
+  // Pro Squad (3 Schichten): 1 Offizier (Leutnant), 1 NCO (Sergeant), 6 Soldaten
+  for (let squad = 0; squad < SQUADS_PER_NATION; squad++) {
+    const frontIndex = squad % FRONTS.length;
+    // Aurelia
+    const aurOff = makeSoldier("aurelia", squad * 10 + 100, `A-S${squad+1}`, "officer", true, frontIndex);
+    aurOff.xp = 1300; // Leutnant
+    const aurNco = makeSoldier("aurelia", squad * 10 + 101, `A-S${squad+1}`, "nco", true, frontIndex);
+    aurNco.xp = 550; // Sergeant
+    for (let i = 0; i < 6; i++) {
+      makeSoldier("aurelia", squad * 10 + i, `A-S${squad+1}`, "soldier", true, frontIndex);
+    }
+    // Karmath
+    const karOff = makeSoldier("karmath", squad * 10 + 100, `K-S${squad+1}`, "officer", true, frontIndex);
+    karOff.xp = 1300;
+    const karNco = makeSoldier("karmath", squad * 10 + 101, `K-S${squad+1}`, "nco", true, frontIndex);
+    karNco.xp = 550;
+    for (let i = 0; i < 6; i++) {
+      makeSoldier("karmath", squad * 10 + i, `K-S${squad+1}`, "soldier", true, frontIndex);
+    }
+  }
+
+  // Reserve
+  for (let i = 0; i < RESERVE_PER_NATION; i++) {
+    makeSoldier("aurelia", 200 + i, "A-RES", "soldier", false);
+    makeSoldier("karmath", 200 + i, "K-RES", "soldier", false);
+  }
+}
+
+/* ============================================================
+   SHIFTS - 3 Schichten à 8 Stunden
+   ============================================================ */
+function getCurrentShift() {
+  const hour = Math.floor(timeOfDay * 24);
+  if (hour >= 6 && hour < 14) return 0;
+  if (hour >= 14 && hour < 22) return 1;
+  return 2;
+}
+
+function getShiftName(shift) {
+  return ["🌅 FRÜHSCHICHT (06-14)", "🌆 SPÄTSCHICHT (14-22)", "🌙 NACHTWACHE (22-06)"][shift];
+}
+
+function getShiftShort(shift) {
+  return ["🌅 FRÜH", "🌆 SPÄT", "🌙 NACHT"][shift];
+}
+
+function updateShifts() {
+  const newShift = getCurrentShift();
+  if (newShift !== currentShift) {
+    currentShift = newShift;
+    showStory(getShiftName(currentShift), "yellow", 3500);
+    log(`🔄 SCHICHTWECHSEL: ${getShiftName(currentShift)}`);
+    radioLog(`🔊 Funk: ${getShiftName(currentShift)} - Ablösung!`);
+    // Squad-Rotation
+    for (const s of soldiers) {
+      if (s.role === "soldier" || s.role === "nco" || s.role === "officer") {
+        s.onDuty = s.squadIndex === currentShift || s.squadIndex >= FRONTS.length;
+        if (!s.onDuty && s.xp > 100) {
+          // Ausgebildete bleiben aber meist aktiv
+          s.onDuty = true;
+        }
+      }
+    }
+  }
+}
+
+function getTimeToNextShift() {
+  const hour = Math.floor(timeOfDay * 24);
+  const minutes = Math.floor((timeOfDay * 24 - hour) * 60);
+  let nextShiftHour;
+  if (hour < 6) nextShiftHour = 6;
+  else if (hour < 14) nextShiftHour = 14;
+  else if (hour < 22) nextShiftHour = 22;
+  else nextShiftHour = 30; // 6 Uhr nächster Tag
+  const hoursLeft = nextShiftHour - hour - 1;
+  const minLeft = 60 - minutes;
+  return `${hoursLeft.toString().padStart(2,'0')}:${minLeft.toString().padStart(2,'0')}`;
+}
+
+/* ============================================================
+   RANKS & OFFICIERS
+   ============================================================ */
+function getRank(s) {
+  let rank = RANKS[0];
+  for (const r of RANKS) if (s.xp >= r.xp) rank = r;
+  return rank;
+}
+
+function getRankClass(rank) {
+  if (rank.tier === 5) return "rank-general";
+  if (rank.tier >= 3) return "rank-officer";
+  if (rank.tier === 2) return "rank-nco";
+  return "rank-enlisted";
+}
+
+function addXP(s, amount) {
+  if (s.role === "general") return;
+  const oldRank = getRank(s).name;
+  s.xp += amount;
+  const newRank = getRank(s);
+  if (newRank.name !== oldRank) {
+    document.getElementById("promoR").textContent = `🎖️ ${newRank.name}`;
+    document.getElementById("promoT").textContent = `${NATIONS[s.nation].name} #${s.index}`;
+    document.getElementById("promoS").textContent = `Befördert vom ${oldRank}`;
+    const el = document.getElementById("promo");
+    el.classList.add("show");
+    setTimeout(() => el.classList.remove("show"), 2500);
+    log(`🎖️ BEFÖRDERT: ${NATIONS[s.nation].name} #${s.index} → ${newRank.name}`);
+    radioLog(`🔊 ${NATIONS[s.nation].name}: #${s.index} ist jetzt ${newRank.name}!`);
+  }
+}
+
+/* ============================================================
+   COMMANDER AI - Taktische Befehle
+   ============================================================ */
+class Commander {
+  constructor(nation) {
+    this.nation = nation;
+    this.orderCooldown = 0;
+    this.currentOrder = "Vorbereitung";
+    this.lastOrderChange = 0;
+    this.artilleryRequests = 0;
+    this.artilleryCooldown = 0;
+  }
+
+  update(delta) {
+    this.orderCooldown -= delta;
+    this.artilleryCooldown -= delta;
+    if (this.orderCooldown > 0) return;
+    this.orderCooldown = 8 + Math.random() * 8; // Alle ~10s neue Befehle
+
+    const mySoldiers = soldiers.filter(s => s.nation === this.nation && s.alive && s.role !== "general" && s.onDuty);
+    const enemyNation = this.nation === "aurelia" ? "karmath" : "aurelia";
+    const enemySoldiers = soldiers.filter(s => s.nation === enemyNation && s.alive && s.role !== "general");
+    const myAlive = mySoldiers.length;
+    const enemyAlive = enemySoldiers.length;
+    const score = this.getScore();
+    const downed = mySoldiers.filter(s => s.isDowned).length;
+
+    // Taktische Analyse
+    let order;
+    if (downed >= 3) order = "RÜCKZUG";
+    else if (myAlive < enemyAlive * 0.6) order = "VERTEIDIGUNG";
+    else if (myAlive > enemyAlive * 1.4) order = "STURMANGRIFF";
+    else if (score.ownFronts < score.enemyFronts) order = "FRONTANGRIFF";
+    else if (score.ownFronts > score.enemyFronts) order = "FRONT_HALTEN";
+    else if (this.canFlank()) order = "FLANKEN";
+    else if (this.enemyInCover()) order = "UNTERDRÜCKUNG";
+    else order = "PATROUILLE";
+
+    if (order !== this.currentOrder) {
+      this.currentOrder = order;
+      this.issueOrder(order, mySoldiers);
+      this.lastOrderChange = elapsed;
+    }
+
+    // Artillerie
+    if (this.artilleryRequests < 3 && this.artilleryCooldown <= 0 && this.enemyClustered() && Math.random() < 0.3) {
+      this.requestArtillery();
+      this.artilleryRequests++;
+      this.artilleryCooldown = 60 + Math.random() * 30;
+    }
+  }
+
+  getScore() {
+    let ownFronts = 0, enemyFronts = 0;
+    for (const f of FRONTS) {
+      if (f.owner === this.nation) ownFronts++;
+      else enemyFronts++;
+    }
+    return { ownFronts, enemyFronts };
+  }
+
+  canFlank() {
+    const enemyNation = this.nation === "aurelia" ? "karmath" : "aurelia";
+    const enemies = soldiers.filter(s => s.nation === enemyNation && s.alive && s.onDuty);
+    // Wenn Feinde konzentriert in einer Hälfte
+    let left = 0, right = 0;
+    for (const e of enemies) {
+      if (e.group.position.z < 0) left++;
+      else right++;
+    }
+    return (left < 3 || right < 3) && enemies.length > 4;
+  }
+
+  enemyInCover() {
+    const enemyNation = this.nation === "aurelia" ? "karmath" : "aurelia";
+    const enemies = soldiers.filter(s => s.nation === enemyNation && s.alive && s.onDuty);
+    let inCover = 0;
+    for (const e of enemies) {
+      for (const c of covers) {
+        if (Math.hypot(e.group.position.x - c.x, e.group.position.z - c.z) < 3) {
+          inCover++;
+          break;
+        }
+      }
+    }
+    return inCover >= enemies.length * 0.5;
+  }
+
+  enemyClustered() {
+    const enemyNation = this.nation === "aurelia" ? "karmath" : "aurelia";
+    const enemies = soldiers.filter(s => s.nation === enemyNation && s.alive && s.onDuty);
+    if (enemies.length < 3) return false;
+    for (const e of enemies) {
+      let near = 0;
+      for (const o of enemies) {
+        if (o === e) continue;
+        if (e.group.position.distanceTo(o.group.position) < 10) near++;
+      }
+      if (near >= 2) return true;
+    }
+    return false;
+  }
+
+  requestArtillery() {
+    const enemyNation = this.nation === "aurelia" ? "karmath" : "aurelia";
+    const enemies = soldiers.filter(s => s.nation === enemyNation && s.alive && s.onDuty);
+    if (enemies.length === 0) return;
+    const cx = enemies.reduce((sum, e) => sum + e.group.position.x, 0) / enemies.length;
+    const cz = enemies.reduce((sum, e) => sum + e.group.position.z, 0) / enemies.length;
+    log(`📻 ${NATIONS[this.nation].name}: Artillerie angefordert!`);
+    radioLog(`🔊 ${NATIONS[this.nation].name} ARTY: Unterwegs!`);
+    requestArtillery(cx, cz, this.nation);
+  }
+
+  issueOrder(order, mySoldiers) {
+    const enemyNation = this.nation === "aurelia" ? "karmath" : "aurelia";
+    log(`⚔️ ${NATIONS[this.nation].name} BEFEHL: ${order}`);
+    radioLog(`🔊 ${NATIONS[this.nation].name} CMD: ${order}!`);
+
+    // Befehl an Offiziere/NCOs, die ihn weitergeben
+    const officers = mySoldiers.filter(s => s.role === "officer" || s.role === "nco");
+    for (const off of officers) {
+      off.squadOrder = order;
+      off.squadTarget = null;
+      off.orderTimer = 15 + Math.random() * 10;
+    }
+    // Alle Soldaten folgen
+    for (const s of mySoldiers) {
+      s.squadOrder = order;
+      s.squadTarget = null;
+      s.orderTimer = 15 + Math.random() * 10;
+    }
+  }
+}
+
+const aurCommander = new Commander("aurelia");
+const karCommander = new Commander("karmath");
+
+/* ============================================================
+   ARTILLERY
+   ============================================================ */
+const incomingArtillery = [];
+
+function requestArtillery(cx, cz, nation) {
+  const delay = 4 + Math.random() * 4;
+  const scatter = 8 + Math.random() * 15;
+  const angle = Math.random() * Math.PI * 2;
+  const fx = cx + Math.cos(angle) * scatter;
+  const fz = cz + Math.sin(angle) * scatter;
+
+  incomingArtillery.push({
+    nation, targetX: fx, targetZ: fz, delay,
+    shellTimer: 0.5, shellsFired: 0, maxShells: 5
+  });
+}
+
+function updateArtilleryFunk(delta) {
+  for (let i = incomingArtillery.length - 1; i >= 0; i--) {
+    const inc = incomingArtillery[i];
+    inc.delay -= delta;
+    if (inc.delay > 0) {
+      if (!inc.warningMesh) {
+        const warnMat = new THREE.MeshBasicMaterial({color: 0xff4400, transparent:true, opacity:0.3});
+        const warn = new THREE.Mesh(new THREE.RingGeometry(3, 4, 16), warnMat);
+        warn.rotation.x = -Math.PI/2;
+        warn.position.set(inc.targetX, 0.1, inc.targetZ);
+        scene.add(warn);
+        inc.warningMesh = warn;
+      }
+      inc.warningMesh.material.opacity = 0.15 + Math.sin(elapsed * 8) * 0.15;
+    } else {
+      if (inc.warningMesh) {
+        scene.remove(inc.warningMesh);
+        inc.warningMesh = null;
+      }
+      inc.shellTimer -= delta;
+      if (inc.shellTimer <= 0 && inc.shellsFired < inc.maxShells) {
+        inc.shellTimer = 0.5;
+        inc.shellsFired++;
+        const ex = inc.targetX + (Math.random()-0.5) * 8;
+        const ez = inc.targetZ + (Math.random()-0.5) * 8;
+        const explMat = new THREE.MeshBasicMaterial({color: 0xffaa00, transparent:true, opacity:0.9});
+        const expl = new THREE.Mesh(GEO.sphere, explMat);
+        expl.scale.setScalar(1);
+        expl.position.set(ex, 0.5, ez);
+        scene.add(expl);
+        let scale = 0.5;
+        const interval = setInterval(() => {
+          scale += 0.4;
+          expl.scale.setScalar(scale);
+          expl.material.opacity -= 0.1;
+          if (scale > 3.5 || expl.material.opacity <= 0) {
+            clearInterval(interval);
+            scene.remove(expl);
+          }
+        }, 30);
+        for (const s of soldiers) {
+          if (!s.alive || s.role === "general") continue;
+          if (Math.hypot(s.group.position.x - ex, s.group.position.z - ez) < 6) {
+            s.health -= 35;
+            if (s.health <= 0) {
+              if (Math.random() < 0.3) {
+                s.health = 5 + Math.random() * 10;
+                s.isDowned = true;
+                s.isWounded = true;
+              } else {
+                s.alive = false;
+                s.group.visible = false;
+                log(`💀 ${NATIONS[s.nation].name} #${s.index} durch Artillerie gefallen`);
+              }
+            }
+          }
+        }
+      }
+      if (inc.shellsFired >= inc.maxShells) incomingArtillery.splice(i, 1);
+    }
+  }
+}
+
+/* ============================================================
+   PATHFINDING
+   ============================================================ */
+function findPath(sx, sz, tx, tz, maxNodes = 500) {
+  const startGx = Math.floor((sx - NAV_MIN) / NAV_CELL);
+  const startGz = Math.floor((sz - NAV_MIN) / NAV_CELL);
+  const goalGx = Math.floor((tx - NAV_MIN) / NAV_CELL);
+  const goalGz = Math.floor((tz - NAV_MIN) / NAV_CELL);
+
+  if (startGx < 0 || startGz < 0 || startGx >= NAV_DIM || startGz >= NAV_DIM) return null;
+  if (goalGx < 0 || goalGz < 0 || goalGx >= NAV_DIM || goalGz >= NAV_DIM) return null;
+
+  const startIdx = startGz * NAV_DIM + startGx;
+  const goalIdx = goalGz * NAV_DIM + goalGx;
+  if (startIdx === goalIdx) return [{x: tx, z: tz}];
+
+  const closed = new Set();
+  const gScore = new Map();
+  const cameFrom = new Map();
+  const heap = [];
+
+  function h(gx, gz) { return (Math.abs(gx - goalGx) + Math.abs(gz - goalGz)) * NAV_CELL; }
+  function push(idx, gx, gz, f) {
+    heap.push({idx, gx, gz, f});
+    let i = heap.length - 1;
+    while (i > 0) {
+      const p = (i-1)>>1;
+      if (heap[p].f <= heap[i].f) break;
+      [heap[p], heap[i]] = [heap[i], heap[p]];
+      i = p;
+    }
+  }
+  function pop() {
+    const top = heap[0];
+    const last = heap.pop();
+    if (heap.length > 0) {
+      heap[0] = last;
+      let i = 0;
+      while (true) {
+        const l = 2*i+1, r = 2*i+2;
+        let smallest = i;
+        if (l < heap.length && heap[l].f < heap[smallest].f) smallest = l;
+        if (r < heap.length && heap[r].f < heap[smallest].f) smallest = r;
+        if (smallest === i) break;
+        [heap[smallest], heap[i]] = [heap[i], heap[smallest]];
+        i = smallest;
+      }
+    }
+    return top;
+  }
+
+  gScore.set(startIdx, 0);
+  push(startIdx, startGx, startGz, h(startGx, startGz));
+
+  let expanded = 0;
+  while (heap.length > 0 && expanded < maxNodes) {
+    const cur = pop();
+    if (cur.idx === goalIdx) {
+      const path = [];
+      let c = goalIdx;
+      while (c !== startIdx) {
+        const gx = c % NAV_DIM;
+        const gz = Math.floor(c / NAV_DIM);
+        path.push({x: NAV_MIN + gx*NAV_CELL + NAV_CELL/2, z: NAV_MIN + gz*NAV_CELL + NAV_CELL/2});
+        c = cameFrom.get(c);
+        if (c === undefined) break;
+      }
+      path.reverse();
+      path.push({x: tx, z: tz});
+      return path;
+    }
+    if (closed.has(cur.idx)) continue;
+    closed.add(cur.idx);
+    expanded++;
+
+    for (const [dx, dz] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nx = cur.gx + dx;
+      const nz = cur.gz + dz;
+      if (nx < 0 || nz < 0 || nx >= NAV_DIM || nz >= NAV_DIM) continue;
+      const nIdx = nz * NAV_DIM + nx;
+      if (closed.has(nIdx) || navGrid[nIdx] === 1) continue;
+      const tentative = gScore.get(cur.idx) + NAV_CELL;
+      if (!gScore.has(nIdx) || tentative < gScore.get(nIdx)) {
+        gScore.set(nIdx, tentative);
+        cameFrom.set(nIdx, cur.idx);
+        push(nIdx, nx, nz, tentative + h(nx, nz));
+      }
+    }
+  }
+  return null;
+}
+
+/* ============================================================
+   FRONTS
+   ============================================================ */
+function updateFronts(delta) {
+  for (const front of FRONTS) {
+    let aurCount = 0, karCount = 0;
+    for (const s of soldiers) {
+      if (!s.alive || s.isDowned || s.role === "general") continue;
+      if (Math.hypot(s.group.position.x - front.x, s.group.position.z - front.z) < 14) {
+        if (s.nation === "aurelia") aurCount++;
+        else karCount++;
+      }
+    }
+    // Langsamere, taktischere Eroberung
+    if (aurCount > 0 && karCount === 0) {
+      front.progress += delta * (15 + aurCount * 3);
+      if (front.progress >= 100) {
+        if (front.owner !== "aurelia") {
+          log(`🚩 AURELIA erobert ${front.name}!`);
+          showStory(`🚩 AURELIA: ${front.name}`, "blue", 3000);
+          radioLog(`🔊 AURELIA: ${front.name} gesichert!`);
+        }
+        front.owner = "aurelia";
+        front.progress = 100;
+      }
+    } else if (karCount > 0 && aurCount === 0) {
+      front.progress -= delta * (15 + karCount * 3);
+      if (front.progress <= -100) {
+        if (front.owner !== "karmath") {
+          log(`🚩 KARMATH erobert ${front.name}!`);
+          showStory(`🚩 KARMATH: ${front.name}`, "red", 3000);
+          radioLog(`🔊 KARMATH: ${front.name} gesichert!`);
+        }
+        front.owner = "karmath";
+        front.progress = -100;
+      }
+    } else if (aurCount > 0 && karCount > 0) {
+      // Beide da = Stillstand
+      front.progress += (aurCount - karCount) * delta * 8;
+      front.progress = Math.max(-100, Math.min(100, front.progress));
+    }
+    const color = front.owner === "aurelia" ? 0x59aaff : front.owner === "karmath" ? 0xff6868 : 0x888888;
+    front.flagMat.color.setHex(color);
+  }
+}
+
+function getFrontScore() {
+  let aur = 0, kar = 0;
+  for (const f of FRONTS) {
+    if (f.owner === "aurelia") aur++;
+    else if (f.owner === "karmath") kar++;
+  }
+  return {aur, kar};
+}
+
+/* ============================================================
+   SOLDIER AI - Taktisch
+   ============================================================ */
+function updateSoldier(s, delta) {
+  if (!s.alive) return;
+
+  // Reserve: bleibt in Basis
+  if (!s.onDuty && (s.role === "soldier" || s.role === "nco" || s.role === "officer")) {
+    const basePos = s.nation === "aurelia" ? AUR_BASE : KAR_BASE;
+    const d = Math.hypot(s.group.position.x - basePos.x, s.group.position.z - basePos.z);
+    if (d > 40) moveTowards(s, basePos, delta, 0.7);
+    return;
+  }
+
+  s.cooldown -= delta;
+  s.moveTimer -= delta;
+  s.retreatTimer = Math.max(0, s.retreatTimer - delta);
+  if (s.orderTimer > 0) s.orderTimer -= delta;
+  if (s.camShake > 0) s.camShake -= delta;
+  if (s.aimLockTimer > 0) s.aimLockTimer -= delta;
+  if (s.fireBurstTimer > 0) s.fireBurstTimer -= delta;
+  if (s.burstCooldown > 0) s.burstCooldown -= delta;
+
+  const oldPos = s.lastPos.clone();
+  s.lastPos.copy(s.group.position);
+  s.velocity.subVectors(s.group.position, oldPos).divideScalar(Math.max(delta, 0.001));
+
+  // General bleibt in Basis
+  if (s.role === "general") {
+    const basePos = s.nation === "aurelia" ? AUR_BASE : KAR_BASE;
+    if (Math.hypot(s.group.position.x - basePos.x, s.group.position.z - basePos.z) > 20) {
+      moveTowards(s, basePos, delta, 0.7);
+    }
+    return;
+  }
+
+  if (s.isDowned) {
+    const enemy = findNearestEnemy(s);
+    if (enemy && enemy.distance < 25 && s.ammo > 0 && s.cooldown <= 0) {
+      const dx = enemy.unit.group.position.x - s.group.position.x;
+      const dz = enemy.unit.group.position.z - s.group.position.z;
+      s.group.rotation.y = Math.atan2(dx, dz);
+      shoot(s, enemy.unit);
+    }
+    return;
+  }
+
+  const enemy = findNearestEnemy(s);
+  const enemyInRange = enemy && enemy.distance < 45;
+
+  // SQUAD-BEFEHLE ausführen
+  if (s.squadOrder && s.orderTimer > 0) {
+    if (executeSquadOrder(s, delta, enemy)) return;
+  }
+
+  // Standard: Feind in Reichweite → Kämpfen
+  if (enemyInRange) {
+    const dx = enemy.unit.group.position.x - s.group.position.x;
+    const dz = enemy.unit.group.position.z - s.group.position.z;
+    s.group.rotation.y = Math.atan2(dx, dz);
+    aimAndFire(s, enemy.unit);
+
+    // Taktische Positionsänderung (NCO/Offiziere bleiben, Soldaten suchen Deckung)
+    if (s.moveTimer <= 0 && s.role === "soldier") {
+      const nearestCover = findNearestCover(s);
+      if (nearestCover && Math.hypot(nearestCover.x - s.group.position.x, nearestCover.z - s.group.position.z) < 15) {
+        s.destination = new THREE.Vector3(nearestCover.x, 0, nearestCover.z);
+        s.path = [];
+        s.moveTimer = 4 + Math.random() * 4;
+      }
+    }
+    if (s.destination) {
+      if (moveTowards(s, s.destination, delta, 0.7)) {
+        s.destination = null;
+        s.path = [];
+      }
+    }
+    return;
+  }
+
+  // Kein Feind → zur nächsten Front gehen
+  const targetFront = findNearestFront(s);
+  const distToFront = Math.hypot(s.group.position.x - targetFront.x, s.group.position.z - targetFront.z);
+
+  if (distToFront > 10) {
+    if (s.moveTimer <= 0 || !s.destination) {
+      s.destination = new THREE.Vector3(
+        targetFront.x + (Math.random()-0.5) * 12,
+        0,
+        targetFront.z + (Math.random()-0.5) * 12
+      );
+      s.path = [];
+      s.moveTimer = 6 + Math.random() * 4;
+    }
+    moveTowards(s, s.destination, delta, 0.9);
+    return;
+  }
+
+  s.state = "holding";
+}
+
+function executeSquadOrder(s, delta, enemy) {
+  const order = s.squadOrder;
+  switch(order) {
+    case "STURMANGRIFF": {
+      // Vorwärts zur nächsten feindlichen Front
+      const enemyFront = FRONTS.find(f => f.owner !== s.nation);
+      if (enemyFront) {
+        const dist = Math.hypot(s.group.position.x - enemyFront.x, s.group.position.z - enemyFront.z);
+        if (dist > 10) {
+          if (!s.squadTarget) s.squadTarget = new THREE.Vector3(enemyFront.x, 0, enemyFront.z);
+          moveTowards(s, s.squadTarget, delta, 1.2);
+        }
+        if (enemy && enemy.distance < 45) {
+          const dx = enemy.unit.group.position.x - s.group.position.x;
+          const dz = enemy.unit.group.position.z - s.group.position.z;
+          s.group.rotation.y = Math.atan2(dx, dz);
+          aimAndFire(s, enemy.unit);
+        }
+        return true;
+      }
+      break;
+    }
+    case "VERTEIDIGUNG": {
+      // Zur eigenen Front zurück
+      const ownFront = FRONTS.find(f => f.owner === s.nation) || FRONTS[0];
+      const dist = Math.hypot(s.group.position.x - ownFront.x, s.group.position.z - ownFront.z);
+      if (dist > 8) {
+        if (!s.squadTarget) s.squadTarget = new THREE.Vector3(ownFront.x, 0, ownFront.z);
+        moveTowards(s, s.squadTarget, delta, 0.9);
+      }
+      if (enemy && enemy.distance < 45) {
+        const dx = enemy.unit.group.position.x - s.group.position.x;
+        const dz = enemy.unit.group.position.z - s.group.position.z;
+        s.group.rotation.y = Math.atan2(dx, dz);
+        aimAndFire(s, enemy.unit);
+      }
+      return true;
+    }
+    case "RÜCKZUG": {
+      // Zur Basis
+      const basePos = s.nation === "aurelia" ? AUR_BASE : KAR_BASE;
+      moveTowards(s, basePos, delta, 1.0);
+      return true;
+    }
+    case "FLANKEN": {
+      // Seitlich umgehen
+      if (!s.squadTarget) {
+        const enemyFront = FRONTS.find(f => f.owner !== s.nation) || FRONTS[0];
+        const side = Math.random() < 0.5 ? -1 : 1;
+        s.squadTarget = new THREE.Vector3(
+          enemyFront.x + side * 30,
+          0,
+          enemyFront.z + side * 30
+        );
+      }
+      moveTowards(s, s.squadTarget, delta, 1.0);
+      if (enemy && enemy.distance < 45) aimAndFire(s, enemy.unit);
+      return true;
+    }
+    case "UNTERDRÜCKUNG": {
+      // In Position bleiben und feuern
+      if (enemy && enemy.distance < 50) {
+        const dx = enemy.unit.group.position.x - s.group.position.x;
+        const dz = enemy.unit.group.position.z - s.group.position.z;
+        s.group.rotation.y = Math.atan2(dx, dz);
+        aimAndFire(s, enemy.unit);
+      }
+      return true;
+    }
+    case "FRONTANGRIFF":
+    case "FRONT_HALTEN": {
+      // Vorwärts zur nächsten Front
+      if (!s.squadTarget) {
+        const target = FRONTS.find(f => f.owner !== s.nation) || FRONTS[0];
+        s.squadTarget = new THREE.Vector3(target.x, 0, target.z);
+      }
+      const dist = Math.hypot(s.group.position.x - s.squadTarget.x, s.group.position.z - s.squadTarget.z);
+      if (dist > 10) {
+        moveTowards(s, s.squadTarget, delta, 1.0);
+      }
+      if (enemy && enemy.distance < 45) {
+        const dx = enemy.unit.group.position.x - s.group.position.x;
+        const dz = enemy.unit.group.position.z - s.group.position.z;
+        s.group.rotation.y = Math.atan2(dx, dz);
+        aimAndFire(s, enemy.unit);
+      }
+      return true;
+    }
+    case "PATROUILLE": {
+      // Zufällig umhergehen
+      if (s.moveTimer <= 0) {
+        const angle = Math.random() * Math.PI * 2;
+        s.squadTarget = new THREE.Vector3(
+          s.group.position.x + Math.cos(angle) * 20,
+          0,
+          s.group.position.z + Math.sin(angle) * 20
+        );
+        s.path = [];
+        s.moveTimer = 6 + Math.random() * 6;
+      }
+      moveTowards(s, s.squadTarget, delta, 0.7);
+      if (enemy && enemy.distance < 45) aimAndFire(s, enemy.unit);
+      return true;
+    }
+  }
+  return false;
+}
+
+function findNearestEnemy(s) {
+  let nearest = null, best = Infinity;
+  for (const other of soldiers) {
+    if (!other.alive || other.nation === s.nation || other.role === "general") continue;
+    if (!other.onDuty && other.role === "soldier") continue;
+    const d = s.group.position.distanceTo(other.group.position);
+    if (d < best) { best = d; nearest = other; }
+  }
+  return nearest ? { unit: nearest, distance: best } : null;
+}
+
+function findNearestFront(s) {
+  let nearest = FRONTS[0], best = Infinity;
+  for (const f of FRONTS) {
+    const d = Math.hypot(s.group.position.x - f.x, s.group.position.z - f.z);
+    const ownerBonus = f.owner !== s.nation ? 0.5 : 1.0;
+    const score = d * ownerBonus;
+    if (score < best) { best = score; nearest = f; }
+  }
+  return nearest;
+}
+
+function findNearestCover(s) {
+  let nearest = null, best = Infinity;
+  for (const c of covers) {
+    const d = Math.hypot(c.x - s.group.position.x, c.z - s.group.position.z);
+    if (d < best && d > 1) { best = d; nearest = c; }
+  }
+  return nearest;
+}
+
+function moveTowards(s, destination, delta, multiplier = 1) {
+  if (!destination || s.isDowned) return false;
+  const directDx = destination.x - s.group.position.x;
+  const directDz = destination.z - s.group.position.z;
+  if (Math.hypot(directDx, directDz) < 1.0) return true;
+
+  s.pathRecomputeTimer = (s.pathRecomputeTimer || 0) - delta;
+  const needNewPath = s.path.length === 0 || s.pathIndex >= s.path.length ||
+    s.pathRecomputeTimer <= 0 ||
+    (s.pathGoalX !== destination.x || s.pathGoalZ !== destination.z);
+
+  if (needNewPath) {
+    s.pathRecomputeTimer = 1.5 + Math.random() * 1.5;
+    s.pathGoalX = destination.x;
+    s.pathGoalZ = destination.z;
+    const path = findPath(s.group.position.x, s.group.position.z, destination.x, destination.z, 400);
+    if (path && path.length > 0) { s.path = path; s.pathIndex = 0; }
+    else { s.path = [{x: destination.x, z: destination.z}]; s.pathIndex = 0; }
+  }
+
+  let wp = null;
+  while (s.pathIndex < s.path.length) {
+    const p = s.path[s.pathIndex];
+    const d = Math.hypot(p.x - s.group.position.x, p.z - s.group.position.z);
+    if (d < 1.5 && s.pathIndex < s.path.length - 1) s.pathIndex++;
+    else { wp = p; break; }
+  }
+  if (!wp) { s.path = []; return true; }
+
+  const dx = wp.x - s.group.position.x;
+  const dz = wp.z - s.group.position.z;
+  const dist = Math.hypot(dx, dz);
+  if (dist < 0.05) return false;
+  const step = Math.min(dist, s.speed * multiplier * delta);
+  const dirX = dx / dist, dirZ = dz / dist;
+
+  const nx = s.group.position.x + dirX * step;
+  const nz = s.group.position.z + dirZ * step;
+  if (!navBlocked(nx, s.group.position.z)) s.group.position.x = nx;
+  if (!navBlocked(s.group.position.x, nz)) s.group.position.z = nz;
+
+  const angle = Math.atan2(dirX, dirZ);
+  let diff = angle - s.group.rotation.y;
+  while (diff > Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+  s.group.rotation.y += diff * Math.min(1, delta * 6);
+
+  const walk = Math.sin(elapsed * 10 + s.phaseOffset) * 0.5;
+  s.armL.rotation.x = walk;
+  s.armR.rotation.x = -walk;
+  s.legL.rotation.x = -walk * 0.9;
+  s.legR.rotation.x = walk * 0.9;
+  return false;
+}
+
+function shoot(s, target) {
+  if (!s.hasWeapon || s.ammo <= 0) {
+    if (s.hasWeapon && s.ammo <= 0) { s.isReloading = true; s.reloadTimer = 2.5; }
+    return;
+  }
+  s.ammo--;
+  const start = s.group.position.clone();
+  start.y = 1.25;
+  start.x += Math.sin(s.group.rotation.y) * 0.8;
+  start.z += Math.cos(s.group.rotation.y) * 0.8;
+  const end = target.group.position.clone();
+  end.y = 1.2;
+  const mesh = new THREE.Mesh(bulletGeo, bulletMat);
+  mesh.position.copy(start);
+  scene.add(mesh);
+  const dir = end.clone().sub(start).normalize();
+  bullets.push({
+    mesh, dir, life: 0,
+    travel: Math.min(0.75, start.distanceTo(end) / 35),
+    target, damage: 6 + Math.random() * 10,
+    shooter: s, hitChance: 0.55 + s.accuracy * 0.35
+  });
+  if (s.muzzleFlash) {
+    s.muzzleFlash.intensity = 5;
+    setTimeout(() => { if (s.muzzleFlash) s.muzzleFlash.intensity = 0; }, 80);
+  }
+
+  if (!s.muzzleVisual) {
+    const muzzleMat = new THREE.MeshBasicMaterial({color: 0xffdd44, transparent: true, opacity: 0.9});
+    s.muzzleVisual = new THREE.Mesh(GEO.sphere, muzzleMat);
+    s.muzzleVisual.scale.setScalar(0.2);
+    s.weaponGroup.add(s.muzzleVisual);
+    s.muzzleVisual.position.set(0, 0.03, 1.1);
+  }
+  s.muzzleVisual.visible = true;
+  s.muzzleVisual.scale.setScalar(0.4 + Math.random() * 0.3);
+  setTimeout(() => { if (s.muzzleVisual) s.muzzleVisual.visible = false; }, 60);
+}
+
+function aimAndFire(s, enemy) {
+  const dist = s.group.position.distanceTo(enemy.group.position);
+  if (dist > 55 || s.ammo <= 0 || s.isReloading) return;
+  if (s.fireBurstTimer > 0) {
+    if (s.cooldown <= 0) {
+      shoot(s, enemy);
+      s.cooldown = 0.12 + Math.random() * 0.1;
+    }
+  } else if (s.burstCooldown <= 0) {
+    s.fireBurstTimer = 0.3 + Math.random() * 0.4;
+    s.cooldown = 0;
+    s.burstCooldown = 0.8 + Math.random() * 1.0;
+  }
+}
+
+function updateBullets(delta) {
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    b.life += delta;
+    b.mesh.position.addScaledVector(b.dir, delta * 40);
+    if (b.life >= b.travel) {
+      if (b.target.alive && Math.random() < b.hitChance) {
+        b.target.health -= b.damage;
+        b.target.camShake = 0.8;
+        if (b.target.health <= 0) {
+          if (Math.random() < 0.3 && !b.target.isDowned) {
+            b.target.health = 5 + Math.random() * 10;
+            b.target.isDowned = true;
+            b.target.isWounded = true;
+          } else {
+            b.target.alive = false;
+            b.target.group.visible = false;
+            log(`💀 ${NATIONS[b.target.nation].name} #${b.target.index} gefallen`);
+            if (b.shooter) {
+              b.shooter.kills++;
+              const xpGain = b.target.role === "officer" ? 150 : b.target.role === "nco" ? 100 : 80;
+              addXP(b.shooter, xpGain);
+            }
+          }
+        }
+      }
+      scene.remove(b.mesh);
+      bullets.splice(i, 1);
+    }
+  }
+}
+
+/* ============================================================
+   TIME
+   ============================================================ */
+function updateDayNight(delta) {
+  timeOfDay += delta / DAY_LENGTH;
+  if (timeOfDay >= 1) timeOfDay -= 1;
+
+  const sunAngle = (timeOfDay - 0.25) * Math.PI * 2;
+  const sunHeight = Math.sin(sunAngle);
+  sunLight.position.set(Math.cos(sunAngle) * 100, Math.max(sunHeight * 100, -15), 30);
+  moonLight.position.set(-Math.cos(sunAngle) * 100, Math.max(-sunHeight * 100, -15), -30);
+
+  const dayIntensity = Math.max(0, sunHeight);
+  const nightIntensity = Math.max(0, -sunHeight);
+
+  sunLight.intensity = dayIntensity * 1.4;
+  moonLight.intensity = nightIntensity * 0.5;
+  hemiLight.intensity = 0.5 + dayIntensity * 1.5;
+
+  const skyColor = new THREE.Color();
+  if (dayIntensity > 0.3) skyColor.setHex(0x87ceeb).lerp(new THREE.Color(0xff8844), 1 - dayIntensity);
+  else if (sunHeight > -0.2) skyColor.setHex(0x0a0a1a).lerp(new THREE.Color(0xff8844), (sunHeight + 0.2) / 0.5);
+  else skyColor.setHex(0x0a0a1a);
+
+  scene.background = skyColor;
+  scene.fog.color = skyColor;
+
+  for (const sl of streetlights) {
+    if (sl.lamp) sl.lamp.material.color.setHex(nightIntensity > 0.3 ? 0xffd78a : 0x555555);
+  }
+
+  for (const tv of tvObjects) {
+    if (tv.light) tv.light.intensity = 1.0 + Math.sin(elapsed * 15) * 0.4;
+    if (tv.screen) tv.screen.material.color.setHSL(0.55 + Math.sin(elapsed * 2) * 0.05, 0.7, 0.3);
+  }
+}
+
+/* ============================================================
+   LOGS
+   ============================================================ */
+const log1El = document.getElementById("log1");
+const log2El = document.getElementById("log2");
+const log1Messages = [];
+const log2Messages = [];
+
+function log(message) {
+  log1Messages.unshift(message);
+  if (log1Messages.length > 5) log1Messages.pop();
+  log1El.replaceChildren();
+  for (const m of log1Messages) {
+    const d = document.createElement("div");
+    d.textContent = m;
+    log1El.appendChild(d);
+  }
+}
+
+function radioLog(message) {
+  log2Messages.unshift(message);
+  if (log2Messages.length > 5) log2Messages.pop();
+  log2El.replaceChildren();
+  for (const m of log2Messages) {
+    const d = document.createElement("div");
+    d.textContent = m;
+    log2El.appendChild(d);
+  }
+}
+
+const storyEl = document.getElementById("story");
+function showStory(text, type = "yellow", duration = 3000) {
+  storyEl.textContent = text;
+  storyEl.className = type + " show";
+  clearTimeout(storyEl._t);
+  storyEl._t = setTimeout(() => { storyEl.className = type; }, duration);
+}
+
+/* ============================================================
+   CONVOYS
+   ============================================================ */
+class Convoy {
+  constructor(nation, route) {
+    this.nation = nation;
+    this.route = route;
+    this.resource = route.resource;
+    this.progress = 0;
+    this.speed = 0.04;
+    this.ambushed = false;
+    this.delivered = false;
+
+    this.group = new THREE.Group();
+    const isAur = nation === "aurelia";
+    boxGeo(3, 1.5, 6, mat(isAur ? 0x3a4a5a : 0x5a3a3a), 0, 1.2, 0, this.group);
+    boxGeo(2, 0.8, 2.5, mat(0x222222), 0, 2.3, 0, this.group);
+    boxGeo(2.5, 1.5, 4, mat(isAur ? 0x2a5a8a : 0x8a2a2a), 0, 2, -0.5, this.group);
+
+    this.group.position.copy(route.from);
+    scene.add(this.group);
+  }
+
+  update(delta) {
+    if (this.delivered) return;
+    this.progress += this.speed * delta;
+    if (this.progress >= 1) {
+      this.delivered = true;
+      this.group.visible = false;
+      resources[this.nation][this.resource] += 200;
+      log(`📦 ${NATIONS[this.nation].name} Konvoi angekommen: +200 ${this.resource}`);
+      return;
+    }
+
+    const fx = this.route.from.x + (this.route.to.x - this.route.from.x) * this.progress;
+    const fz = this.route.from.z + (this.route.to.z - this.route.from.z) * this.progress;
+    this.group.position.set(fx, 0, fz);
+    this.group.rotation.y = Math.atan2(
+      this.route.to.x - this.route.from.x,
+      this.route.to.z - this.route.from.z
+    );
+
+    if (!this.ambushed) {
+      const enemyNation = this.nation === "aurelia" ? "karmath" : "aurelia";
+      for (const s of soldiers) {
+        if (!s.alive || s.nation !== enemyNation || !s.onDuty || s.role === "general") continue;
+        if (Math.hypot(s.group.position.x - fx, s.group.position.z - fz) < 15) {
+          this.ambush();
+          break;
+        }
+      }
+    }
+  }
+
+  ambush() {
+    this.ambushed = true;
+    const alert = document.getElementById("convoyAlert");
+    alert.classList.add("show");
+    setTimeout(() => alert.classList.remove("show"), 3500);
+    log(`🚨 ${NATIONS[this.nation].name} Konvoi überfallen!`);
+    radioLog(`🔊 ${NATIONS[this.nation].name} FUNK: Konvoi unter Beschuss!`);
+    newsItems.unshift({
+      type: "convoy",
+      headline: "KONVOI ÜBERFALLEN",
+      body: `${NATIONS[this.nation].name} Nachschubkonvoi (${this.resource}) überfallen.`,
+      time: `Tag ${Math.floor(elapsed/DAY_LENGTH)+1}`
+    });
+  }
+}
+
+let convoyTimer = 30;
+function updateConvoySpawner(delta) {
+  convoyTimer -= delta;
+  if (convoyTimer > 0) return;
+  convoyTimer = 50 + Math.random() * 40;
+
+  const nation = Math.random() < 0.5 ? "aurelia" : "karmath";
+  const base = nation === "aurelia" ? AUR_BASE : KAR_BASE;
+  const possible = CONVOY_ROUTES.filter(r => Math.hypot(r.from.x - base.x, r.from.z - base.z) < 50);
+  if (possible.length === 0) return;
+
+  const route = possible[Math.floor(Math.random() * possible.length)];
+  convoys.push(new Convoy(nation, {
+    from: route.from.clone(),
+    to: new THREE.Vector3(route.to.x, 0, route.to.z),
+    resource: route.resource
+  }));
+}
+
+/* ============================================================
+   BODYCAM
+   ============================================================ */
+const bodycamEl = document.getElementById("bodycam");
+const camIdEl = document.getElementById("camId");
+const camTimeEl = document.getElementById("camTime");
+const camHpEl = document.getElementById("camHp");
+const camAmmoEl = document.getElementById("camAmmo");
+const camStateEl = document.getElementById("camState");
+const camDmgEl = document.getElementById("camDmg");
+const camNoticeEl = document.getElementById("camNotice");
+
+let bodycamTarget = null;
+let bodycamFullscreen = false;
+let camRenderer = null;
+let camCamera = null;
+let camSignalLostTimer = 0;
+
+function initBodycam() {
+  camCamera = new THREE.PerspectiveCamera(75, 260/195, 0.05, 400);
+  camRenderer = new THREE.WebGLRenderer({antialias: false, powerPreference: "high-performance"});
+  camRenderer.setSize(260, 195);
+  camRenderer.setPixelRatio(0.85);
+  document.getElementById("bodycamCanvasHolder").appendChild(camRenderer.domElement);
+}
+initBodycam();
+
+function openBodycam(soldier) {
+  if (!soldier || !soldier.alive || soldier.role === "general") return;
+  bodycamTarget = soldier;
+  bodycamEl.classList.add("visible");
+  camNoticeEl.classList.remove("show");
+  camSignalLostTimer = 0;
+  const rank = getRank(soldier);
+  camIdEl.textContent = `${NATIONS[soldier.nation].name.slice(0,3)} #${soldier.index} · ${rank.name}`;
+  camIdEl.style.color = soldier.nation === "aurelia" ? "#59aaff" : "#ff6868";
+}
+
+function closeBodycam() {
+  bodycamTarget = null;
+  bodycamEl.classList.remove("visible");
+  bodycamEl.classList.remove("fullscreen");
+  bodycamFullscreen = false;
+  camRenderer.setSize(260, 195);
+}
+
+function toggleBodycamFullscreen() {
+  if (!bodycamTarget) return;
+  bodycamFullscreen = !bodycamFullscreen;
+  bodycamEl.classList.toggle("fullscreen", bodycamFullscreen);
+  if (bodycamFullscreen) camRenderer.setSize(innerWidth, innerHeight);
+  else camRenderer.setSize(260, 195);
+}
+
+function updateBodycam(delta) {
+  if (!bodycamTarget) return;
+  const s = bodycamTarget;
+  if (!s.alive) {
+    if (camSignalLostTimer === 0) {
+      camSignalLostTimer = 3;
+      camNoticeEl.classList.add("show");
+    }
+    camSignalLostTimer -= delta;
+    if (camSignalLostTimer <= 0) closeBodycam();
+    return;
+  }
+  const headWorld = new THREE.Vector3();
+  s.group.getWorldPosition(headWorld);
+  headWorld.y += 1.65;
+  const speed = Math.hypot(s.velocity.x, s.velocity.z);
+  const isMoving = speed > 0.5;
+  const bob = Math.sin(elapsed * (isMoving ? 10 : 3) + s.phaseOffset) * (isMoving ? 0.06 : 0.02);
+  const shake = s.camShake > 0 ? s.camShake * 0.1 : 0;
+  camCamera.position.set(
+    headWorld.x + (Math.random() - 0.5) * shake,
+    headWorld.y + bob + (Math.random() - 0.5) * shake,
+    headWorld.z + (Math.random() - 0.5) * shake
+  );
+  const lookAngle = s.group.rotation.y;
+  camCamera.lookAt(
+    camCamera.position.x + Math.sin(lookAngle) * 12,
+    camCamera.position.y,
+    camCamera.position.z + Math.cos(lookAngle) * 12
+  );
+  camRenderer.render(scene, camCamera);
+
+  camHpEl.style.width = `${Math.max(0, s.health)}%`;
+  camHpEl.style.background = s.health > 60 ? "#44ff44" : s.health > 30 ? "#ffaa00" : "#ff2222";
+  camAmmoEl.textContent = s.hasWeapon ? `${s.ammo}/${s.mags}` : "NO WPN";
+  let state = s.state.toUpperCase();
+  if (s.isReloading) state = "RELOADING";
+  else if (s.isDowned) state = "CRITICAL";
+  else if (s.isWounded) state = "WOUNDED";
+  camStateEl.textContent = state;
+
+  const hour = Math.floor(timeOfDay * 24);
+  const minute = Math.floor((timeOfDay * 24 - hour) * 60);
+  camTimeEl.textContent = `${hour.toString().padStart(2,'0')}:${minute.toString().padStart(2,'0')}`;
+
+  if (s.camShake > 0.5) camDmgEl.classList.add("flash");
+  else camDmgEl.classList.remove("flash");
+}
+
+/* ============================================================
+   PANELS
+   ============================================================ */
+function updateDiaryPanel() {
+  const content = document.getElementById("diaryContent");
+  content.replaceChildren();
+  for (const nation of ["aurelia", "karmath"]) {
+    const section = document.createElement("section");
+    section.className = `diary-team ${nation}`;
+    const h = document.createElement("h3");
+    h.textContent = nation === "aurelia" ? `🔵 AURELIA – ${NATIONS.aurelia.general}` : `🔴 KARMATH – ${NATIONS.karmath.general}`;
+    section.appendChild(h);
+    const sorted = soldiers
+      .filter(s => s.nation === nation && s.role !== "general")
+      .sort((a, b) => b.xp - a.xp)
+      .slice(0, 12);
+    for (const s of sorted) {
+      const entry = document.createElement("div");
+      entry.className = "diary-entry";
+      const rank = getRank(s);
+      const rankClass = getRankClass(rank);
+      const status = !s.alive ? "☠️ Gefallen" : s.isDowned ? "🩸 Verwundet" : s.onDuty ? "⚔️ Im Einsatz" : "🏠 Reserve";
+      entry.innerHTML = `<span class="rank-badge ${rankClass}">${rank.name}</span> <strong>#${s.index}</strong> [${s.squadId}] · ${s.kills} Kills · ${status}`;
+      section.appendChild(entry);
+    }
+    content.appendChild(section);
+  }
+}
+
+function toggleDiaries() {
+  const panel = document.getElementById("diaryPanel");
+  const isOpen = panel.classList.toggle("show");
+  if (isOpen) { updateDiaryPanel(); closeBodycam(); }
+}
+document.getElementById("closeDiaries").addEventListener("click", toggleDiaries);
+
+function initNews() {
+  newsItems.push({
+    type: "breaking",
+    headline: "KRIEG ERKLÄRT",
+    body: "Aurelia und Karmath befinden sich im Krieg. 5 Fronten, 3 Schichten à 8 Soldaten mit Offizieren.",
+    time: "Tag 1"
+  });
+  newsItems.push({
+    type: "military",
+    headline: "OFFIZIERS-HIERARCHIE AKTIV",
+    body: "Jede Nation operiert mit General, Leutnant, Sergeant und Soldaten. Squad-Befehle werden taktisch erteilt.",
+    time: "Tag 1"
+  });
+}
+
+function showNews() {
+  const content = document.getElementById("newsContent");
+  content.replaceChildren();
+  document.getElementById("newsSub").textContent = `Tag ${Math.floor(elapsed/DAY_LENGTH)+1} · ${getShiftName(currentShift)}`;
+  for (const item of newsItems.slice(0, 10)) {
+    const div = document.createElement("div");
+    div.className = "news-item " + item.type;
+    div.innerHTML = `<div class="hl">${item.headline}</div><div class="body">${item.body}</div><div class="tm">${item.time}</div>`;
+    content.appendChild(div);
+  }
+  document.getElementById("newsPanel").classList.add("show");
+}
+
+document.getElementById("closeNews").addEventListener("click", () => {
+  document.getElementById("newsPanel").classList.remove("show");
+});
+
+/* ============================================================
+   HUD
+   ============================================================ */
+let frontMiniInitialized = false;
+function updateHUD() {
+  const aurActive = soldiers.filter(s => s.nation === "aurelia" && s.alive && s.role !== "general" && s.onDuty).length;
+  const karActive = soldiers.filter(s => s.nation === "karmath" && s.alive && s.role !== "general" && s.onDuty).length;
+  document.getElementById("aurCount").textContent = aurActive;
+  document.getElementById("karCount").textContent = karActive;
+
+  const score = getFrontScore();
+  document.getElementById("frontScore").textContent = `${score.aur} / ${FRONTS.length}`;
+  document.getElementById("activeSquads").textContent = `3 / 3`;
+
+  document.getElementById("rMoney").textContent = Math.floor(resources.aurelia.money);
+  document.getElementById("rAmmo").textContent = Math.floor(resources.aurelia.ammo);
+  document.getElementById("rFuel").textContent = Math.floor(resources.aurelia.fuel);
+
+  const day = Math.floor(elapsed / DAY_LENGTH) + 1;
+  document.getElementById("dayNum").textContent = Math.min(day, TOTAL_DAYS);
+
+  const hour = Math.floor(timeOfDay * 24);
+  const minute = Math.floor((timeOfDay * 24 - hour) * 60);
+  const speedLabel = timeSpeed > 1 ? ` ×${timeSpeed}` : "";
+  document.getElementById("timeStr").textContent = `${hour.toString().padStart(2,'0')}:${minute.toString().padStart(2,'0')}${speedLabel}`;
+  document.getElementById("shiftShort").textContent = getShiftShort(currentShift);
+
+  document.getElementById("shiftName").textContent = getShiftName(currentShift);
+  document.getElementById("nextShift").textContent = `Nächste: in ${getTimeToNextShift()}`;
+  document.getElementById("convoyCount").textContent = convoys.length;
+  document.getElementById("aurOrder").textContent = aurCommander.currentOrder;
+  document.getElementById("aurCmd").textContent = aurCommander.currentOrder;
+  document.getElementById("karCmd").textContent = karCommander.currentOrder;
+
+  const mini = document.getElementById("frontMini");
+  if (!frontMiniInitialized) {
+    mini.replaceChildren();
+    for (const f of FRONTS) {
+      const d = document.createElement("div");
+      d.className = "fm";
+      d.id = "fm_" + f.id;
+      d.textContent = f.name[0];
+      mini.appendChild(d);
+    }
+    frontMiniInitialized = true;
+  }
+  for (const f of FRONTS) {
+    const d = document.getElementById("fm_" + f.id);
+    if (!d) continue;
+    d.className = "fm " + (f.owner === "aurelia" ? "blue" : f.owner === "karmath" ? "red" : "contested");
+  }
+}
+
+/* ============================================================
+   CAMERA
+   ============================================================ */
+const keys = {};
+let yaw = 0, pitch = -0.4;
+let dragging = false, lastX = 0, lastY = 0;
+
+window.addEventListener("keydown", e => {
+  const key = e.key.toLowerCase();
+  keys[key] = true;
+  if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) e.preventDefault();
+  if (key === " " && !e.repeat) paused = !paused;
+  if (key === "v" && !e.repeat) toggleBodycamFullscreen();
+  if (key === "g" && !e.repeat) toggleDiaries();
+  if (key === "n" && !e.repeat) {
+    const speeds = [1, 5, 20, 60];
+    const idx = speeds.indexOf(timeSpeed);
+    timeSpeed = speeds[(idx + 1) % speeds.length];
+    log(`⏩ Zeit x${timeSpeed}`);
+  }
+  if (e.key === "Escape") {
+    closeBodycam();
+    document.getElementById("diaryPanel").classList.remove("show");
+    document.getElementById("newsPanel").classList.remove("show");
+  }
+});
+window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+renderer.domElement.addEventListener("pointerdown", e => {
+  if (e.button !== 0) return;
+  dragging = true;
+  lastX = e.clientX;
+  lastY = e.clientY;
+});
+renderer.domElement.addEventListener("pointerup", () => dragging = false);
+renderer.domElement.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  yaw -= dx * 0.004;
+  pitch = Math.max(-1.3, Math.min(0.2, pitch - dy * 0.003));
+});
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+renderer.domElement.addEventListener("click", e => {
+  if (Math.abs(e.clientX - lastX) > 5 || Math.abs(e.clientY - lastY) > 5) return;
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  for (const tv of tvObjects) {
+    if (raycaster.intersectObject(tv.mesh, true).length > 0) {
+      showNews();
+      return;
+    }
+  }
+
+  const objects = [];
+  for (const s of soldiers) if (s.alive && s.role !== "general") objects.push(s.group);
+  const hits = raycaster.intersectObjects(objects, true);
+  if (!hits.length) return;
+  let obj = hits[0].object;
+  while (obj && !soldiers.some(s => s.group === obj)) obj = obj.parent;
+  const clicked = soldiers.find(s => s.group === obj);
+  if (clicked && clicked.role !== "general") openBodycam(clicked);
+});
+
+function updateCamera(delta) {
+  const speed = (keys["shift"] ? 70 : 35) * delta;
+  const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+  const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+  if (keys["w"]) camera.position.addScaledVector(forward, speed);
+  if (keys["s"]) camera.position.addScaledVector(forward, -speed);
+  if (keys["a"]) camera.position.addScaledVector(right, -speed);
+  if (keys["d"]) camera.position.addScaledVector(right, speed);
+  if (keys["q"]) camera.position.y += speed;
+  if (keys["e"]) camera.position.y -= speed;
+  camera.position.y = Math.max(5, Math.min(250, camera.position.y));
+  camera.position.x = Math.max(-240, Math.min(240, camera.position.x));
+  camera.position.z = Math.max(-240, Math.min(240, camera.position.z));
+
+  const lookDir = new THREE.Vector3(
+    -Math.sin(yaw) * Math.cos(pitch),
+    Math.sin(pitch),
+    -Math.cos(yaw) * Math.cos(pitch)
+  );
+  camera.lookAt(camera.position.clone().add(lookDir.multiplyScalar(40)));
+}
+
+/* ============================================================
+   LABELS
+   ============================================================ */
+function updateLabels() {
+  const labels = [
+    { id: "campLabel_aurelia", pos: AUR_BASE },
+    { id: "campLabel_karmath", pos: KAR_BASE },
+    { id: "baseLabel", pos: HQ_POS }
+  ];
+  for (const lbl of labels) {
+    const el = document.getElementById(lbl.id);
+    if (!el) continue;
+    const pos = new THREE.Vector3(lbl.pos.x, 15, lbl.pos.z);
+    pos.project(camera);
+    if (pos.z > 1 || Math.abs(pos.x) > 1.2 || Math.abs(pos.y) > 1.2) {
+      el.style.display = "none";
+    } else {
+      el.style.display = "block";
+      el.style.left = ((pos.x * 0.5 + 0.5) * innerWidth) + "px";
+      el.style.top = ((-pos.y * 0.5 + 0.5) * innerHeight) + "px";
+    }
+  }
+
+  const tvHint = document.getElementById("tvHint");
+  if (tvObjects.length > 0) {
+    const pos = tvObjects[0].worldPos.clone();
+    pos.y += 2;
+    pos.project(camera);
+    if (pos.z > 1 || Math.abs(pos.x) > 1.2 || Math.abs(pos.y) > 1.2) {
+      tvHint.classList.remove("show");
+    } else {
+      tvHint.classList.add("show");
+      tvHint.style.left = ((pos.x * 0.5 + 0.5) * innerWidth + 20) + "px";
+      tvHint.style.top = ((-pos.y * 0.5 + 0.5) * innerHeight - 10) + "px";
+    }
+  }
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+buildWorld();
+buildBase("aurelia", AUR_BASE);
+buildBase("karmath", KAR_BASE);
+buildHQ();
+buildFronts();
+spawnArmies();
+initNews();
+
+currentShift = getCurrentShift();
+
+log("📖 Nations at War gestartet");
+log(`⏱ 1 Spielmin = 5s · Tag = 2h`);
+log("⚔️ Offiziere & Squad-Befehle aktiv");
+log("🌅 Frühschicht läuft");
+radioLog("🔊 General Weber: Bereit für Befehle!");
+radioLog("🔊 General Volkov: Bereit für Befehle!");
+radioLog("💡 N für Zeit (x1/x5/x20/x60)");
+
+/* ============================================================
+   MAIN LOOP
+   ============================================================ */
+let previous = performance.now();
+let hudTimer = 0;
+let labelTimer = 0;
+let shiftCheckTimer = 0;
+let cmdTimer = 0;
+
+function animate(now) {
+  requestAnimationFrame(animate);
+  const delta = Math.min((now - previous) / 1000, 0.05);
+  previous = now;
+
+  if (!paused) {
+    const d = delta * timeSpeed;
+    elapsed += d;
+    timeOfDay += d / DAY_LENGTH;
+    if (timeOfDay >= 1) timeOfDay -= 1;
+
+    updateDayNight(d);
+    updateCamera(delta);
+
+    shiftCheckTimer += d;
+    if (shiftCheckTimer > 0.5) {
+      shiftCheckTimer = 0;
+      updateShifts();
+    }
+
+    // Commander AI
+    aurCommander.update(d);
+    karCommander.update(d);
+
+    for (const s of soldiers) updateSoldier(s, d);
+
+    for (let i = convoys.length - 1; i >= 0; i--) {
+      convoys[i].update(d);
+      if (convoys[i].delivered) {
+        if (convoys[i].group) scene.remove(convoys[i].group);
+        convoys.splice(i, 1);
+      }
+    }
+    updateConvoySpawner(d);
+    updateBullets(d);
+    updateArtilleryFunk(d);
+    updateFronts(d);
+
+    resources.aurelia.money += d * 2;
+    resources.karmath.money += d * 2;
+
+    hudTimer += d;
+    if (hudTimer > 0.4) { hudTimer = 0; updateHUD(); }
+    labelTimer += d;
+    if (labelTimer > 0.25) { labelTimer = 0; updateLabels(); }
+
+    updateBodycam(d);
+  }
+
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(animate);
+
+window.addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  if (bodycamFullscreen) camRenderer.setSize(innerWidth, innerHeight);
+});
+
+</script>
+</body>
+</html>
